@@ -1,4 +1,4 @@
-<!DOCTYPE html>
++<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
@@ -1454,8 +1454,8 @@
             return { status: 'pending', deadline, daysToDeadline, badge: `📅 ${daysToDeadline} 天後到期` };
         }
 
-// 🔥 修改評估結果保存 - 支援切換功能
-        function saveAssessmentResult(staffId, assessmentType, result) {
+// 🔥 修改評估結果保存 - 支援切換功能 + Firebase 同步
+async function saveAssessmentResult(staffId, assessmentType, result) {
             if (staffData[staffId] && staffData[staffId].assessments) {
                 const currentAssessment = staffData[staffId].assessments[assessmentType];
                 
@@ -1485,10 +1485,15 @@
                     }
                 }
                 
-                // 重新顯示評估區域
-                displayAssessments(staffId);
-            }
+// 🔥 儲存到 Firebase
+        if (window.saveAssessmentResultToFirebase) {
+            await window.saveAssessmentResultToFirebase(staffId, assessmentType, result);
         }
+        
+        // 重新顯示評估區域
+        displayAssessments(staffId);
+    }
+}
 
         // 🆕 取得評估項目名稱
         function getAssessmentName(assessmentType) {
@@ -1858,7 +1863,7 @@ category.records.forEach((record, index) => {
         }
 
         // 🆕 切換簡單記錄狀態
-        function toggleSimpleRecord(recordIndex) {
+async function toggleSimpleRecord(recordIndex) {
             const staff = staffData[currentStaffId];
             const category = staff.trainingCategories[currentCategory];
             const record = category.records[recordIndex];
@@ -1873,6 +1878,11 @@ category.records.forEach((record, index) => {
                 record.completed = true;
                 record.date = getCurrentDate();
                 category.completed++;
+            }
+
+            // 🔥 儲存到 Firebase
+            if (window.saveTrainingProgressToFirebase) {
+                await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, recordIndex, record.completed);
             }
             
             // 重新顯示培訓詳情
@@ -1983,7 +1993,7 @@ category.records.forEach((record, index) => {
         }
 
 // 🔥 修正完成評核邏輯
-        function finishAssessment() {
+async function finishAssessment() {
             const staff = staffData[currentStaffId];
             const category = staff.trainingCategories[currentCategory];
             const record = category.records[currentRecordIndex];
@@ -2028,6 +2038,11 @@ category.records.forEach((record, index) => {
                 record.status = 'in_progress';
                 
                 showSuccessMessage('💾', `評核進度已保存 (${passedItems}/${totalItems} 通過)`, '#f39c12');
+            }
+
+         // 🔥 儲存到 Firebase
+            if (window.saveTrainingProgressToFirebase) {
+                await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, record.completed, record.failed);
             }
             
             closeAssessmentModal();
@@ -2762,6 +2777,48 @@ window.loadStaffDataFromFirebase = async function() {
       }
     });
 
+      // 載入培訓進度
+    const progressQuery = query(collection(db, "training-progress"), orderBy("timestamp", "desc"));
+    const progressSnapshot = await getDocs(progressQuery);
+
+    // 建立最新進度狀態
+    const latestProgress = {};
+
+    progressSnapshot.forEach((doc) => {
+      const data = doc.data();
+      const key = `${data.staffId}-${data.categoryKey}-${data.recordIndex}`;
+      
+      if (!latestProgress[key]) {
+        latestProgress[key] = data;
+      }
+    });
+
+    // 應用最新進度
+    Object.values(latestProgress).forEach(progress => {
+      if (staffData[progress.staffId] && 
+          staffData[progress.staffId].trainingCategories &&
+          staffData[progress.staffId].trainingCategories[progress.categoryKey] &&
+          staffData[progress.staffId].trainingCategories[progress.categoryKey].records[progress.recordIndex]) {
+        
+        const record = staffData[progress.staffId].trainingCategories[progress.categoryKey].records[progress.recordIndex];
+        record.completed = progress.completed;
+        record.failed = progress.failed;
+        record.date = progress.date;
+        
+        console.log(`✅ 載入培訓進度：${progress.staffName} - ${progress.recordName}: ${progress.completed ? '完成' : progress.failed ? '失敗' : '進行中'}`);
+      }
+    });
+
+    // 重新計算完成數量
+    Object.keys(staffData).forEach(staffId => {
+      if (staffData[staffId].trainingCategories) {
+        Object.keys(staffData[staffId].trainingCategories).forEach(categoryKey => {
+          const category = staffData[staffId].trainingCategories[categoryKey];
+          category.completed = category.records.filter(r => r.completed && !r.failed).length;
+        });
+      }
+    });
+
     console.log("🎉 Firebase 資料載入完成！");
     return true;
     
@@ -2809,7 +2866,54 @@ window.addEventListener('load', async function() {
       alert("❌ 備份失敗，請重試！");
     }
   };
+// 🔥 增強版 Firebase 資料同步
+window.saveAssessmentResultToFirebase = async function(staffId, assessmentType, result) {
+  if (typeof addDoc !== 'undefined') {
+    try {
+      await addDoc(collection(db, "assessments"), {
+        staffId: staffId,
+        staffName: staffData[staffId].name,
+        assessmentType: assessmentType,
+        result: result,
+        passed: result === 'pass',
+        failed: result === 'fail',
+        timestamp: new Date(),
+        updatedBy: currentUser ? currentUser.name : "admin",
+        date: getCurrentDate()
+      });
+      console.log("✅ 評估結果已儲存到 Firebase");
+    } catch (e) {
+      console.error("❌ 評估結果儲存失敗: ", e);
+    }
+  }
+};
 
+// 🔥 儲存培訓進度到 Firebase
+window.saveTrainingProgressToFirebase = async function(staffId, categoryKey, recordIndex, completed, failed = false) {
+  if (typeof addDoc !== 'undefined') {
+    try {
+      const staff = staffData[staffId];
+      const category = staff.trainingCategories[categoryKey];
+      const record = category.records[recordIndex];
+      
+      await addDoc(collection(db, "training-progress"), {
+        staffId: staffId,
+        staffName: staff.name,
+        categoryKey: categoryKey,
+        recordIndex: recordIndex,
+        recordName: record.name,
+        completed: completed,
+        failed: failed,
+        date: completed || failed ? getCurrentDate() : null,
+        timestamp: new Date(),
+        updatedBy: currentUser ? currentUser.name : "admin"
+      });
+      console.log("✅ 培訓進度已儲存到 Firebase");
+    } catch (e) {
+      console.error("❌ 培訓進度儲存失敗: ", e);
+    }
+  }
+};
 </script>
 </body>
 </html>
