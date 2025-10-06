@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TKOH A&OT E-training System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-size: 18px; /* 加大基礎字體 */
+        }
+        
+        .container {
+            background: white;
+            padding: 60px; /* 增加padding */
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            max-width: 1300px; /* 增加最大寬度 */
+            width: 100%;
+            min-height: 700px; /* 增加最小高度 */
+        }
+        
+        .title {
+            color: #2c3e50;
+            font-size: 42px; /* 加大標題 */
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 24px; /* 加大副標題 */
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        
+        /* 登入頁面 */
+        .login-page {
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 30px;
+            text-align: left;
+            max-width: 450px; /* 增加表單寬度 */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 20px; /* 加大標籤字體 */
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 18px; /* 增加padding */
+            border: 2px solid #ecf0f1;
+            border-radius: 12px;
+            font-size: 20px; /* 加大輸入框字體 */
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .login-btn, .btn {
+            padding: 22px 45px; /* 增加按鈕大小 */
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 22px; /* 加大按鈕字體 */
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 12px;
+        }
+        
+        .login-btn:hover, .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .error-msg {
+            color: #e74c3c;
+            font-size: 18px; /* 加大錯誤訊息字體 */
+            margin-top: 15px;
+        }
+        
+        .test-info {
+            background: #f8f9fa;
+            padding: 25px; /* 增加padding */
+            border-radius: 12px;
+            margin-top: 35px;
+            font-size: 18px; /* 加大測試資訊字體 */
+            color: #6c757d;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* 主選單 */
+        .main-menu {
+            text-align: center;
+        }
+        
+        .grade-buttons {
+            display: flex;
+            gap: 35px; /* 增加間距 */
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+        
+        .grade-btn {
+            padding: 50px 60px; /* 增加按鈕大小 */
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            border: none;
+            border-radius: 18px;
+            font-size: 28px; /* 加大字體 */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 200px; /* 增加最小寬度 */
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        
+        .grade-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        /* 員工列表 */
+        .staff-list {
+            text-align: center;
+        }
+        
+        .staff-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* 增加最小寬度 */
+            gap: 30px; /* 增加間距 */
+            margin-bottom: 50px;
+        }
+        
+        .staff-btn {
+            padding: 45px; /* 增加padding */
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+            border: none;
+            border-radius: 18px;
+            font-size: 26px; /* 加大字體 */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        
+        .staff-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        /* 員工詳情 */
+        .staff-details {
+            text-align: center;
+        }
+        
+        .staff-info {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 40px; /* 增加padding */
+            border-radius: 18px;
+            margin-bottom: 50px;
+            border-left: 8px solid #00b894; /* 加粗邊框 */
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* 增加最小寬度 */
+            gap: 25px;
+            text-align: left;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            width: 160px; /* 增加寬度 */
+            font-size: 22px; /* 加大字體 */
+        }
+        
+        .info-value {
+            color: #34495e;
+            font-size: 22px; /* 加大字體 */
+            flex: 1;
+        }
+        
+        /* 新增：評估時間表樣式 */
+        .assessment-section {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            padding: 35px;
+            border-radius: 18px;
+            margin-bottom: 50px;
+            border-left: 8px solid #f39c12;
+        }
+        
+        .assessment-title {
+            color: #e67e22;
+            font-size: 28px; /* 加大字體 */
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .assessment-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .assessment-item {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+        }
+        
+        .assessment-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .assessment-item.overdue {
+            border-left: 6px solid #e74c3c;
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+        }
+        
+        .assessment-item.due-soon {
+            border-left: 6px solid #f39c12;
+            background: linear-gradient(135deg, #fff8e1, #ffecb3);
+        }
+        
+        .assessment-item.completed {
+            border-left: 6px solid #00b894;
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+        }
+        
+        .assessment-info {
+            flex: 1;
+        }
+        
+        .assessment-name {
+            font-size: 20px; /* 加大字體 */
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .assessment-deadline {
+            font-size: 16px; /* 加大字體 */
+            color: #7f8c8d;
+        }
+        
+        .assessment-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .status-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px; /* 加大字體 */
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .status-overdue {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .status-due-soon {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .status-completed {
+            background: #00b894;
+            color: white;
+        }
+        
+        .status-pending {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px; /* 加大字體 */
+            cursor: pointer;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 20px; /* 增加checkbox大小 */
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .training-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* 增加最小寬度 */
+            gap: 35px; /* 增加間距 */
+            margin-bottom: 50px;
+        }
+        
+        .training-card {
+            background: white;
+            border-radius: 22px; /* 增加圓角 */
+            padding: 35px; /* 增加padding */
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 3px solid transparent;
+            position: relative;
+        }
+        
+        .training-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border-color: #00b894;
+        }
+        
+        .training-card.completed {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+        
+        .training-icon {
+            font-size: 48px; /* 加大圖標 */
+            margin-bottom: 18px;
+            display: block;
+        }
+        
+        .training-name {
+            font-size: 24px; /* 加大字體 */
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        
+        .training-card.completed .training-name {
+            color: white;
+        }
+        
+        .progress-circle {
+            position: relative;
+            width: 140px; /* 增加圓形大小 */
+            height: 140px;
+            margin: 0 auto 18px;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px; /* 加大字體 */
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .training-card.completed .progress-text {
+            color: white;
+        }
+        
+        .progress-info {
+            font-size: 18px; /* 加大字體 */
+            color: #7f8c8d;
+            margin-top: 12px;
+        }
+        
+        .training-card.completed .progress-info {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .completed-badge {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: #00b894;
+            color: white;
+            padding: 10px 15px; /* 增加padding */
+            border-radius: 22px;
+            font-size: 14px; /* 加大字體 */
+            font-weight: bold;
+        }
+        
+        /* 培訓詳情 */
+        .training-details {
+            text-align: center;
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        
+        .category-icon {
+            font-size: 56px; /* 加大圖標 */
+        }
+        
+        .category-name {
+            font-size: 32px; /* 加大字體 */
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .progress-summary {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 35px;
+            border-radius: 18px;
+            margin-bottom: 50px;
+        }
+        
+        .progress-circle-large {
+            position: relative;
+            width: 170px; /* 增加大小 */
+            height: 170px;
+            margin: 0 auto 25px;
+        }
+        
+        .progress-text-large {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px; /* 加大字體 */
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px; /* 增加間距 */
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 28px; /* 加大字體 */
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            font-size: 16px; /* 加大字體 */
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+        
+        .records-grid {
+            display: grid;
+            gap: 25px; /* 增加間距 */
+            text-align: left;
+        }
+        
+        .record-item {
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 15px;
+            padding: 30px; /* 增加padding */
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .record-item.completed {
+            border-color: #00b894;
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+        
+        .record-item.pending {
+            border-color: #ffeaa7;
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+        }
+        
+        .record-status {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            padding: 10px 18px; /* 增加padding */
+            border-radius: 22px;
+            font-size: 14px; /* 加大字體 */
+            font-weight: bold;
+        }
+        
+        .record-status.completed {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .record-status.pending {
+            background: rgba(0,0,0,0.1);
+            color: #2c3e50;
+        }
+        
+        .record-name {
+            font-size: 24px; /* 加大字體 */
+            font-weight: bold;
+            margin-bottom: 12px;
+            padding-right: 120px; /* 增加padding */
+        }
+        
+        .record-date {
+            font-size: 18px; /* 加大字體 */
+            opacity: 0.8;
+        }
+        
+        /* 按鈕樣式 */
+        .back-btn {
+            padding: 22px 45px; /* 增加大小 */
+            background: #636e72;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 22px; /* 加大字體 */
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 25px;
+        }
+        
+        .back-btn:hover {
+            background: #2d3436;
+        }
+        
+        .logout-btn {
+            background: #e17055;
+        }
+        
+        .logout-btn:hover {
+            background: #d63031;
+        }
+        
+        /* 隱藏頁面 */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            font-size: 32px; /* 加大字體 */
+            font-weight: bold;
+            margin-bottom: 35px;
+            border-bottom: 4px solid #ecf0f1; /* 加粗邊框 */
+            padding-bottom: 18px;
+        }
+        
+        .click-hint {
+            color: #7f8c8d;
+            font-size: 18px; /* 加大字體 */
+            margin-bottom: 35px;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 25px; /* 增加mobile padding */
+            }
+            
+            .title {
+                font-size: 32px; /* 調整mobile標題大小 */
+            }
+            
+            .grade-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .grade-btn {
+                width: 100%;
+                max-width: 350px; /* 增加最大寬度 */
+            }
+            
+            .training-grid, .staff-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .progress-stats {
+                gap: 25px;
+            }
+            
+            .assessment-item {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .checkbox-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 登入頁面 -->
+        <div id="loginPage" class="page active login-page">
+            <div class="title">🏥 TKOH A&OT<br>E-training System</div>
+            <div class="subtitle">培訓管理系統</div>
+            
+            <div class="form-group">
+                <label>Login ID</label>
+                <input type="text" id="loginId" placeholder="請輸入登入ID">
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="請輸入密碼">
+            </div>
+            
+            <button class="login-btn" onclick="login()">登入系統</button>
+            
+            <div class="error-msg" id="errorMsg" style="display: none;"></div>
+            
+            <div class="test-info">
+                <strong>🔑 測試帳號</strong><br>
+                Login ID: admin<br>
+                Password: admin123
+            </div>
+        </div>
+
+        <!-- 主選單 -->
+        <div id="mainMenu" class="page main-menu">
+            <div class="title">🏥 TKOH A&OT E-training System</div>
+            <div class="subtitle">歡迎使用培訓管理系統 👋</div>
+            
+            <div class="section-title">👥 選擇員工職級</div>
+            <div class="grade-buttons">
+                <button class="grade-btn" onclick="showStaffList('PCA1')">
+                    🩺<br>PCA1
+                </button>
+                <button class="grade-btn" onclick="showStaffList('PCA2')">
+                    🏥<br>PCA2
+                </button>
+                <button class="grade-btn" onclick="showStaffList('PCA3')">
+                    ⚕️<br>PCA3
+                </button>
+            </div>
+            
+            <button class="btn logout-btn" onclick="logout()">🚪 登出系統</button>
+        </div>
+
+        <!-- 員工列表 -->
+        <div id="staffListPage" class="page staff-list">
+            <div class="title">👥 員工列表</div>
+            <div class="subtitle" id="gradeInfo"></div>
+            
+            <div id="staffCount" class="click-hint"></div>
+            
+            <div class="staff-grid" id="staffGrid"></div>
+            
+            <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
+        </div>
+
+        <!-- 員工詳情 -->
+        <div id="staffDetailsPage" class="page staff-details">
+            <div class="title">📋 員工培訓記錄</div>
+            
+            <div class="staff-info" id="staffInfoSection"></div>
+            
+            <!-- 新增：評估時間表 -->
+            <div class="assessment-section" id="assessmentSection">
+                <div class="assessment-title">📅 各評估時間表</div>
+                <div class="assessment-grid" id="assessmentGrid"></div>
+            </div>
+            
+            <div class="section-title">🎓 培訓項目進度</div>
+            <div class="click-hint">💡 點擊培訓項目查看詳細記錄</div>
+            <div class="training-grid" id="trainingGrid"></div>
+            
+            <button class="back-btn" onclick="goBackToStaffList()">← 返回員工列表</button>
+        </div>
+
+        <!-- 培訓詳情 -->
+        <div id="trainingDetailsPage" class="page training-details">
+            <div class="title">📚 培訓詳情</div>
+            
+            <div id="trainingDetailContent"></div>
+            
+            <button class="back-btn" onclick="goBackToStaffDetails()">← 返回員工記錄</button>
+        </div>
+    </div>
+
+    <script>
+        // 資料庫
+        const staffDatabase = {
+            'PCA1': [
+                {id: 'leung_noah', name: '梁諾文'},
+                {id: 'chan_david', name: '陳大衛'},
+                {id: 'wong_mary', name: '黃美麗'},
+                {id: 'li_peter', name: '李彼得'}
+            ],
+            'PCA2': [
+                {id: 'tam_susan', name: '譚素珊'},
+                {id: 'lau_john', name: '劉約翰'},
+                {id: 'ng_linda', name: '吳琳達'}
+            ],
+            'PCA3': [
+                {id: 'ho_michael', name: '何米高'},
+                {id: 'cheung_anna', name: '張安娜'},
+                {id: 'yip_thomas', name: '葉湯馬士'}
+            ]
+        };
+
+        // 新增：評估項目配置
+        const assessmentConfig = [
+            {
+                name: '職安健簡介及測試',
+                weeksDeadline: 1,
+                type: 'safety'
+            },
+            {
+                name: '筆試',
+                weeksDeadline: 20,
+                type: 'written'
+            },
+            {
+                name: '完成培訓項目',
+                weeksDeadline: 24,
+                type: 'training'
+            }
+        ];
+
+        const staffData = {
+            'leung_noah': {
+                name: '梁諾文',
+                employeeId: '224813',
+                grade: 'PCA1', // 修正職級
+                joinDate: '08/10/2025',
+                // 新增：評估記錄
+                assessments: {
+                    'safety': { passed: false, failed: false },
+                    'written': { passed: false, failed: false },
+                    'training': { passed: false, failed: false }
+                },
+                trainingCategories: {
+                    'Decontamination': {
+                        name: 'Decontamination',
+                        icon: '🧽',
+                        completed: 2,
+                        total: 4,
+                        records: [
+                            {name: 'Basic Cleaning Procedures', completed: true, date: '01/10/2024'},
+                            {name: 'Chemical Safety Training', completed: true, date: '15/10/2024'},
+                            {name: 'Equipment Maintenance', completed: false, date: null},
+                            {name: 'Quality Control Standards', completed: false, date: null}
+                        ]
+                    },
+                    'Sterilization': {
+                        name: 'Sterilization',
+                        icon: '🔥',
+                        completed: 5,
+                        total: 5,
+                        records: [
+                            {name: 'Steam Sterilization', completed: true, date: '20/09/2024'},
+                            {name: 'ETO Sterilization', completed: true, date: '25/09/2024'},
+                            {name: 'Low Temperature Sterilization', completed: true, date: '05/10/2024'},
+                            {name: 'Biological Indicators', completed: true, date: '12/10/2024'},
+                            {name: 'Load Documentation', completed: true, date: '18/10/2024'}
+                        ]
+                    },
+                    'Endoscope': {
+                        name: 'Endoscope',
+                        icon: '🔬',
+                        completed: 1,
+                        total: 4,
+                        records: [
+                            {name: 'Pre-cleaning Procedures', completed: true, date: '10/10/2024'},
+                            {name: 'Manual Cleaning', completed: false, date: null},
+                            {name: 'Automated Reprocessing', completed: false, date: null},
+                            {name: 'Leak Testing', completed: false, date: null}
+                        ]
+                    },
+                    'Robotic Instrument': {
+                        name: 'Robotic Instrument',
+                        icon: '🤖',
+                        completed: 2,
+                        total: 3,
+                        records: [
+                            {name: 'Da Vinci System Overview', completed: true, date: '30/09/2024'},
+                            {name: 'Instrument Handling', completed: true, date: '08/10/2024'},
+                            {name: 'Troubleshooting', completed: false, date: null}
+                        ]
+                    },
+                    'Picking List': {
+                        name: 'Picking List',
+                        icon: '📋',
+                        completed: 1,
+                        total: 4,
+                        records: [
+                            {name: 'Inventory Management', completed: true, date: '12/10/2024'},
+                            {name: 'Order Processing', completed: false, date: null},
+                            {name: 'Quality Checking', completed: false, date: null},
+                            {name: 'Documentation Standards', completed: false, date: null}
+                        ]
+                    }
+                }
+            },
+            'chan_david': {
+                name: '陳大衛',
+                employeeId: '224814',
+                grade: 'PCA1', // 修正職級
+                joinDate: '15/09/2025',
+                assessments: {
+                    'safety': { passed: true, failed: false },
+                    'written': { passed: false, failed: false },
+                    'training': { passed: false, failed: false }
+                },
+                trainingCategories: {
+                    'Decontamination': {
+                        name: 'Decontamination',
+                        icon: '🧽',
+                        completed: 4,
+                        total: 4,
+                        records: [
+                            {name: 'Basic Cleaning Procedures', completed: true, date: '20/09/2024'},
+                            {name: 'Chemical Safety Training', completed: true, date: '25/09/2024'},
+                            {name: 'Equipment Maintenance', completed: true, date: '01/10/2024'},
+                            {name: 'Quality Control Standards', completed: true, date: '08/10/2024'}
+                        ]
+                    },
+                    'Sterilization': {
+                        name: 'Sterilization',
+                        icon: '🔥',
+                        completed: 3,
+                        total: 5,
+                        records: [
+                            {name: 'Steam Sterilization', completed: true, date: '18/09/2024'},
+                            {name: 'ETO Sterilization', completed: true, date: '22/09/2024'},
+                            {name: 'Low Temperature Sterilization', completed: true, date: '28/09/2024'},
+                            {name: 'Biological Indicators', completed: false, date: null},
+                            {name: 'Load Documentation', completed: false, date: null}
+                        ]
+                    },
+                    'Endoscope': {
+                        name: 'Endoscope',
+                        icon: '🔬',
+                        completed: 0,
+                        total: 4,
+                        records: [
+                            {name: 'Pre-cleaning Procedures', completed: false, date: null},
+                            {name: 'Manual Cleaning', completed: false, date: null},
+                            {name: 'Automated Reprocessing', completed: false, date: null},
+                            {name: 'Leak Testing', completed: false, date: null}
+                        ]
+                    },
+                    'Robotic Instrument': {
+                        name: 'Robotic Instrument',
+                        icon: '🤖',
+                        completed: 1,
+                        total: 3,
+                        records: [
+                            {name: 'Da Vinci System Overview', completed: true, date: '25/09/2024'},
+                            {name: 'Instrument Handling', completed: false, date: null},
+                            {name: 'Troubleshooting', completed: false, date: null}
+                        ]
+                    },
+                    'Picking List': {
+                        name: 'Picking List',
+                        icon: '📋',
+                        completed: 2,
+                        total: 4,
+                        records: [
+                            {name: 'Inventory Management', completed: true, date: '05/10/2024'},
+                            {name: 'Order Processing', completed: true, date: '10/10/2024'},
+                            {name: 'Quality Checking', completed: false, date: null},
+                            {name: 'Documentation Standards', completed: false, date: null}
+                        ]
+                    }
+                }
+            },
+            'wong_mary': {
+                name: '黃美麗',
+                employeeId: '224815',
+                grade: 'PCA1', // 修正職級
+                joinDate: '22/08/2025',
+                assessments: {
+                    'safety': { passed: true, failed: false },
+                    'written': { passed: true, failed: false },
+                    'training': { passed: false, failed: false }
+                },
+                trainingCategories: {
+                    'Decontamination': {
+                        name: 'Decontamination',
+                        icon: '🧽',
+                        completed: 3,
+                        total: 4,
+                        records: [
+                            {name: 'Basic Cleaning Procedures', completed: true, date: '15/09/2024'},
+                            {name: 'Chemical Safety Training', completed: true, date: '20/09/2024'},
+                            {name: 'Equipment Maintenance', completed: true, date: '28/09/2024'},
+                            {name: 'Quality Control Standards', completed: false, date: null}
+                        ]
+                    },
+                    'Sterilization': {
+                        name: 'Sterilization',
+                        icon: '🔥',
+                        completed: 4,
+                        total: 5,
+                        records: [
+                            {name: 'Steam Sterilization', completed: true, date: '12/09/2024'},
+                            {name: 'ETO Sterilization', completed: true, date: '18/09/2024'},
+                            {name: 'Low Temperature Sterilization', completed: true, date: '25/09/2024'},
+                            {name: 'Biological Indicators', completed: true, date: '02/10/2024'},
+                            {name: 'Load Documentation', completed: false, date: null}
+                        ]
+                    },
+                    'Endoscope': {
+                        name: 'Endoscope',
+                        icon: '🔬',
+                        completed: 2,
+                        total: 4,
+                        records: [
+                            {name: 'Pre-cleaning Procedures', completed: true, date: '30/09/2024'},
+                            {name: 'Manual Cleaning', completed: true, date: '05/10/2024'},
+                            {name: 'Automated Reprocessing', completed: false, date: null},
+                            {name: 'Leak Testing', completed: false, date: null}
+                        ]
+                    },
+                    'Robotic Instrument': {
+                        name: 'Robotic Instrument',
+                        icon: '🤖',
+                        completed: 3,
+                        total: 3,
+                        records: [
+                            {name: 'Da Vinci System Overview', completed: true, date: '22/09/2024'},
+                            {name: 'Instrument Handling', completed: true, date: '28/09/2024'},
+                            {name: 'Troubleshooting', completed: true, date: '08/10/2024'}
+                        ]
+                    },
+                    'Picking List': {
+                        name: 'Picking List',
+                        icon: '📋',
+                        completed: 4,
+                        total: 4,
+                        records: [
+                            {name: 'Inventory Management', completed: true, date: '18/09/2024'},
+                            {name: 'Order Processing', completed: true, date: '25/09/2024'},
+                            {name: 'Quality Checking', completed: true, date: '01/10/2024'},
+                            {name: 'Documentation Standards', completed: true, date: '10/10/2024'}
+                        ]
+                    }
+                }
+            }
+        };
+
+        // 全域變數
+        let currentGrade = '';
+        let currentStaffId = '';
+        let currentCategory = '';
+
+        // 新增：計算日期函數
+        function addWeeksToDate(dateStr, weeks) {
+            const [day, month, year] = dateStr.split('/');
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() + (weeks * 7));
+            
+            const newDay = String(date.getDate()).padStart(2, '0');
+            const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+            const newYear = date.getFullYear();
+            
+            return `${newDay}/${newMonth}/${newYear}`;
+        }
+
+        function daysBetweenDates(date1Str, date2Str) {
+            const [day1, month1, year1] = date1Str.split('/');
+            const [day2, month2, year2] = date2Str.split('/');
+            
+            const date1 = new Date(year1, month1 - 1, day1);
+            const date2 = new Date(year2, month2 - 1, day2);
+            
+            const diffTime = date2 - date1;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function getCurrentDate() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // 新增：計算評估狀態
+        function calculateAssessmentStatus(joinDate, weeksDeadline, assessments, assessmentType) {
+            const deadline = addWeeksToDate(joinDate, weeksDeadline);
+            const currentDate = getCurrentDate();
+            const daysToDeadline = daysBetweenDates(currentDate, deadline);
+            
+            // 檢查是否已完成
+            if (assessments[assessmentType].passed) {
+                return { status: 'completed', deadline, daysToDeadline, badge: '✅ 合格' };
+            }
+            
+            if (assessments[assessmentType].failed) {
+                return { status: 'completed', deadline, daysToDeadline, badge: '❌ 不合格' };
+            }
+            
+            // 檢查是否逾期
+            if (daysToDeadline < 0) {
+                return { status: 'overdue', deadline, daysToDeadline, badge: `⚠️ 逾期 ${Math.abs(daysToDeadline)} 天` };
+            }
+            
+            // 檢查是否即將到期 (7天內)
+            if (daysToDeadline <= 7) {
+                return { status: 'due-soon', deadline, daysToDeadline, badge: `🔔 ${daysToDeadline} 天後到期` };
+            }
+            
+            return { status: 'pending', deadline, daysToDeadline, badge: `📅 ${daysToDeadline} 天後到期` };
+        }
+
+        // 新增：保存評估結果
+        function saveAssessmentResult(staffId, assessmentType, result) {
+            if (staffData[staffId] && staffData[staffId].assessments) {
+                if (result === 'pass') {
+                    staffData[staffId].assessments[assessmentType].passed = true;
+                    staffData[staffId].assessments[assessmentType].failed = false;
+                } else if (result === 'fail') {
+                    staffData[staffId].assessments[assessmentType].passed = false;
+                    staffData[staffId].assessments[assessmentType].failed = true;
+                } else {
+                    staffData[staffId].assessments[assessmentType].passed = false;
+                    staffData[staffId].assessments[assessmentType].failed = false;
+                }
+                
+                // 重新顯示評估區域
+                displayAssessments(staffId);
+            }
+        }
+
+        // 新增：顯示評估時間表
+        function displayAssessments(staffId) {
+            const staff = staffData[staffId];
+            if (!staff) return;
+            
+            const assessmentGrid = document.getElementById('assessmentGrid');
+            let html = '';
+            
+            assessmentConfig.forEach(assessment => {
+                const assessmentStatus = calculateAssessmentStatus(
+                    staff.joinDate, 
+                    assessment.weeksDeadline, 
+                    staff.assessments, 
+                    assessment.type
+                );
+                
+                const isCompleted = staff.assessments[assessment.type].passed || staff.assessments[assessment.type].failed;
+                
+                html += `
+                    <div class="assessment-item ${assessmentStatus.status}">
+                        <div class="assessment-info">
+                            <div class="assessment-name">${assessment.name}</div>
+                            <div class="assessment-deadline">
+                                截止日期：${assessmentStatus.deadline}
+                                ${assessmentStatus.daysToDeadline >= 0 ? 
+                                    ` (入職後 ${assessment.weeksDeadline} 週)` : 
+                                    ` (已逾期 ${Math.abs(assessmentStatus.daysToDeadline)} 天)`
+                                }
+                            </div>
+                        </div>
+                        <div class="assessment-status">
+                            <div class="status-badge status-${assessmentStatus.status}">
+                                ${assessmentStatus.badge}
+                            </div>
+                            ${!isCompleted ? `
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" onchange="saveAssessmentResult('${staffId}', '${assessment.type}', 'pass')"
+                                               ${staff.assessments[assessment.type].passed ? 'checked' : ''}>
+                                        合格
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" onchange="saveAssessmentResult('${staffId}', '${assessment.type}', 'fail')"
+                                               ${staff.assessments[assessment.type].failed ? 'checked' : ''}>
+                                        不合格
+                                    </label>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            assessmentGrid.innerHTML = html;
+        }
+
+        // 登入功能
+        function login() {
+            const loginId = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (!loginId || !password) {
+                showError('請輸入Login ID和Password');
+                return;
+            }
+            
+            if (loginId === 'admin' && password === 'admin123') {
+                hideAllPages();
+                document.getElementById('mainMenu').classList.add('active');
+                clearLoginForm();
+            } else {
+                showError('Login ID或Password錯誤');
+            }
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+
+        function clearLoginForm() {
+            document.getElementById('loginId').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        // 頁面導航
+        function hideAllPages() {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+        }
+
+        function showMainMenu() {
+            hideAllPages();
+            document.getElementById('mainMenu').classList.add('active');
+        }
+
+        function showStaffList(grade) {
+            currentGrade = grade;
+            hideAllPages();
+            document.getElementById('staffListPage').classList.add('active');
+            document.getElementById('gradeInfo').textContent = `職級：${grade}`;
+            
+            const staffList = staffDatabase[grade] || [];
+            document.getElementById('staffCount').textContent = `共 ${staffList.length} 位員工`;
+            
+            const staffGrid = document.getElementById('staffGrid');
+            let html = '';
+            
+            staffList.forEach(staff => {
+                html += `<button class="staff-btn" onclick="showStaffDetails('${staff.id}')">
+                    👤 ${staff.name}
+                </button>`;
+            });
+            
+            staffGrid.innerHTML = html;
+        }
+
+        function showStaffDetails(staffId) {
+            currentStaffId = staffId;
+            const staff = staffData[staffId];
+            
+            if (!staff) {
+                alert('找不到員工資料');
+                return;
+            }
+            
+            hideAllPages();
+            document.getElementById('staffDetailsPage').classList.add('active');
+            
+            // 顯示員工資訊
+            const staffInfoSection = document.getElementById('staffInfoSection');
+            staffInfoSection.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">👤 姓名：</div>
+                        <div class="info-value">${staff.name}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">🆔 員工編號：</div>
+                        <div class="info-value">${staff.employeeId}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">🏥 職級：</div>
+                        <div class="info-value">${staff.grade}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">📅 入職日期：</div>
+                        <div class="info-value">${staff.joinDate}</div>
+                    </div>
+                </div>
+            `;
+            
+            // 顯示評估時間表
+            displayAssessments(staffId);
+            
+            // 顯示培訓項目
+            const trainingGrid = document.getElementById('trainingGrid');
+            let html = '';
+            
+            if (staff.trainingCategories) {
+                Object.keys(staff.trainingCategories).forEach(categoryKey => {
+                    const category = staff.trainingCategories[categoryKey];
+                    const percentage = category.total > 0 ? Math.round((category.completed / category.total) * 100) : 0;
+                    const isCompleted = percentage === 100;
+                    
+                    html += `
+                        <div class="training-card ${isCompleted ? 'completed' : ''}" onclick="showTrainingDetails('${categoryKey}')">
+                            ${isCompleted ? '<div class="completed-badge">✅ 完成</div>' : ''}
+                            <div class="training-icon">${category.icon}</div>
+                            <div class="training-name">${category.name}</div>
+                            <div class="progress-circle">
+                                <svg width="140" height="140" viewBox="0 0 140 140">
+                                    <circle cx="70" cy="70" r="60" fill="none" stroke="${isCompleted ? 'rgba(255,255,255,0.3)' : '#ecf0f1'}" stroke-width="12"/>
+                                    <circle cx="70" cy="70" r="60" fill="none" stroke="${isCompleted ? 'white' : (percentage > 0 ? '#74b9ff' : '#ecf0f1')}" 
+                                            stroke-width="12" stroke-dasharray="${2 * Math.PI * 60}" 
+                                            stroke-dashoffset="${2 * Math.PI * 60 * (1 - percentage / 100)}"
+                                            transform="rotate(-90 70 70)" stroke-linecap="round"/>
+                                </svg>
+                                <div class="progress-text">${percentage}%</div>
+                            </div>
+                            <div class="progress-info">
+                                ${category.completed}/${category.total} 項目完成
+                                ${isCompleted ? '<br>🎉 全部完成！' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            trainingGrid.innerHTML = html;
+        }
+
+        function showTrainingDetails(categoryKey) {
+            currentCategory = categoryKey;
+            const staff = staffData[currentStaffId];
+            const category = staff.trainingCategories[categoryKey];
+            
+            if (!category) {
+                alert('找不到培訓資料');
+                return;
+            }
+            
+            hideAllPages();
+            document.getElementById('trainingDetailsPage').classList.add('active');
+            
+            const percentage = Math.round((category.completed / category.total) * 100);
+            const isCompleted = percentage === 100;
+            const progressColor = isCompleted ? '#00b894' : '#74b9ff';
+            
+            const content = document.getElementById('trainingDetailContent');
+            content.innerHTML = `
+                <div class="staff-info" style="margin-bottom: 25px;">
+                    👤 ${staff.name} (${staff.employeeId})
+                </div>
+                
+                <div class="category-header">
+                    <div class="category-icon">${category.icon}</div>
+                    <div class="category-name">${category.name}</div>
+                </div>
+                
+                <div class="progress-summary">
+                    <div class="progress-circle-large">
+                        <svg width="170" height="170" viewBox="0 0 170 170">
+                            <circle cx="85" cy="85" r="75" fill="none" stroke="#ecf0f1" stroke-width="14"/>
+                            <circle cx="85" cy="85" r="75" fill="none" stroke="${progressColor}" 
+                                    stroke-width="14" stroke-dasharray="${2 * Math.PI * 75}" 
+                                    stroke-dashoffset="${2 * Math.PI * 75 * (1 - percentage / 100)}"
+                                    transform="rotate(-90 85 85)" stroke-linecap="round"/>
+                        </svg>
+                        <div class="progress-text-large">${percentage}%</div>
+                    </div>
+                    
+                    <div class="progress-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" style="color: #00b894;">${category.completed}</div>
+                            <div class="stat-label">已完成</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" style="color: #fd79a8;">${category.total - category.completed}</div>
+                            <div class="stat-label">待完成</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" style="color: #2c3e50;">${category.total}</div>
+                            <div class="stat-label">總項目</div>
+                        </div>
+                    </div>
+                    
+                    ${isCompleted ? '<div style="margin-top: 25px; font-size: 24px; color: #00b894; font-weight: bold;">🎉 恭喜！所有培訓項目已完成</div>' : ''}
+                </div>
+                
+                <div style="margin-top: 50px;">
+                    <div class="section-title">📋 培訓記錄明細</div>
+                    <div class="records-grid">
+            `;
+            
+            category.records.forEach(record => {
+                const statusClass = record.completed ? 'completed' : 'pending';
+                const statusText = record.completed ? '✅ 已完成' : '⏳ 待完成';
+                const dateText = record.completed ? `完成日期：${record.date}` : '尚未完成';
+                
+                content.innerHTML += `
+                    <div class="record-item ${statusClass}">
+                        <div class="record-status ${statusClass}">${statusText}</div>
+                        <div class="record-name">${record.name}</div>
+                        <div class="record-date">${dateText}</div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML += `
+                    </div>
+                </div>
+            `;
+        }
+
+        function goBackToStaffList() {
+            showStaffList(currentGrade);
+        }
+
+        function goBackToStaffDetails() {
+            showStaffDetails(currentStaffId);
+        }
+
+        function logout() {
+            if (confirm('確定要登出系統嗎？')) {
+                hideAllPages();
+                document.getElementById('loginPage').classList.add('active');
+                clearLoginForm();
+            }
+        }
+
+        // Enter鍵登入
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && document.getElementById('loginPage').classList.contains('active')) {
+                login();
+            }
+        });
+
+        // 頁面載入後聚焦
+        window.addEventListener('load', function() {
+            document.getElementById('loginId').focus();
+        });
+    </script>
+</body>
+</html>
