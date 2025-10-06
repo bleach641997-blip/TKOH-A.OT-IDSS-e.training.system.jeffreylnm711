@@ -752,6 +752,187 @@
                 justify-content: center;
             }
         }
+        /* 🆕 帳戶管理和刪除功能樣式 */
+.user-management-page {
+    text-align: center;
+}
+
+.user-list {
+    display: grid;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.user-item {
+    background: white;
+    border: 2px solid #ecf0f1;
+    border-radius: 15px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s;
+}
+
+.user-item:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.user-info {
+    flex: 1;
+    text-align: left;
+}
+
+.user-name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.user-role {
+    font-size: 16px;
+    color: #7f8c8d;
+}
+
+.delete-btn {
+    padding: 12px 25px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-left: 15px;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+}
+
+.admin-controls {
+    background: linear-gradient(135deg, #74b9ff, #0984e3);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+}
+
+.admin-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.admin-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.admin-btn {
+    padding: 15px 30px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.admin-btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: white;
+}
+
+.item-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.edit-btn {
+    padding: 8px 15px;
+    background: #f39c12;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.edit-btn:hover {
+    background: #e67e22;
+}
+
+.confirm-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-content {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.confirm-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #e74c3c;
+    margin-bottom: 20px;
+}
+
+.confirm-message {
+    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.confirm-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.confirm-yes {
+    background: #e74c3c;
+    color: white;
+}
+
+.confirm-no {
+    background: #95a5a6;
+    color: white;
+}
     </style>
 </head>
 <body>
@@ -799,7 +980,9 @@
                     ⚕️<br>PCA3
                 </button>
             </div>
-            
+            <button class="btn" onclick="showUserManagement()" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
+    👥 帳戶管理
+</button>
             <button class="btn logout-btn" onclick="logout()">🚪 登出系統</button>
         </div>
 
@@ -833,6 +1016,32 @@
             
             <button class="back-btn" onclick="goBackToStaffList()">← 返回員工列表</button>
         </div>
+
+        <!-- 🆕 帳戶管理頁面 -->
+<div id="userManagementPage" class="page user-management-page">
+    <div class="title">👥 帳戶管理系統</div>
+    <div class="subtitle">管理用戶帳戶和權限</div>
+    
+    <div class="admin-controls">
+        <div class="admin-title">📊 管理員控制台</div>
+        <div class="admin-buttons">
+            <button class="admin-btn" onclick="showAddUserModal()">
+                ➕ 新增用戶
+            </button>
+            <button class="admin-btn" onclick="exportUserData()">
+                📤 匯出用戶資料
+            </button>
+            <button class="admin-btn" onclick="showSystemSettings()">
+                ⚙️ 系統設定
+            </button>
+        </div>
+    </div>
+    
+    <div class="section-title">👤 現有用戶列表</div>
+    <div class="user-list" id="userList"></div>
+    
+    <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
+</div>
 
         <!-- 培訓詳情 -->
         <div id="trainingDetailsPage" class="page training-details">
@@ -888,9 +1097,8 @@
             'leung_noah': {
                 name: '梁諾文',
                 employeeId: '224813',
-                grade: 'PCA1', // 修正職級
+                grade: 'PCA1',
                 joinDate: '08/10/2025',
-                // 新增：評估記錄
                 assessments: {
                     'safety': { passed: false, failed: false },
                     'written': { passed: false, failed: false },
@@ -962,7 +1170,7 @@
             'chan_david': {
                 name: '陳大衛',
                 employeeId: '224814',
-                grade: 'PCA1', // 修正職級
+                grade: 'PCA1',
                 joinDate: '15/09/2025',
                 assessments: {
                     'safety': { passed: true, failed: false },
@@ -1035,7 +1243,7 @@
             'wong_mary': {
                 name: '黃美麗',
                 employeeId: '224815',
-                grade: 'PCA1', // 修正職級
+                grade: 'PCA1',
                 joinDate: '22/08/2025',
                 assessments: {
                     'safety': { passed: true, failed: false },
@@ -1107,11 +1315,43 @@
             }
         };
 
+        // 🆕 用戶帳戶系統
+        const userAccounts = {
+            'admin': { 
+                username: 'admin', 
+                password: 'admin123', 
+                role: 'admin', 
+                name: '系統管理員',
+                email: 'admin@tkoh.hk',
+                createdDate: '01/01/2024'
+            },
+            'supervisor': { 
+                username: 'supervisor', 
+                password: 'sup123', 
+                role: 'supervisor', 
+                name: '主管',
+                email: 'supervisor@tkoh.hk',
+                createdDate: '15/01/2024'
+            },
+            'trainer': { 
+                username: 'trainer', 
+                password: 'train123', 
+                role: 'trainer', 
+                name: '培訓員',
+                email: 'trainer@tkoh.hk',
+                createdDate: '01/02/2024'
+            }
+        };
+
+        // 🆕 當前登入用戶
+        let currentUser = null;
+        let currentUserRole = 'admin';
+
         // 全域變數
         let currentGrade = '';
         let currentStaffId = '';
         let currentCategory = '';
-        let currentRecordIndex = -1; // 🆕 當前記錄索引
+        let currentRecordIndex = -1;
 
         // 新增：計算日期函數
         function addWeeksToDate(dateStr, weeks) {
@@ -1248,7 +1488,7 @@
             assessmentGrid.innerHTML = html;
         }
 
-        // 登入功能
+        // 🔥 修改登入功能
         function login() {
             const loginId = document.getElementById('loginId').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -1259,10 +1499,27 @@
                 return;
             }
             
-            if (loginId === 'admin' && password === 'admin123') {
+            // 檢查用戶帳戶
+            const user = userAccounts[loginId];
+            if (user && user.password === password) {
+                currentUser = user;
+                currentUserRole = user.role;
+                
                 hideAllPages();
                 document.getElementById('mainMenu').classList.add('active');
                 clearLoginForm();
+                
+                // 顯示登入成功訊息
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = `
+                    position: fixed; top: 20px; right: 20px; z-index: 9999;
+                    background: #00b894; color: white; padding: 15px 25px;
+                    border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                `;
+                successMsg.textContent = `✅ 歡迎，${user.name}！`;
+                document.body.appendChild(successMsg);
+                setTimeout(() => successMsg.remove(), 3000);
+                
             } else {
                 showError('Login ID或Password錯誤');
             }
@@ -1994,6 +2251,224 @@
             
             closeRecordModal();
             showTrainingDetails(currentCategory); // 重新載入頁面
+        }
+
+        // 🆕 帳戶管理功能
+        function showUserManagement() {
+            if (currentUserRole !== 'admin') {
+                alert('❌ 權限不足！只有管理員可以訪問帳戶管理！');
+                return;
+            }
+            
+            hideAllPages();
+            document.getElementById('userManagementPage').classList.add('active');
+            displayUserList();
+        }
+
+        function displayUserList() {
+            const userList = document.getElementById('userList');
+            let html = '';
+            
+            Object.values(userAccounts).forEach(user => {
+                const roleColor = user.role === 'admin' ? '#e74c3c' : 
+                                 user.role === 'supervisor' ? '#f39c12' : '#00b894';
+                
+                html += `
+                    <div class="user-item">
+                        <div class="user-info">
+                            <div class="user-name">${user.name} (@${user.username})</div>
+                            <div class="user-role" style="color: ${roleColor};">
+                                👤 ${user.role === 'admin' ? '管理員' : 
+                                    user.role === 'supervisor' ? '主管' : '培訓員'} | 
+                                📧 ${user.email} | 📅 ${user.createdDate}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="edit-btn" onclick="editUser('${user.username}')">
+                                ✏️ 編輯
+                            </button>
+                            ${user.username !== 'admin' ? `
+                                <button class="delete-btn" onclick="confirmDeleteUser('${user.username}', '${user.name}')">
+                                    🗑️ 刪除
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            userList.innerHTML = html;
+        }
+
+        // 🆕 新增用戶功能
+        function showAddUserModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%;">
+                    <h3 style="text-align: center; margin-bottom: 30px; font-size: 24px; color: #2c3e50;">
+                        🆕 新增用戶帳戶
+                    </h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">👤 用戶名稱：</label>
+                        <input type="text" id="newUserName" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px;" placeholder="例如：張三">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">🔑 登入帳號：</label>
+                        <input type="text" id="newUsername" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px;" placeholder="例如：john_doe">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">🔒 密碼：</label>
+                        <input type="password" id="newPassword" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px;" placeholder="設定登入密碼">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">📧 電子郵件：</label>
+                        <input type="email" id="newEmail" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px;" placeholder="例如：john@tkoh.hk">
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">👑 用戶權限：</label>
+                        <select id="newUserRole" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px;">
+                            <option value="trainer">培訓員 (基本權限)</option>
+                            <option value="supervisor">主管 (進階權限)</option>
+                            <option value="admin">管理員 (完整權限)</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="closeUserModal()" style="padding: 12px 25px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            ❌ 取消
+                        </button>
+                        <button onclick="addNewUser()" style="padding: 12px 25px; background: #00b894; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            ✅ 新增用戶
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            window.currentUserModal = modal;
+        }
+
+        function addNewUser() {
+            const name = document.getElementById('newUserName').value.trim();
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const role = document.getElementById('newUserRole').value;
+            
+            if (!name || !username || !password || !email) {
+                alert('❌ 請填寫所有必填欄位！');
+                return;
+            }
+            
+            if (userAccounts[username]) {
+                alert('❌ 此用戶名已存在！');
+                return;
+            }
+            
+            // 新增用戶
+            userAccounts[username] = {
+                username: username,
+                password: password,
+                role: role,
+                name: name,
+                email: email,
+                createdDate: getCurrentDate()
+            };
+            
+            closeUserModal();
+            displayUserList();
+            
+            // 顯示成功訊息
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 9999;
+                background: #00b894; color: white; padding: 15px 25px;
+                border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            `;
+            successMsg.textContent = `✅ 用戶「${name}」新增成功！`;
+            document.body.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 3000);
+        }
+
+        function closeUserModal() {
+            if (window.currentUserModal) {
+                document.body.removeChild(window.currentUserModal);
+                window.currentUserModal = null;
+            }
+        }
+
+        // 🆕 刪除用戶確認
+        function confirmDeleteUser(username, name) {
+            const modal = document.createElement('div');
+            modal.className = 'confirm-dialog';
+            
+            modal.innerHTML = `
+                <div class="confirm-content">
+                    <div class="confirm-title">⚠️ 確認刪除</div>
+                    <div class="confirm-message">
+                        您確定要刪除用戶「${name}」嗎？<br>
+                        <strong>此操作無法復原！</strong>
+                    </div>
+                    <div class="confirm-buttons">
+                        <button class="confirm-btn confirm-no" onclick="closeConfirmDialog()">
+                            ❌ 取消
+                        </button>
+                        <button class="confirm-btn confirm-yes" onclick="deleteUser('${username}')">
+                            🗑️ 確認刪除
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            window.currentConfirmDialog = modal;
+        }
+
+        function deleteUser(username) {
+            delete userAccounts[username];
+            closeConfirmDialog();
+            displayUserList();
+            
+            // 顯示成功訊息
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 9999;
+                background: #e74c3c; color: white; padding: 15px 25px;
+                border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            `;
+            successMsg.textContent = `🗑️ 用戶已成功刪除！`;
+            document.body.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 3000);
+        }
+
+        function closeConfirmDialog() {
+            if (window.currentConfirmDialog) {
+                document.body.removeChild(window.currentConfirmDialog);
+                window.currentConfirmDialog = null;
+            }
+        }
+
+        function editUser(username) {
+            alert('編輯功能開發中...');
+        }
+
+        function exportUserData() {
+            alert('匯出功能開發中...');
+        }
+
+        function showSystemSettings() {
+            alert('系統設定開發中...');
         }
 
         // 🔥 Firebase 儲存新培訓項目函數
