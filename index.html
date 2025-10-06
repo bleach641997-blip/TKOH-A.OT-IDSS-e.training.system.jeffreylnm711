@@ -1392,5 +1392,167 @@
             document.getElementById('loginId').focus();
         });
     </script>
+    <!-- Firebase SDK -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBUCakw1zrm4atg5TQ6lFHgGJ88Gofm6G0",
+    authDomain: "tkoh-training-system-74b07.firebaseapp.com",
+    projectId: "tkoh-training-system-74b07",
+    storageBucket: "tkoh-training-system-74b07.firebasestorage.app",
+    messagingSenderId: "1044004131681",
+    appId: "1:1044004131681:web:8004fbf63324b98dc3eb20"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  console.log("🔥 Firebase 已成功連接！");
+
+  // 🔥 修改原有的 saveAssessmentResult 函數
+  window.originalSaveAssessmentResult = window.saveAssessmentResult || function() {};
+  
+  window.saveAssessmentResult = async function(staffId, assessmentType, result) {
+    if (staffData[staffId] && staffData[staffId].assessments) {
+      if (result === 'pass') {
+        staffData[staffId].assessments[assessmentType].passed = true;
+        staffData[staffId].assessments[assessmentType].failed = false;
+      } else if (result === 'fail') {
+        staffData[staffId].assessments[assessmentType].passed = false;
+        staffData[staffId].assessments[assessmentType].failed = true;
+      } else {
+        staffData[staffId].assessments[assessmentType].passed = false;
+        staffData[staffId].assessments[assessmentType].failed = false;
+      }
+      
+      // 🔥 儲存到 Firebase
+      try {
+        await addDoc(collection(db, "assessments"), {
+          staffId: staffId,
+          staffName: staffData[staffId].name,
+          assessmentType: assessmentType,
+          result: result,
+          passed: result === 'pass',
+          failed: result === 'fail',
+          timestamp: new Date(),
+          updatedBy: "admin",
+          date: new Date().toLocaleDateString('en-GB')
+        });
+        console.log("✅ 評估結果已儲存到 Firebase");
+        
+        // 顯示成功訊息
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = `
+          position: fixed; top: 20px; right: 20px; z-index: 9999;
+          background: #00b894; color: white; padding: 15px 25px;
+          border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        `;
+        successMsg.textContent = '✅ 評估結果已成功儲存到雲端！';
+        document.body.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
+        
+      } catch (e) {
+        console.error("❌ Firebase 儲存失敗: ", e);
+        alert("❌ 儲存失敗，請檢查網絡連接！");
+      }
+      
+      // 重新顯示評估區域
+      displayAssessments(staffId);
+    }
+  };
+
+  // 🔥 儲存培訓記錄到 Firebase
+  window.saveTrainingRecord = async function(staffId, category, recordName, completed) {
+    try {
+      await addDoc(collection(db, "training-records"), {
+        staffId: staffId,
+        staffName: staffData[staffId] ? staffData[staffId].name : '',
+        category: category,
+        recordName: recordName,
+        completed: completed,
+        completedDate: completed ? new Date().toLocaleDateString('en-GB') : null,
+        timestamp: new Date(),
+        updatedBy: "admin"
+      });
+      console.log("✅ 培訓記錄已儲存到 Firebase");
+    } catch (e) {
+      console.error("❌ 培訓記錄儲存失敗: ", e);
+    }
+  };
+
+  // 🔥 載入 Firebase 資料
+  window.loadFirebaseData = async function() {
+    try {
+      console.log("📥 正在載入 Firebase 資料...");
+      
+      // 載入評估記錄
+      const assessmentQuery = query(collection(db, "assessments"), orderBy("timestamp", "desc"));
+      const assessmentSnapshot = await getDocs(assessmentQuery);
+      
+      console.log("📊 評估記錄：");
+      assessmentSnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log(`${data.staffName} - ${data.assessmentType}: ${data.result}`);
+      });
+
+      // 載入培訓記錄
+      const trainingQuery = query(collection(db, "training-records"), orderBy("timestamp", "desc"));
+      const trainingSnapshot = await getDocs(trainingQuery);
+      
+      console.log("📚 培訓記錄：");
+      trainingSnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log(`${data.staffName} - ${data.category} - ${data.recordName}: ${data.completed ? '完成' : '未完成'}`);
+      });
+
+      return {
+        assessments: assessmentSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()})),
+        trainings: trainingSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}))
+      };
+      
+    } catch (e) {
+      console.error("❌ 載入 Firebase 資料失敗: ", e);
+      return { assessments: [], trainings: [] };
+    }
+  };
+
+  // 🔥 頁面載入時自動載入資料
+  window.addEventListener('load', function() {
+    console.log("🚀 系統啟動，正在載入雲端資料...");
+    loadFirebaseData();
+  });
+
+  // 🔥 添加手動備份功能
+  window.backupToFirebase = async function() {
+    try {
+      console.log("💾 開始備份本地資料到 Firebase...");
+      
+      for (const staffId in staffData) {
+        const staff = staffData[staffId];
+        
+        // 備份員工基本資料
+        await addDoc(collection(db, "staff-backup"), {
+          staffId: staffId,
+          staffData: staff,
+          backupDate: new Date(),
+          backupBy: "admin"
+        });
+      }
+      
+      console.log("✅ 備份完成！");
+      alert("✅ 本地資料已成功備份到雲端！");
+      
+    } catch (e) {
+      console.error("❌ 備份失敗: ", e);
+      alert("❌ 備份失敗，請重試！");
+    }
+  };
+
+</script>
 </body>
 </html>
