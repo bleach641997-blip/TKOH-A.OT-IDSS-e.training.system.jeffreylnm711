@@ -1245,8 +1245,15 @@
             displayAssessments(staffId);
             
             // 顯示培訓項目
-            const trainingGrid = document.getElementById('trainingGrid');
-            let html = '';
+            // 顯示培訓項目
+const trainingGrid = document.getElementById('trainingGrid');
+let html = `
+    <div class="training-card add-new-card" onclick="showAddTrainingModal()" style="border: 3px dashed #74b9ff; background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+        <div class="training-icon" style="font-size: 48px; color: #74b9ff;">➕</div>
+        <div class="training-name" style="color: #74b9ff;">新增培訓項目</div>
+        <div class="progress-info" style="color: #74b9ff;">點擊新增自訂培訓項目</div>
+    </div>
+`;
             
             if (staff.trainingCategories) {
                 Object.keys(staff.trainingCategories).forEach(categoryKey => {
@@ -1391,6 +1398,161 @@
         window.addEventListener('load', function() {
             document.getElementById('loginId').focus();
         });
+        // 🆕 新增培訓項目功能
+function showAddTrainingModal() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 500px; width: 90%;">
+            <h3 style="text-align: center; margin-bottom: 30px; font-size: 24px; color: #2c3e50;">
+                🆕 新增培訓項目
+            </h3>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                    📚 項目名稱：
+                </label>
+                <input type="text" id="newTrainingName" 
+                       style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;"
+                       placeholder="例如：Advanced Cleaning Procedures">
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                    🎯 選擇圖標：
+                </label>
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
+                    <button class="icon-btn" data-icon="🧽" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🧽</button>
+                    <button class="icon-btn" data-icon="🔥" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🔥</button>
+                    <button class="icon-btn" data-icon="🔬" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🔬</button>
+                    <button class="icon-btn" data-icon="🤖" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🤖</button>
+                    <button class="icon-btn" data-icon="📋" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">📋</button>
+                    <button class="icon-btn" data-icon="⚕️" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">⚕️</button>
+                    <button class="icon-btn" data-icon="🧪" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🧪</button>
+                    <button class="icon-btn" data-icon="🩺" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🩺</button>
+                    <button class="icon-btn" data-icon="💉" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">💉</button>
+                    <button class="icon-btn" data-icon="🏥" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🏥</button>
+                    <button class="icon-btn" data-icon="🔧" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">🔧</button>
+                    <button class="icon-btn" data-icon="⚙️" style="padding: 10px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 24px; cursor: pointer; background: white;">⚙️</button>
+                </div>
+                <input type="hidden" id="selectedIcon" value="🧽">
+            </div>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+                <button onclick="closeModal()" 
+                        style="padding: 15px 30px; background: #95a5a6; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                    ❌ 取消
+                </button>
+                <button onclick="addNewTrainingCategory()" 
+                        style="padding: 15px 30px; background: #00b894; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                    ✅ 新增項目
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 圖標選擇功能
+    modal.querySelectorAll('.icon-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            modal.querySelectorAll('.icon-btn').forEach(b => b.style.background = 'white');
+            this.style.background = '#74b9ff';
+            document.getElementById('selectedIcon').value = this.dataset.icon;
+        });
+    });
+    
+    window.currentModal = modal;
+}
+
+function closeModal() {
+    if (window.currentModal) {
+        document.body.removeChild(window.currentModal);
+        window.currentModal = null;
+    }
+}
+
+async function addNewTrainingCategory() {
+    const name = document.getElementById('newTrainingName').value.trim();
+    const icon = document.getElementById('selectedIcon').value;
+    
+    if (!name) {
+        alert('❌ 請輸入項目名稱！');
+        return;
+    }
+    
+    // 生成唯一的 key
+    const categoryKey = name.replace(/\s+/g, '_').toLowerCase();
+    
+    // 檢查是否已存在
+    if (staffData[currentStaffId].trainingCategories[categoryKey]) {
+        alert('❌ 此項目已存在！');
+        return;
+    }
+    
+    // 新增到當前員工資料
+    staffData[currentStaffId].trainingCategories[categoryKey] = {
+        name: name,
+        icon: icon,
+        completed: 0,
+        total: 0,
+        records: []
+    };
+    
+    // 🔥 儲存到 Firebase
+    try {
+        if (window.saveTrainingCategoryToFirebase) {
+            await window.saveTrainingCategoryToFirebase(currentStaffId, categoryKey, {
+                name: name,
+                icon: icon,
+                completed: 0,
+                total: 0,
+                records: []
+            });
+        }
+        
+        // 顯示成功訊息
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            background: #00b894; color: white; padding: 15px 25px;
+            border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        `;
+        successMsg.textContent = `✅ 新培訓項目「${name}」已成功新增！`;
+        document.body.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
+        
+    } catch (e) {
+        console.error("❌ 儲存培訓項目失敗: ", e);
+    }
+    
+    closeModal();
+    showStaffDetails(currentStaffId); // 重新載入頁面
+}
+
+// 🔥 Firebase 儲存新培訓項目函數 (加到 Firebase script 部分)
+window.saveTrainingCategoryToFirebase = async function(staffId, categoryKey, categoryData) {
+    if (typeof addDoc !== 'undefined') {
+        try {
+            await addDoc(collection(db, "training-categories"), {
+                staffId: staffId,
+                staffName: staffData[staffId].name,
+                categoryKey: categoryKey,
+                categoryData: categoryData,
+                timestamp: new Date(),
+                createdBy: "admin"
+            });
+            console.log("✅ 新培訓項目已儲存到 Firebase");
+        } catch (e) {
+            console.error("❌ 培訓項目儲存失敗: ", e);
+        }
+    }
+};
     </script>
     <!-- Firebase SDK -->
 <script type="module">
