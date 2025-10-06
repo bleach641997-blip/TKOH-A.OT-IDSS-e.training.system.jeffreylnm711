@@ -2163,11 +2163,98 @@
     }
   };
 
-  // 🔥 頁面載入時自動載入資料
-  window.addEventListener('load', function() {
-    console.log("🚀 系統啟動，正在載入雲端資料...");
-    loadFirebaseData();
-  });
+// 🔥 載入員工基本資料
+window.loadStaffDataFromFirebase = async function() {
+  try {
+    console.log("📥 載入員工基本資料...");
+    
+    // 載入新增嘅培訓項目
+    const categoriesQuery = query(collection(db, "training-categories"), orderBy("timestamp", "desc"));
+    const categoriesSnapshot = await getDocs(categoriesQuery);
+    
+    categoriesSnapshot.forEach((doc) => {
+      const data = doc.data();
+      const { staffId, categoryKey, categoryData } = data;
+      
+      if (staffData[staffId] && staffData[staffId].trainingCategories) {
+        staffData[staffId].trainingCategories[categoryKey] = categoryData;
+        console.log(`✅ 載入培訓項目：${data.staffName} - ${categoryData.name}`);
+      }
+    });
+
+    // 載入新增嘅培訓記錄
+    const recordsQuery = query(collection(db, "training-record-details"), orderBy("timestamp", "desc"));
+    const recordsSnapshot = await getDocs(recordsQuery);
+    
+    recordsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      const { staffId, categoryKey, recordData } = data;
+      
+      if (staffData[staffId] && 
+          staffData[staffId].trainingCategories && 
+          staffData[staffId].trainingCategories[categoryKey]) {
+        
+        const category = staffData[staffId].trainingCategories[categoryKey];
+        
+        // 檢查記錄是否已存在
+        const existingRecord = category.records.find(record => record.name === recordData.name);
+        if (!existingRecord) {
+          category.records.push(recordData);
+          category.total = category.records.length;
+          category.completed = category.records.filter(record => record.completed).length;
+          console.log(`✅ 載入培訓記錄：${data.staffName} - ${recordData.name}`);
+        }
+      }
+    });
+
+    // 載入評估結果
+    const assessmentsQuery = query(collection(db, "assessments"), orderBy("timestamp", "desc"));
+    const assessmentsSnapshot = await getDocs(assessmentsQuery);
+    
+    // 建立最新評估狀態
+    const latestAssessments = {};
+    
+    assessmentsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      const key = `${data.staffId}-${data.assessmentType}`;
+      
+      if (!latestAssessments[key]) {
+        latestAssessments[key] = data;
+      }
+    });
+    
+    // 應用最新評估結果
+    Object.values(latestAssessments).forEach(assessment => {
+      if (staffData[assessment.staffId] && staffData[assessment.staffId].assessments) {
+        staffData[assessment.staffId].assessments[assessment.assessmentType] = {
+          passed: assessment.passed,
+          failed: assessment.failed
+        };
+        console.log(`✅ 載入評估結果：${assessment.staffName} - ${assessment.assessmentType}: ${assessment.result}`);
+      }
+    });
+
+    console.log("🎉 Firebase 資料載入完成！");
+    return true;
+    
+  } catch (e) {
+    console.error("❌ 載入 Firebase 資料失敗: ", e);
+    return false;
+  }
+};
+
+// 🔥 修改頁面載入事件
+window.addEventListener('load', async function() {
+  console.log("🚀 系統啟動中...");
+  
+  // 先載入 Firebase 資料
+  await loadStaffDataFromFirebase();
+  
+  // 然後聚焦登入欄位
+  document.getElementById('loginId').focus();
+  
+  console.log("✅ 系統準備就緒！");
+});
 
   // 🔥 添加手動備份功能
   window.backupToFirebase = async function() {
