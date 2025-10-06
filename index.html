@@ -2634,59 +2634,7 @@ category.records.forEach((record, index) => {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  console.log("🔥 Firebase 已成功連接！");
-
-  // 🔥 修改原有的 saveAssessmentResult 函數
-  window.originalSaveAssessmentResult = window.saveAssessmentResult || function() {};
-  
-  window.saveAssessmentResult = async function(staffId, assessmentType, result) {
-    if (staffData[staffId] && staffData[staffId].assessments) {
-      if (result === 'pass') {
-        staffData[staffId].assessments[assessmentType].passed = true;
-        staffData[staffId].assessments[assessmentType].failed = false;
-      } else if (result === 'fail') {
-        staffData[staffId].assessments[assessmentType].passed = false;
-        staffData[staffId].assessments[assessmentType].failed = true;
-      } else {
-        staffData[staffId].assessments[assessmentType].passed = false;
-        staffData[staffId].assessments[assessmentType].failed = false;
-      }
-      
-      // 🔥 儲存到 Firebase
-      try {
-        await addDoc(collection(db, "assessments"), {
-          staffId: staffId,
-          staffName: staffData[staffId].name,
-          assessmentType: assessmentType,
-          result: result,
-          passed: result === 'pass',
-          failed: result === 'fail',
-          timestamp: new Date(),
-          updatedBy: "admin",
-          date: new Date().toLocaleDateString('en-GB')
-        });
-        console.log("✅ 評估結果已儲存到 Firebase");
-        
-        // 顯示成功訊息
-        const successMsg = document.createElement('div');
-        successMsg.style.cssText = `
-          position: fixed; top: 20px; right: 20px; z-index: 9999;
-          background: #00b894; color: white; padding: 15px 25px;
-          border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        `;
-        successMsg.textContent = '✅ 評估結果已成功儲存到雲端！';
-        document.body.appendChild(successMsg);
-        setTimeout(() => successMsg.remove(), 3000);
-        
-      } catch (e) {
-        console.error("❌ Firebase 儲存失敗: ", e);
-        alert("❌ 儲存失敗，請檢查網絡連接！");
-      }
-      
-      // 重新顯示評估區域
-      displayAssessments(staffId);
-    }
-  };
+console.log("🔥 Firebase 已成功連接！");
 
   // 🔥 儲存培訓記錄到 Firebase
   window.saveTrainingRecord = async function(staffId, category, recordName, completed) {
