@@ -533,7 +533,17 @@
             border-color: #ffeaa7;
             background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
         }
+
+        .record-item.failed {
+            border-color: #e74c3c;
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+        }
         
+        .record-status.failed {
+            background: #e74c3c;
+            color: white;
+        }
         .record-status {
             position: absolute;
             top: 18px;
@@ -932,6 +942,37 @@
 .confirm-no {
     background: #95a5a6;
     color: white;
+}
+        /* 🆕 評估動作按鈕樣式 */
+.assessment-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.assessment-action-btn.active-pass:hover {
+    background: #00a085 !important;
+}
+
+.assessment-action-btn.active-fail:hover {
+    background: #d63031 !important;
+}
+
+.assessment-action-btn:not(.active-pass):not(.active-fail):hover {
+    background: #f8f9fa !important;
+}
+
+@media (max-width: 768px) {
+    .assessment-action-btn {
+        font-size: 14px !important;
+        padding: 8px 15px !important;
+        margin: 5px 0 !important;
+        width: 100%;
+    }
+    
+    .checkbox-group {
+        flex-direction: column;
+        gap: 10px;
+    }
 }
     </style>
 </head>
@@ -1413,23 +1454,64 @@
             return { status: 'pending', deadline, daysToDeadline, badge: `📅 ${daysToDeadline} 天後到期` };
         }
 
-        // 新增：保存評估結果
+// 🔥 修改評估結果保存 - 支援切換功能
         function saveAssessmentResult(staffId, assessmentType, result) {
             if (staffData[staffId] && staffData[staffId].assessments) {
+                const currentAssessment = staffData[staffId].assessments[assessmentType];
+                
                 if (result === 'pass') {
-                    staffData[staffId].assessments[assessmentType].passed = true;
-                    staffData[staffId].assessments[assessmentType].failed = false;
+                    if (currentAssessment.passed) {
+                        // 已經合格 → 取消合格
+                        currentAssessment.passed = false;
+                        currentAssessment.failed = false;
+                        showSuccessMessage('⏳', `「${getAssessmentName(assessmentType)}」已取消合格狀態！`, '#f39c12');
+                    } else {
+                        // 未合格 → 設為合格
+                        currentAssessment.passed = true;
+                        currentAssessment.failed = false;
+                        showSuccessMessage('✅', `「${getAssessmentName(assessmentType)}」已標記為合格！`, '#00b894');
+                    }
                 } else if (result === 'fail') {
-                    staffData[staffId].assessments[assessmentType].passed = false;
-                    staffData[staffId].assessments[assessmentType].failed = true;
-                } else {
-                    staffData[staffId].assessments[assessmentType].passed = false;
-                    staffData[staffId].assessments[assessmentType].failed = false;
+                    if (currentAssessment.failed) {
+                        // 已經不合格 → 取消不合格
+                        currentAssessment.passed = false;
+                        currentAssessment.failed = false;
+                        showSuccessMessage('⏳', `「${getAssessmentName(assessmentType)}」已取消不合格狀態！`, '#f39c12');
+                    } else {
+                        // 未不合格 → 設為不合格
+                        currentAssessment.passed = false;
+                        currentAssessment.failed = true;
+                        showSuccessMessage('❌', `「${getAssessmentName(assessmentType)}」已標記為不合格！`, '#e74c3c');
+                    }
                 }
                 
                 // 重新顯示評估區域
                 displayAssessments(staffId);
             }
+        }
+
+        // 🆕 取得評估項目名稱
+        function getAssessmentName(assessmentType) {
+            const assessmentNames = {
+                'safety': '職安健簡介及測試',
+                'written': '筆試',
+                'training': '完成培訓項目'
+            };
+            return assessmentNames[assessmentType] || assessmentType;
+        }
+
+        // 🆕 顯示成功訊息函數
+        function showSuccessMessage(icon, message, color) {
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 9999;
+                background: ${color}; color: white; padding: 15px 25px;
+                border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                font-size: 16px;
+            `;
+            successMsg.textContent = `${icon} ${message}`;
+            document.body.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 2500);
         }
 
         // 新增：顯示評估時間表
@@ -1466,20 +1548,18 @@
                             <div class="status-badge status-${assessmentStatus.status}">
                                 ${assessmentStatus.badge}
                             </div>
-                            ${!isCompleted ? `
-                                <div class="checkbox-group">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" onchange="saveAssessmentResult('${staffId}', '${assessment.type}', 'pass')"
-                                               ${staff.assessments[assessment.type].passed ? 'checked' : ''}>
-                                        合格
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" onchange="saveAssessmentResult('${staffId}', '${assessment.type}', 'fail')"
-                                               ${staff.assessments[assessment.type].failed ? 'checked' : ''}>
-                                        不合格
-                                    </label>
-                                </div>
-                            ` : ''}
+<div class="checkbox-group">
+                                <button class="assessment-action-btn ${staff.assessments[assessment.type].passed ? 'active-pass' : ''}"
+                                        onclick="saveAssessmentResult('${staffId}', '${assessment.type}', 'pass')"
+                                        style="padding: 10px 20px; border: 2px solid #00b894; border-radius: 8px; background: ${staff.assessments[assessment.type].passed ? '#00b894' : 'white'}; color: ${staff.assessments[assessment.type].passed ? 'white' : '#00b894'}; font-weight: bold; cursor: pointer; transition: all 0.3s; margin-right: 10px;">
+                                    ${staff.assessments[assessment.type].passed ? '✅ 已合格 (點擊取消)' : '⭕ 標記合格'}
+                                </button>
+                                <button class="assessment-action-btn ${staff.assessments[assessment.type].failed ? 'active-fail' : ''}"
+                                        onclick="saveAssessmentResult('${staffId}', '${assessment.type}', 'fail')"
+                                        style="padding: 10px 20px; border: 2px solid #e74c3c; border-radius: 8px; background: ${staff.assessments[assessment.type].failed ? '#e74c3c' : 'white'}; color: ${staff.assessments[assessment.type].failed ? 'white' : '#e74c3c'}; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+                                    ${staff.assessments[assessment.type].failed ? '❌ 不合格 (點擊取消)' : '⭕ 標記不合格'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1714,10 +1794,26 @@
                     <div class="records-grid">
             `;
             
-            category.records.forEach((record, index) => {
-                const statusClass = record.completed ? 'completed' : 'pending';
-                const statusText = record.completed ? '✅ 已完成' : '⏳ 待完成';
-                const dateText = record.completed ? `完成日期：${record.date}` : '尚未完成';
+category.records.forEach((record, index) => {
+                // 🔥 修正狀態判斷邏輯
+                let statusClass, statusText, dateText;
+                
+                if (record.failed) {
+                    // 失敗狀態
+                    statusClass = 'failed';
+                    statusText = '❌ 失敗需重做';
+                    dateText = `評核日期：${record.date} | 狀態：需要重新評核`;
+                } else if (record.completed) {
+                    // 完成狀態
+                    statusClass = 'completed';
+                    statusText = '✅ 已完成';
+                    dateText = `完成日期：${record.date}`;
+                } else {
+                    // 待完成狀態
+                    statusClass = 'pending';
+                    statusText = '⏳ 待完成';
+                    dateText = '尚未完成';
+                }
                 
                 content.innerHTML += `
                     <div class="record-item ${statusClass}" onclick="openTrainingRecord(${index})">
@@ -1727,7 +1823,7 @@
                         ${record.type === 'assessment' || record.type === 'checklist' ? 
                             `<div style="margin-top: 10px; font-size: 14px; opacity: 0.8;">
                                 📋 ${record.type === 'assessment' ? '評核項目' : '檢查清單'} 
-                                ${record.assessmentItems ? `(${record.completedItems || 0}/${record.totalItems} 項目完成)` : ''}
+                                ${record.assessmentItems ? `(${record.completedItems || 0}/${record.totalItems} 通過${record.failedItems ? `, ${record.failedItems} 失敗` : ''})` : ''}
                             </div>` : ''
                         }
                     </div>
@@ -1849,7 +1945,7 @@
             window.currentAssessmentModal = modal;
         }
 
-        // 🆕 設置評核項目結果
+// 🔥 修正設置評核項目結果
         function setAssessmentItemResult(itemIndex, result) {
             const staff = staffData[currentStaffId];
             const category = staff.trainingCategories[currentCategory];
@@ -1871,58 +1967,67 @@
             const itemRow = document.getElementById(`assessmentItem${itemIndex}`);
             itemRow.className = `assessment-item-row ${result === 'pass' ? 'passed' : (result === 'fail' ? 'failed' : '')}`;
             
-            // 更新進度
-            const completedItems = record.assessmentItems.filter(item => item.passed).length;
+            // 🔥 更新進度 - 只計算通過的項目
+            const passedItems = record.assessmentItems.filter(item => item.passed).length;
+            const failedItems = record.assessmentItems.filter(item => item.failed).length;
             const totalItems = record.assessmentItems.length;
-            const progressPercentage = Math.round((completedItems / totalItems) * 100);
+            const progressPercentage = Math.round((passedItems / totalItems) * 100);
             
-            document.querySelector('.assessment-progress').textContent = 
-                `進度：${completedItems}/${totalItems} (${progressPercentage}%)`;
+            // 🔥 顯示詳細進度信息
+            const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項失敗` : ''}`;
+            document.querySelector('.assessment-progress').textContent = progressText;
             
             // 更新記錄中的完成項目數
-            record.completedItems = completedItems;
+            record.completedItems = passedItems;
+            record.failedItems = failedItems;
         }
 
-        // 🆕 完成評核
+// 🔥 修正完成評核邏輯
         function finishAssessment() {
             const staff = staffData[currentStaffId];
             const category = staff.trainingCategories[currentCategory];
             const record = category.records[currentRecordIndex];
             
-            const completedItems = record.assessmentItems ? 
+            const passedItems = record.assessmentItems ? 
                 record.assessmentItems.filter(item => item.passed).length : 0;
+            const failedItems = record.assessmentItems ? 
+                record.assessmentItems.filter(item => item.failed).length : 0;
             const totalItems = record.assessmentItems ? record.assessmentItems.length : 0;
             
-            // 檢查是否全部通過
-            if (completedItems === totalItems && totalItems > 0) {
-                // 標記整個記錄為完成
-                if (!record.completed) {
-                    record.completed = true;
-                    record.date = getCurrentDate();
-                    category.completed++;
+            // 🔥 檢查是否有失敗項目
+            if (failedItems > 0) {
+                // 有失敗項目 - 標記為失敗需重做
+                record.completed = false;
+                record.failed = true;
+                record.date = getCurrentDate();
+                record.status = 'failed';
+                
+                // 從完成數量中移除（如果之前標記為完成）
+                if (category.completed > 0) {
+                    category.completed = category.records.filter(r => r.completed && !r.failed).length;
                 }
                 
-                // 顯示成功訊息
-                const successMsg = document.createElement('div');
-                successMsg.style.cssText = `
-                    position: fixed; top: 20px; right: 20px; z-index: 9999;
-                    background: #00b894; color: white; padding: 15px 25px;
-                    border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                `;
-                successMsg.textContent = `🎉 恭喜！「${record.name}」評核已完成！`;
-                document.body.appendChild(successMsg);
-                setTimeout(() => successMsg.remove(), 3000);
+                showSuccessMessage('❌', `「${record.name}」評核失敗，需要重做！共 ${failedItems} 項未通過`, '#e74c3c');
+                
+            } else if (passedItems === totalItems && totalItems > 0) {
+                // 全部通過 - 標記為完成
+                record.completed = true;
+                record.failed = false;
+                record.date = getCurrentDate();
+                record.status = 'completed';
+                
+                // 重新計算完成數量
+                category.completed = category.records.filter(r => r.completed && !r.failed).length;
+                
+                showSuccessMessage('🎉', `恭喜！「${record.name}」評核已完成！`, '#00b894');
+                
             } else {
-                // 部分完成，保存進度但不標記為完成
-                const successMsg = document.createElement('div');
-                successMsg.style.cssText = `
-                    position: fixed; top: 20px; right: 20px; z-index: 9999;
-                    background: #f39c12; color: white; padding: 15px 25px;
-                    border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                `;
-                successMsg.textContent = `💾 評核進度已保存 (${completedItems}/${totalItems})`;
-                document.body.appendChild(successMsg);
-                setTimeout(() => successMsg.remove(), 2000);
+                // 部分完成，保存進度
+                record.completed = false;
+                record.failed = false;
+                record.status = 'in_progress';
+                
+                showSuccessMessage('💾', `評核進度已保存 (${passedItems}/${totalItems} 通過)`, '#f39c12');
             }
             
             closeAssessmentModal();
