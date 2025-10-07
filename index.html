@@ -1832,7 +1832,7 @@ function calculateAssessmentStatus(joinDate, weeksDeadline, assessments, assessm
                 }
                 
                 showSuccessMessage('🗑️', `培訓項目「${category.name}」已刪除！`, '#e74c3c');
-                showStaffDetails(currentStaffId);
+                (currentStaffId);
             }
         }
 
@@ -1929,23 +1929,40 @@ function calculateAssessmentStatus(joinDate, weeksDeadline, assessments, assessm
                 </button>
             `;
             
-            staffList.forEach(staff => {
-                html += `<button class="staff-btn" onclick="showStaffDetails('${staff.id}')">
-                    👤 ${staff.name}
-                </button>`;
-            });
+staffList.forEach(staff => {
+    html += `<button class="staff-btn" onclick="showStaffDetails('${staff.id}')">
+        👤 ${staff.name}
+    </button>`;
+});
             
             staffGrid.innerHTML = html;
         }
 
-        function showStaffDetails(staffId) {
-            currentStaffId = staffId;
-            const staff = staffData[staffId];
-            
-            if (!staff) {
-                alert('找不到員工資料');
-                return;
-            }
+function showStaffDetails(staffId) {
+    currentStaffId = staffId;
+    const staff = staffData[staffId];
+    
+    if (!staff) {
+        alert('找不到員工資料');
+        return;
+    }
+    
+    // 確保評估資料結構完整
+    if (!staff.assessments) {
+        console.warn(`⚠️ 員工 ${staff.name} 缺少評估資料，正在初始化...`);
+        staff.assessments = {
+            'safety': { passed: false, failed: false },
+            'written': { passed: false, failed: false },
+            'training': { passed: false, failed: false }
+        };
+    }
+    
+    // 確保所有評估類型都存在
+    assessmentConfig.forEach(assessment => {
+        if (!staff.assessments[assessment.type]) {
+            staff.assessments[assessment.type] = { passed: false, failed: false };
+        }
+    });
             
             hideAllPages();
             document.getElementById('staffDetailsPage').classList.add('active');
