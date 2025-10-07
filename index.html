@@ -1011,9 +1011,7 @@
                     ⚕️<br>PCA3
                 </button>
             </div>
-            <button class="btn" onclick="showUserManagement()" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
-                👥 帳戶管理
-            </button>
+
             <button class="btn logout-btn" onclick="logout()">🚪 登出系統</button>
         </div>
 
@@ -1073,7 +1071,20 @@
             
             <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
         </div>
+<button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
+    </div>
 
+    <!-- 需要被培訓的員工頁面 -->
+    <div id="pendingTrainingPage" class="page">
+        <div class="title">📚 需要被培訓的員工</div>
+        <div class="subtitle">查看所有需要培訓的員工狀況</div>
+        
+        <div id="pendingTrainingContent"></div>
+        
+        <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
+    </div>
+
+    <!-- 培訓詳情 -->
         <!-- 培訓詳情 -->
         <div id="trainingDetailsPage" class="page training-details">
             <div class="title">📚 培訓詳情</div>
@@ -2226,6 +2237,89 @@
         }
 
         // 帳戶管理功能
+
+        // 顯示需要被培訓的員工
+function showPendingTrainingList() {
+    hideAllPages();
+    document.getElementById('pendingTrainingPage').classList.add('active');
+    displayPendingTraining();
+}
+
+function displayPendingTraining() {
+    const content = document.getElementById('pendingTrainingContent');
+    let html = '<div class="user-list">';
+    
+    // 遍歷所有員工
+    Object.keys(staffData).forEach(staffId => {
+        const staff = staffData[staffId];
+        let pendingItems = [];
+        
+        // 檢查評估項目
+        assessmentConfig.forEach(assessment => {
+            const assessmentStatus = calculateAssessmentStatus(
+                staff.joinDate, 
+                assessment.weeksDeadline, 
+                staff.assessments, 
+                assessment.type
+            );
+            
+            if (!staff.assessments[assessment.type].passed && !staff.assessments[assessment.type].failed) {
+                pendingItems.push(`📝 ${assessment.name} (${assessmentStatus.daysToDeadline >= 0 ? `${assessmentStatus.daysToDeadline} 天後到期` : `逾期 ${Math.abs(assessmentStatus.daysToDeadline)} 天`})`);
+            }
+        });
+        
+        // 檢查培訓項目
+        if (staff.trainingCategories) {
+            Object.keys(staff.trainingCategories).forEach(categoryKey => {
+                const category = staff.trainingCategories[categoryKey];
+                const uncompletedCount = category.total - category.completed;
+                if (uncompletedCount > 0) {
+                    pendingItems.push(`🎓 ${category.name} (${uncompletedCount} 項未完成)`);
+                }
+            });
+        }
+        
+        if (pendingItems.length > 0) {
+            html += `
+                <div class="user-item" onclick="showStaffDetails('${staffId}')">
+                    <div class="user-info">
+                        <div class="user-name">${staff.name} (${staff.employeeId})</div>
+                        <div class="user-role" style="color: #e74c3c;">
+                            🏥 ${staff.grade} | 📅 入職：${staff.joinDate} | ⚠️ ${pendingItems.length} 項待完成
+                        </div>
+                        <div style="margin-top: 10px; font-size: 14px;">
+                            ${pendingItems.slice(0, 3).join('<br>')}
+                            ${pendingItems.length > 3 ? `<br><span style="color: #95a5a6;">...還有 ${pendingItems.length - 3} 項</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span style="color: #e74c3c; font-weight: bold;">點擊查看 →</span>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    if (html === '<div class="user-list">') {
+        html += '<div style="text-align: center; padding: 50px; color: #00b894; font-size: 24px;">🎉 所有員工培訓都已完成！</div>';
+    }
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+// 原本的 showUserManagement 函數保持不變
+        
+function showUserManagement() {
+    if (currentUserRole !== 'admin') {
+        alert('❌ 權限不足！只有管理員可以訪問帳戶管理！');
+        return;
+    }
+    
+    hideAllPages();
+    document.getElementById('userManagementPage').classList.add('active');
+    displayUserList();
+}
         function showUserManagement() {
             if (currentUserRole !== 'admin') {
                 alert('❌ 權限不足！只有管理員可以訪問帳戶管理！');
