@@ -1421,29 +1421,36 @@
         }
 
         // 計算評估狀態
-        function calculateAssessmentStatus(joinDate, weeksDeadline, assessments, assessmentType) {
-            const deadline = addWeeksToDate(joinDate, weeksDeadline);
-            const currentDate = getCurrentDate();
-            const daysToDeadline = daysBetweenDates(currentDate, deadline);
-            
-            if (assessments[assessmentType].passed) {
-                return { status: 'completed', deadline, daysToDeadline, badge: '✅ 合格' };
-            }
-            
-            if (assessments[assessmentType].failed) {
-                return { status: 'completed', deadline, daysToDeadline, badge: '❌ 不合格' };
-            }
-            
-            if (daysToDeadline < 0) {
-                return { status: 'overdue', deadline, daysToDeadline, badge: `⚠️ 逾期 ${Math.abs(daysToDeadline)} 天` };
-            }
-            
-            if (daysToDeadline <= 7) {
-                return { status: 'due-soon', deadline, daysToDeadline, badge: `🔔 ${daysToDeadline} 天後到期` };
-            }
-            
-            return { status: 'pending', deadline, daysToDeadline, badge: `📅 ${daysToDeadline} 天後到期` };
-        }
+function calculateAssessmentStatus(joinDate, weeksDeadline, assessments, assessmentType) {
+    const deadline = addWeeksToDate(joinDate, weeksDeadline);
+    const currentDate = getCurrentDate();
+    const daysToDeadline = daysBetweenDates(currentDate, deadline);
+    
+    // 安全檢查：如果 assessments 或特定評估類型不存在，創建默認值
+    if (!assessments || !assessments[assessmentType]) {
+        console.warn(`⚠️ 評估資料不存在，創建默認值: ${assessmentType}`);
+        if (!assessments) assessments = {};
+        assessments[assessmentType] = { passed: false, failed: false };
+    }
+    
+    if (assessments[assessmentType].passed) {
+        return { status: 'completed', deadline, daysToDeadline, badge: '✅ 合格' };
+    }
+    
+    if (assessments[assessmentType].failed) {
+        return { status: 'completed', deadline, daysToDeadline, badge: '❌ 不合格' };
+    }
+    
+    if (daysToDeadline < 0) {
+        return { status: 'overdue', deadline, daysToDeadline, badge: `⚠️ 逾期 ${Math.abs(daysToDeadline)} 天` };
+    }
+    
+    if (daysToDeadline <= 7) {
+        return { status: 'due-soon', deadline, daysToDeadline, badge: `🔔 ${daysToDeadline} 天後到期` };
+    }
+    
+    return { status: 'pending', deadline, daysToDeadline, badge: `📅 ${daysToDeadline} 天後到期` };
+}
 
         // 修改評估結果保存 - 支援切換功能 + Firebase 同步
         async function saveAssessmentResult(staffId, assessmentType, result) {
