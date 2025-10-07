@@ -1904,15 +1904,16 @@ async function deleteTrainingRecord(recordIndex) {
             // 記錄刪除操作到 Firebase
             if (window.addDoc && window.collection && window.db) {
                 await window.addDoc(window.collection(window.db, "deleted-training-records"), {
-                    staffId: currentStaffId,
-                    staffName: staff.name,
-                    categoryKey: currentCategory,
-                    recordIndex: recordIndex,
-                    recordName: record.name,
-                    deletedBy: currentUser ? currentUser.name : "admin",
-                    timestamp: new Date(),
-                    action: "delete"
-                });
+    staffId: currentStaffId,
+    staffName: staff.name,
+    categoryKey: currentCategory,
+    recordIndex: recordIndex,
+    recordName: record.name,
+    recordId: `${currentStaffId}_${currentCategory}_${record.name}_${Date.now()}`, // 新增唯一ID
+    deletedBy: currentUser ? currentUser.name : "admin",
+    timestamp: new Date(),
+    action: "delete"
+});
                 console.log("✅ 培訓記錄刪除已記錄到 Firebase");
             }
             
@@ -2895,30 +2896,28 @@ document.addEventListener('keypress', function(event) {
         try {
           console.log("📥 載入員工基本資料...");
           
-          // 載入新增的員工
-          const staffQuery = query(collection(db, "staff"), orderBy("timestamp", "desc"));
-          const staffSnapshot = await getDocs(staffQuery);
-          
-          staffSnapshot.forEach((doc) => {
-            const data = doc.data();
-            const { staffId, staffData: newStaffData } = data;
-            
-            if (!staffData[staffId]) {
-              staffData[staffId] = newStaffData;
-              
-              // 更新 staffDatabase
-              if (!staffDatabase[newStaffData.grade]) {
-                staffDatabase[newStaffData.grade] = [];
-              }
-              
-              const existingStaff = staffDatabase[newStaffData.grade].find(s => s.id === staffId);
-              if (!existingStaff) {
-                staffDatabase[newStaffData.grade].push({id: staffId, name: newStaffData.name});
-              }
-              
-              console.log(`✅ 載入新員工：${newStaffData.name} (${newStaffData.grade})`);
-            }
-          });
+// 載入新增的員工
+const staffQuery = query(collection(db, "staff"), orderBy("timestamp", "desc"));
+const staffSnapshot = await getDocs(staffQuery);
+
+staffSnapshot.forEach((doc) => {
+  const data = doc.data();
+  const { staffId, staffData: newStaffData } = data;
+  
+  // 總是更新員工資料（包括已存在的）
+  staffData[staffId] = { ...staffData[staffId], ...newStaffData };
+  
+  // 更新 staffDatabase
+  if (!staffDatabase[newStaffData.grade]) {
+    staffDatabase[newStaffData.grade] = [];
+  }
+  
+  const existingStaff = staffDatabase[newStaffData.grade].find(s => s.id === staffId);
+  if (!existingStaff) {
+    staffDatabase[newStaffData.grade].push({id: staffId, name: newStaffData.name});
+    console.log(`✅ 載入新員工：${newStaffData.name} (${newStaffData.grade})`);
+  }
+});
 
           // 載入評估配置
           const assessmentConfigQuery = query(collection(db, "assessment-config"), orderBy("timestamp", "desc"));
@@ -2971,30 +2970,41 @@ document.addEventListener('keypress', function(event) {
             }
           });
 
-          // 載入評估結果
-          const assessmentsQuery = query(collection(db, "assessments"), orderBy("timestamp", "desc"));
-          const assessmentsSnapshot = await getDocs(assessmentsQuery);
-          
-          const latestAssessments = {};
-          
-          assessmentsSnapshot.forEach((doc) => {
-            const data = doc.data();
-            const key = `${data.staffId}-${data.assessmentType}`;
-            
-            if (!latestAssessments[key]) {
-              latestAssessments[key] = data;
-            }
-          });
-          
-          Object.values(latestAssessments).forEach(assessment => {
-            if (staffData[assessment.staffId] && staffData[assessment.staffId].assessments) {
-              staffData[assessment.staffId].assessments[assessment.assessmentType] = {
-                passed: assessment.passed,
-                failed: assessment.failed
-              };
-              console.log(`✅ 載入評估結果：${assessment.staffName} - ${assessment.assessmentType}: ${assessment.result}`);
-            }
-          });
+// 載入評估結果
+const assessmentsQuery = query(collection(db, "assessments"), orderBy("timestamp", "desc"));
+const assessmentsSnapshot = await getDocs(assessmentsQuery);
+
+const latestAssessments = {};
+
+assessmentsSnapshot.forEach((doc) => {
+  const data = doc.data();
+  const key = `${data.staffId}-${data.assessmentType}`;
+  
+  if (!latestAssessments[key] || latestAssessments[key].timestamp < data.timestamp) {
+    latestAssessments[key] = data;
+  }
+});
+
+Object.values(latestAssessments).forEach(assessment => {
+  if (staffData[assessment.staffId]) {
+    // 確保評估結構存在
+    if (!staffData[assessment.staffId].assessments) {
+      staffData[assessment.staffId].assessments = {};
+    }
+    
+    // 確保特定評估類型存在
+    if (!staffData[assessment.staffId].assessments[assessment.assessmentType]) {
+      staffData[assessment.staffId].assessments[assessment.assessmentType] = { passed: false, failed: false };
+    }
+    
+    // 更新評估結果
+    staffData[assessment.staffId].assessments[assessment.assessmentType] = {
+      passed: assessment.passed || false,
+      failed: assessment.failed || false
+    };
+    console.log(`✅ 載入評估結果：${assessment.staffName} - ${assessment.assessmentType}: ${assessment.result} (passed: ${assessment.passed}, failed: ${assessment.failed})`);
+  }
+});
 
           // 載入培訓進度
           const progressQuery = query(collection(db, "training-progress"), orderBy("timestamp", "desc"));
@@ -3036,6 +3046,67 @@ document.addEventListener('keypress', function(event) {
             }
           });
 
+            // 載入刪除記錄並應用刪除操作
+try {
+  // 載入已刪除的評估項目
+  const deletedAssessmentsQuery = query(collection(db, "deleted-assessments"), orderBy("timestamp", "desc"));
+  const deletedAssessmentsSnapshot = await getDocs(deletedAssessmentsQuery);
+  
+  deletedAssessmentsSnapshot.forEach((doc) => {
+    const data = doc.data();
+    const index = assessmentConfig.findIndex(a => a.id === data.assessmentId);
+    if (index > -1) {
+      assessmentConfig.splice(index, 1);
+      console.log(`🗑️ 應用刪除：評估項目 ${data.assessmentName}`);
+    }
+    
+    // 從所有員工記錄中移除
+    Object.keys(staffData).forEach(staffId => {
+      if (staffData[staffId].assessments && staffData[staffId].assessments[data.assessmentType]) {
+        delete staffData[staffId].assessments[data.assessmentType];
+      }
+    });
+  });
+
+  // 載入已刪除的培訓項目
+  const deletedCategoriesQuery = query(collection(db, "deleted-training-categories"), orderBy("timestamp", "desc"));
+  const deletedCategoriesSnapshot = await getDocs(deletedCategoriesQuery);
+  
+  deletedCategoriesSnapshot.forEach((doc) => {
+    const data = doc.data();
+    if (staffData[data.staffId] && staffData[data.staffId].trainingCategories && staffData[data.staffId].trainingCategories[data.categoryKey]) {
+      delete staffData[data.staffId].trainingCategories[data.categoryKey];
+      console.log(`🗑️ 應用刪除：培訓項目 ${data.categoryName} (${data.staffName})`);
+    }
+  });
+
+  // 載入已刪除的培訓記錄
+  const deletedRecordsQuery = query(collection(db, "deleted-training-records"), orderBy("timestamp", "desc"));
+  const deletedRecordsSnapshot = await getDocs(deletedRecordsQuery);
+  
+  deletedRecordsSnapshot.forEach((doc) => {
+    const data = doc.data();
+    if (staffData[data.staffId] && 
+        staffData[data.staffId].trainingCategories && 
+        staffData[data.staffId].trainingCategories[data.categoryKey]) {
+      
+      const category = staffData[data.staffId].trainingCategories[data.categoryKey];
+      
+      // 根據記錄名稱找到要刪除的記錄
+      const recordIndex = category.records.findIndex(record => record.name === data.recordName);
+      if (recordIndex > -1) {
+        category.records.splice(recordIndex, 1);
+        category.total = category.records.length;
+        category.completed = category.records.filter(r => r.completed && !r.failed).length;
+        console.log(`🗑️ 應用刪除：培訓記錄 ${data.recordName} (${data.staffName})`);
+      }
+    }
+});
+
+} catch (e) {
+  console.error("❌ 載入刪除記錄失敗: ", e);
+}
+            
           console.log("🎉 Firebase 資料載入完成！");
           return true;
           
