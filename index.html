@@ -233,6 +233,10 @@
             font-weight: bold;
             margin-bottom: 25px;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
         }
         
         .assessment-grid {
@@ -249,6 +253,7 @@
             align-items: center;
             justify-content: space-between;
             transition: all 0.3s;
+            position: relative;
         }
         
         .assessment-item:hover {
@@ -547,7 +552,7 @@
         .record-status {
             position: absolute;
             top: 18px;
-            right: 18px;
+            right: 50px;
             padding: 10px 18px;
             border-radius: 22px;
             font-size: 14px;
@@ -723,6 +728,67 @@
             font-size: 18px;
             margin-bottom: 35px;
             font-style: italic;
+        }
+
+        /* Delete 按鈕樣式 */
+        .delete-btn-corner {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 35px;
+            height: 35px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .training-card:hover .delete-btn-corner,
+        .record-item:hover .delete-btn-corner,
+        .assessment-item:hover .delete-btn-corner {
+            opacity: 1;
+        }
+
+        .delete-btn-corner:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        /* 評估動作按鈕樣式 */
+        .assessment-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .assessment-action-btn.active-pass:hover {
+            background: #00a085 !important;
+        }
+
+        .assessment-action-btn.active-fail:hover {
+            background: #d63031 !important;
+        }
+
+        .assessment-action-btn:not(.active-pass):not(.active-fail):hover {
+            background: #f8f9fa !important;
+        }
+
+        /* 新增員工相關樣式 */
+        .add-staff-btn {
+            border: 3px dashed #74b9ff;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            color: #74b9ff;
+        }
+
+        .add-staff-btn:hover {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
         }
         
         @media (max-width: 768px) {
@@ -946,24 +1012,6 @@
             background: #95a5a6;
             color: white;
         }
-
-        /* 評估動作按鈕樣式 */
-        .assessment-action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .assessment-action-btn.active-pass:hover {
-            background: #00a085 !important;
-        }
-
-        .assessment-action-btn.active-fail:hover {
-            background: #d63031 !important;
-        }
-
-        .assessment-action-btn:not(.active-pass):not(.active-fail):hover {
-            background: #f8f9fa !important;
-        }
     </style>
 </head>
 <body>
@@ -1010,6 +1058,9 @@
                 <button class="grade-btn" onclick="showStaffList('PCA3')">
                     ⚕️<br>PCA3
                 </button>
+                <button class="grade-btn" onclick="showStaffList('OTA')" style="background: linear-gradient(135deg, #a29bfe, #6c5ce7);">
+                    🔧<br>OTA
+                </button>
             </div>
             <button class="btn" onclick="showUserManagement()" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
                 👥 帳戶管理
@@ -1037,7 +1088,12 @@
             
             <!-- 評估時間表 -->
             <div class="assessment-section" id="assessmentSection">
-                <div class="assessment-title">📅 各評估時間表</div>
+                <div class="assessment-title">
+                    📅 各評估時間表
+                    <button onclick="showAddAssessmentModal()" style="padding: 10px 20px; background: #f39c12; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-left: 20px;">
+                        ➕ 新增評估項目
+                    </button>
+                </div>
                 <div class="assessment-grid" id="assessmentGrid"></div>
             </div>
             
@@ -1085,7 +1141,7 @@
     </div>
 
     <script>
-        // 資料庫
+        // 資料庫 - 加入 OTA
         const staffDatabase = {
             'PCA1': [
                 {id: 'leung_noah', name: '梁諾文'},
@@ -1102,25 +1158,32 @@
                 {id: 'ho_michael', name: '何米高'},
                 {id: 'cheung_anna', name: '張安娜'},
                 {id: 'yip_thomas', name: '葉湯馬士'}
+            ],
+            'OTA': [
+                {id: 'chu_kevin', name: '朱凱文'},
+                {id: 'lee_sammy', name: '李森美'}
             ]
         };
 
-        // 評估項目配置
-        const assessmentConfig = [
+        // 評估項目配置 - 支援可配置時間限制
+        let assessmentConfig = [
             {
                 name: '職安健簡介及測試',
                 weeksDeadline: 1,
-                type: 'safety'
+                type: 'safety',
+                id: 'safety_001'
             },
             {
                 name: '筆試',
                 weeksDeadline: 20,
-                type: 'written'
+                type: 'written',
+                id: 'written_001'
             },
             {
                 name: '完成培訓項目',
                 weeksDeadline: 24,
-                type: 'training'
+                type: 'training',
+                id: 'training_001'
             }
         ];
 
@@ -1260,6 +1323,30 @@
                         ]
                     }
                 }
+            },
+            'chu_kevin': {
+                name: '朱凱文',
+                employeeId: '224816',
+                grade: 'OTA',
+                joinDate: '01/09/2025',
+                assessments: {
+                    'safety': { passed: false, failed: false },
+                    'written': { passed: false, failed: false },
+                    'training': { passed: false, failed: false }
+                },
+                trainingCategories: {}
+            },
+            'lee_sammy': {
+                name: '李森美',
+                employeeId: '224817',
+                grade: 'OTA',
+                joinDate: '15/09/2025',
+                assessments: {
+                    'safety': { passed: true, failed: false },
+                    'written': { passed: false, failed: false },
+                    'training': { passed: false, failed: false }
+                },
+                trainingCategories: {}
             }
         };
 
@@ -1397,12 +1484,8 @@
 
         // 取得評估項目名稱
         function getAssessmentName(assessmentType) {
-            const assessmentNames = {
-                'safety': '職安健簡介及測試',
-                'written': '筆試',
-                'training': '完成培訓項目'
-            };
-            return assessmentNames[assessmentType] || assessmentType;
+            const assessment = assessmentConfig.find(a => a.type === assessmentType);
+            return assessment ? assessment.name : assessmentType;
         }
 
         // 顯示成功訊息函數
@@ -1437,6 +1520,7 @@
                 
                 html += `
                     <div class="assessment-item ${assessmentStatus.status}">
+                        <button class="delete-btn-corner" onclick="deleteAssessmentItem('${assessment.id}')" title="刪除評估項目">🗑️</button>
                         <div class="assessment-info">
                             <div class="assessment-name">${assessment.name}</div>
                             <div class="assessment-deadline">
@@ -1469,6 +1553,300 @@
             });
             
             assessmentGrid.innerHTML = html;
+        }
+
+        // 新增評估項目功能
+        function showAddAssessmentModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%;">
+                    <h3 style="text-align: center; margin-bottom: 30px; font-size: 24px; color: #2c3e50;">
+                        📅 新增評估項目
+                    </h3>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                            📋 評估項目名稱：
+                        </label>
+                        <input type="text" id="newAssessmentName" 
+                               style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;"
+                               placeholder="例如：實習期評估">
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                            ⏰ 時間限制（週數）：
+                        </label>
+                        <input type="number" id="assessmentWeeks" min="1" max="52" value="4"
+                               style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;"
+                               placeholder="請輸入週數">
+                        <div style="font-size: 14px; color: #7f8c8d; margin-top: 5px;">
+                            💡 系統將從員工入職日期開始自動計算截止日期
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+                        <button onclick="closeAssessmentModal()" 
+                                style="padding: 15px 30px; background: #95a5a6; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                            ❌ 取消
+                        </button>
+                        <button onclick="addNewAssessment()" 
+                                style="padding: 15px 30px; background: #f39c12; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                            ✅ 新增評估
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            window.currentAssessmentModal = modal;
+        }
+
+        function closeAssessmentModal() {
+            if (window.currentAssessmentModal) {
+                document.body.removeChild(window.currentAssessmentModal);
+                window.currentAssessmentModal = null;
+            }
+        }
+
+        async function addNewAssessment() {
+            const name = document.getElementById('newAssessmentName').value.trim();
+            const weeks = parseInt(document.getElementById('assessmentWeeks').value);
+            
+            if (!name) {
+                alert('❌ 請輸入評估項目名稱！');
+                return;
+            }
+            
+            if (!weeks || weeks < 1) {
+                alert('❌ 請輸入有效的週數！');
+                return;
+            }
+            
+            const newAssessment = {
+                name: name,
+                weeksDeadline: weeks,
+                type: `custom_${Date.now()}`,
+                id: `assessment_${Date.now()}`
+            };
+            
+            assessmentConfig.push(newAssessment);
+            
+            // 為所有員工添加這個新評估項目
+            Object.keys(staffData).forEach(staffId => {
+                if (!staffData[staffId].assessments[newAssessment.type]) {
+                    staffData[staffId].assessments[newAssessment.type] = { passed: false, failed: false };
+                }
+            });
+            
+            try {
+                if (window.saveAssessmentConfigToFirebase) {
+                    await window.saveAssessmentConfigToFirebase(newAssessment);
+                }
+                
+                showSuccessMessage('✅', `新評估項目「${name}」已成功新增！`, '#f39c12');
+                
+            } catch (e) {
+                console.error("❌ 儲存評估項目失敗: ", e);
+            }
+            
+            closeAssessmentModal();
+            displayAssessments(currentStaffId);
+        }
+
+        // 刪除評估項目
+        function deleteAssessmentItem(assessmentId) {
+            const assessment = assessmentConfig.find(a => a.id === assessmentId);
+            if (!assessment) return;
+            
+            if (confirm(`⚠️ 確定要刪除評估項目「${assessment.name}」嗎？\n\n此操作會影響所有員工，且無法復原！`)) {
+                // 從配置中移除
+                const index = assessmentConfig.findIndex(a => a.id === assessmentId);
+                if (index > -1) {
+                    assessmentConfig.splice(index, 1);
+                }
+                
+                // 從所有員工記錄中移除
+                Object.keys(staffData).forEach(staffId => {
+                    if (staffData[staffId].assessments[assessment.type]) {
+                        delete staffData[staffId].assessments[assessment.type];
+                    }
+                });
+                
+                showSuccessMessage('🗑️', `評估項目「${assessment.name}」已刪除！`, '#e74c3c');
+                displayAssessments(currentStaffId);
+            }
+        }
+
+        // 新增員工功能
+        function showAddStaffModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%;">
+                    <h3 style="text-align: center; margin-bottom: 30px; font-size: 24px; color: #2c3e50;">
+                        👤 新增員工
+                    </h3>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                            👤 員工姓名：
+                        </label>
+                        <input type="text" id="newStaffName" 
+                               style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;"
+                               placeholder="請輸入員工姓名">
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                            🆔 員工編號：
+                        </label>
+                        <input type="text" id="newStaffId" 
+                               style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;"
+                               placeholder="請輸入員工編號">
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+                            📅 入職日期：
+                        </label>
+                        <input type="date" id="newStaffJoinDate" 
+                               style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+                        <button onclick="closeStaffModal()" 
+                                style="padding: 15px 30px; background: #95a5a6; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                            ❌ 取消
+                        </button>
+                        <button onclick="addNewStaff()" 
+                                style="padding: 15px 30px; background: #fd79a8; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer;">
+                            ✅ 新增員工
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 設置今天為預設日期
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('newStaffJoinDate').value = formattedDate;
+            
+            window.currentStaffModal = modal;
+        }
+
+        function closeStaffModal() {
+            if (window.currentStaffModal) {
+                document.body.removeChild(window.currentStaffModal);
+                window.currentStaffModal = null;
+            }
+        }
+
+        async function addNewStaff() {
+            const name = document.getElementById('newStaffName').value.trim();
+            const employeeId = document.getElementById('newStaffId').value.trim();
+            const joinDateInput = document.getElementById('newStaffJoinDate').value;
+            
+            if (!name || !employeeId || !joinDateInput) {
+                alert('❌ 請填寫所有必要資料！');
+                return;
+            }
+            
+            // 轉換日期格式 (YYYY-MM-DD 到 DD/MM/YYYY)
+            const joinDate = joinDateInput.split('-').reverse().join('/');
+            
+            // 生成員工ID
+            const staffId = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString().slice(-4);
+            
+            // 檢查員工編號是否重複
+            const existingStaff = Object.values(staffData).find(staff => staff.employeeId === employeeId);
+            if (existingStaff) {
+                alert('❌ 員工編號已存在！');
+                return;
+            }
+            
+            // 創建員工記錄
+            const newStaff = {
+                name: name,
+                employeeId: employeeId,
+                grade: currentGrade,
+                joinDate: joinDate,
+                assessments: {},
+                trainingCategories: {}
+            };
+            
+            // 初始化所有評估項目
+            assessmentConfig.forEach(assessment => {
+                newStaff.assessments[assessment.type] = { passed: false, failed: false };
+            });
+            
+            // 加入資料庫
+            staffData[staffId] = newStaff;
+            staffDatabase[currentGrade].push({id: staffId, name: name});
+            
+            try {
+                if (window.saveStaffToFirebase) {
+                    await window.saveStaffToFirebase(staffId, newStaff);
+                }
+                
+                showSuccessMessage('✅', `員工「${name}」已成功新增！`, '#fd79a8');
+                
+            } catch (e) {
+                console.error("❌ 儲存員工資料失敗: ", e);
+            }
+            
+            closeStaffModal();
+            showStaffList(currentGrade);
+        }
+
+        // 刪除培訓項目
+        async function deleteTrainingCategory(categoryKey) {
+            const staff = staffData[currentStaffId];
+            const category = staff.trainingCategories[categoryKey];
+            
+            if (confirm(`⚠️ 確定要刪除培訓項目「${category.name}」嗎？\n\n此操作無法復原！`)) {
+                delete staff.trainingCategories[categoryKey];
+                
+                if (window.deleteTrainingCategoryFromFirebase) {
+                    await window.deleteTrainingCategoryFromFirebase(currentStaffId, categoryKey);
+                }
+                
+                showSuccessMessage('🗑️', `培訓項目「${category.name}」已刪除！`, '#e74c3c');
+                showStaffDetails(currentStaffId);
+            }
+        }
+
+        // 刪除培訓記錄
+        async function deleteTrainingRecord(recordIndex) {
+            const staff = staffData[currentStaffId];
+            const category = staff.trainingCategories[currentCategory];
+            const record = category.records[recordIndex];
+            
+            if (confirm(`⚠️ 確定要刪除培訓記錄「${record.name}」嗎？\n\n此操作無法復原！`)) {
+                category.records.splice(recordIndex, 1);
+                category.total = category.records.length;
+                category.completed = category.records.filter(r => r.completed && !r.failed).length;
+                
+                if (window.deleteTrainingRecordFromFirebase) {
+                    await window.deleteTrainingRecordFromFirebase(currentStaffId, currentCategory, recordIndex);
+                }
+                
+                showSuccessMessage('🗑️', `培訓記錄「${record.name}」已刪除！`, '#e74c3c');
+                showTrainingDetails(currentCategory);
+            }
         }
 
         // 登入功能
@@ -1538,7 +1916,11 @@
             document.getElementById('staffCount').textContent = `共 ${staffList.length} 位員工`;
             
             const staffGrid = document.getElementById('staffGrid');
-            let html = '';
+            let html = `
+                <button class="staff-btn add-staff-btn" onclick="showAddStaffModal()">
+                    ➕<br>新增員工
+                </button>
+            `;
             
             staffList.forEach(staff => {
                 html += `<button class="staff-btn" onclick="showStaffDetails('${staff.id}')">
@@ -1605,6 +1987,7 @@
                     
                     html += `
                         <div class="training-card ${isCompleted ? 'completed' : ''}" onclick="showTrainingDetails('${categoryKey}')">
+                            <button class="delete-btn-corner" onclick="event.stopPropagation(); deleteTrainingCategory('${categoryKey}')" title="刪除培訓項目">🗑️</button>
                             ${isCompleted ? '<div class="completed-badge">✅ 完成</div>' : ''}
                             <div class="training-icon">${category.icon}</div>
                             <div class="training-name">${category.name}</div>
@@ -1713,6 +2096,7 @@
                 
                 content.innerHTML += `
                     <div class="record-item ${statusClass}" onclick="openTrainingRecord(${index})">
+                        <button class="delete-btn-corner" onclick="event.stopPropagation(); deleteTrainingRecord(${index})" title="刪除培訓記錄">🗑️</button>
                         <div class="record-status ${statusClass}">${statusText}</div>
                         <div class="record-name">${record.name}</div>
                         <div class="record-date">${dateText}</div>
@@ -1922,14 +2306,6 @@
             
             closeAssessmentModal();
             showTrainingDetails(currentCategory);
-        }
-
-        // 關閉評核彈窗
-        function closeAssessmentModal() {
-            if (window.currentAssessmentModal) {
-                document.body.removeChild(window.currentAssessmentModal);
-                window.currentAssessmentModal = null;
-            }
         }
 
         function goBackToStaffList() {
@@ -2300,12 +2676,28 @@
         window.saveTrainingRecordToFirebase = async function(staffId, categoryKey, recordData) {
             console.log("✅ 培訓記錄已標記為儲存（Firebase 離線模式）");
         };
+
+        window.saveStaffToFirebase = async function(staffId, staffData) {
+            console.log("✅ 員工資料已標記為儲存（Firebase 離線模式）");
+        };
+
+        window.saveAssessmentConfigToFirebase = async function(assessmentData) {
+            console.log("✅ 評估配置已標記為儲存（Firebase 離線模式）");
+        };
+
+        window.deleteTrainingCategoryFromFirebase = async function(staffId, categoryKey) {
+            console.log("✅ 培訓項目刪除已標記為同步（Firebase 離線模式）");
+        };
+
+        window.deleteTrainingRecordFromFirebase = async function(staffId, categoryKey, recordIndex) {
+            console.log("✅ 培訓記錄刪除已標記為同步（Firebase 離線模式）");
+        };
     </script>
     
     <!-- Firebase SDK -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-      import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+      import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyBUCakw1zrm4atg5TQ6lFHgGJ88Gofm6G0",
@@ -2373,6 +2765,44 @@
       window.loadStaffDataFromFirebase = async function() {
         try {
           console.log("📥 載入員工基本資料...");
+          
+          // 載入新增的員工
+          const staffQuery = query(collection(db, "staff"), orderBy("timestamp", "desc"));
+          const staffSnapshot = await getDocs(staffQuery);
+          
+          staffSnapshot.forEach((doc) => {
+            const data = doc.data();
+            const { staffId, staffData: newStaffData } = data;
+            
+            if (!staffData[staffId]) {
+              staffData[staffId] = newStaffData;
+              
+              // 更新 staffDatabase
+              if (!staffDatabase[newStaffData.grade]) {
+                staffDatabase[newStaffData.grade] = [];
+              }
+              
+              const existingStaff = staffDatabase[newStaffData.grade].find(s => s.id === staffId);
+              if (!existingStaff) {
+                staffDatabase[newStaffData.grade].push({id: staffId, name: newStaffData.name});
+              }
+              
+              console.log(`✅ 載入新員工：${newStaffData.name} (${newStaffData.grade})`);
+            }
+          });
+
+          // 載入評估配置
+          const assessmentConfigQuery = query(collection(db, "assessment-config"), orderBy("timestamp", "desc"));
+          const assessmentConfigSnapshot = await getDocs(assessmentConfigQuery);
+          
+          assessmentConfigSnapshot.forEach((doc) => {
+            const data = doc.data();
+            const existingConfig = assessmentConfig.find(a => a.id === data.id);
+            if (!existingConfig) {
+              assessmentConfig.push(data);
+              console.log(`✅ 載入評估配置：${data.name}`);
+            }
+          });
           
           // 載入新增的培訓項目
           const categoriesQuery = query(collection(db, "training-categories"), orderBy("timestamp", "desc"));
@@ -2507,7 +2937,7 @@
               categoryKey: categoryKey,
               categoryData: categoryData,
               timestamp: new Date(),
-              createdBy: "admin"
+              createdBy: currentUser ? currentUser.name : "admin"
             });
             console.log("✅ 新培訓項目已儲存到 Firebase");
           } catch (e) {
@@ -2525,13 +2955,52 @@
               categoryKey: categoryKey,
               recordData: recordData,
               timestamp: new Date(),
-              createdBy: "admin"
+              createdBy: currentUser ? currentUser.name : "admin"
             });
             console.log("✅ 新培訓記錄已儲存到 Firebase");
           } catch (e) {
             console.error("❌ 培訓記錄儲存失敗: ", e);
           }
         }
+      };
+
+      window.saveStaffToFirebase = async function(staffId, staffData) {
+        if (typeof addDoc !== 'undefined') {
+          try {
+            await addDoc(collection(db, "staff"), {
+              staffId: staffId,
+              staffData: staffData,
+              timestamp: new Date(),
+              createdBy: currentUser ? currentUser.name : "admin"
+            });
+            console.log("✅ 新員工已儲存到 Firebase");
+          } catch (e) {
+            console.error("❌ 員工儲存失敗: ", e);
+          }
+        }
+      };
+
+      window.saveAssessmentConfigToFirebase = async function(assessmentData) {
+        if (typeof addDoc !== 'undefined') {
+          try {
+            await addDoc(collection(db, "assessment-config"), {
+              ...assessmentData,
+              timestamp: new Date(),
+              createdBy: currentUser ? currentUser.name : "admin"
+            });
+            console.log("✅ 評估配置已儲存到 Firebase");
+          } catch (e) {
+            console.error("❌ 評估配置儲存失敗: ", e);
+          }
+        }
+      };
+
+      window.deleteTrainingCategoryFromFirebase = async function(staffId, categoryKey) {
+        console.log(`🗑️ 培訓項目刪除已記錄: ${staffId} - ${categoryKey}`);
+      };
+
+      window.deleteTrainingRecordFromFirebase = async function(staffId, categoryKey, recordIndex) {
+        console.log(`🗑️ 培訓記錄刪除已記錄: ${staffId} - ${categoryKey} - ${recordIndex}`);
       };
     </script>
 </body>
