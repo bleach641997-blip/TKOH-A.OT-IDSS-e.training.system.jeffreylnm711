@@ -773,10 +773,16 @@
             opacity: 1;
         }
 
-        .delete-btn-corner:hover {
-            background: #c0392b;
-            transform: scale(1.1);
-        }
+/* 在員工按鈕 hover 時顯示刪除按鈕 */
+.staff-btn:hover + .delete-btn-corner,
+div:hover .delete-btn-corner {
+    opacity: 1 !important;
+}
+
+.delete-btn-corner:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
 
         /* 評估動作按鈕樣式 */
         .assessment-action-btn:hover {
@@ -2085,9 +2091,17 @@ async function login() {
             `;
             
 staffList.forEach(staff => {
-    html += `<button class="staff-btn" onclick="showStaffDetails('${staff.id}')">
-        👤 ${staff.name}
-    </button>`;
+    html += `
+        <div style="position: relative; display: inline-block;">
+            <button class="staff-btn" onclick="showStaffDetails('${staff.id}')">
+                👤 ${staff.name}
+            </button>
+            <button class="delete-btn-corner" onclick="event.stopPropagation(); confirmDeleteStaff('${staff.id}', '${staff.name}')" 
+                    title="刪除員工" style="position: absolute; top: 10px; right: 10px; opacity: 0; transition: all 0.3s;">
+                🗑️
+            </button>
+        </div>
+    `;
 });
             
             staffGrid.innerHTML = html;
@@ -2508,7 +2522,7 @@ async function setAssessmentItemResult(itemIndex, result) {
     }
 }
 
-        // 完成評核邏輯
+// 完成評核邏輯
 async function finishAssessment() {
     const staff = staffData[currentStaffId];
     const category = staff.trainingCategories[currentCategory];
@@ -2519,6 +2533,31 @@ async function finishAssessment() {
     const failedItems = record.assessmentItems ? 
         record.assessmentItems.filter(item => item.failed).length : 0;
     const totalItems = record.assessmentItems ? record.assessmentItems.length : 0;
+    
+    // 檢查是否有任何項目被評核過
+    const hasAnyResults = record.assessmentItems ? 
+        record.assessmentItems.some(item => item.passed || item.failed) : false;
+    
+    // 🔧 新增：如果全部重設（沒有任何結果），轉為待完成狀態
+    if (!hasAnyResults || (passedItems === 0 && failedItems === 0)) {
+        record.completed = false;
+        record.failed = false;
+        record.date = null;
+        record.status = 'pending';
+        
+        category.completed = category.records.filter(r => r.completed && !r.failed).length;
+        
+        showSuccessMessage('⏳', `「${record.name}」已重設為待完成狀態`, '#f39c12');
+        
+        // 儲存到 Firebase
+        if (window.saveTrainingProgressToFirebase) {
+            await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, false, false);
+        }
+        
+        closeAssessmentModal();
+        showTrainingDetails(currentCategory);
+        return;
+    }
     
     // 檢查 Critical Items
     const criticalItems = record.assessmentItems ? 
@@ -2597,6 +2636,88 @@ async function finishAssessment() {
             }
         }
 
+        // 確認刪除員工
+function confirmDeleteStaff(staffId, staffName) {
+    const confirmDialog = document.createElement('div');
+    confirmDialog.className = 'confirm-dialog';
+    
+    confirmDialog.innerHTML = `
+        <div class="confirm-content">
+            <div class="confirm-title">⚠️ 刪除員工確認</div>
+            <div class="confirm-message">
+                你確定要刪除員工「<strong>${staffName}</strong>」嗎？<br><br>
+                <span style="color: #e74c3c; font-weight: bold;">
+                    ⚠️ 此操作將永久刪除該員工的所有資料，包括：<br>
+                    • 所有培訓記錄<br>
+                    • 評估結果<br>
+                    • 進度資料<br><br>
+                    此操作無法復原！
+                </span>
+            </div>
+            <div class="confirm-buttons">
+                <button class="confirm-btn confirm-no" onclick="closeConfirmDialog()">
+                    ❌ 取消
+                </button>
+                <button class="confirm-btn confirm-yes" onclick="deleteStaff('${staffId}', '${staffName}')">
+                    🗑️ 確定刪除
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(confirmDialog);
+    window.currentConfirmDialog = confirmDialog;
+}
+
+// 關閉確認對話框
+function closeConfirmDialog() {
+    if (window.currentConfirmDialog) {
+        document.body.removeChild(window.currentConfirmDialog);
+        window.currentConfirmDialog = null;
+    }
+}
+
+// 執行刪除員工
+async function deleteStaff(staffId, staffName) {
+    try {
+        // 記錄刪除操作到 Firebase
+        if (window.addDoc && window.collection && window.db) {
+            await window.addDoc(window.collection(window.db, "deleted-staff"), {
+                staffId: staffId,
+                staffName: staffName,
+                staffData: staffData[staffId], // 備份完整員工資料
+                deletedBy: currentUser ? currentUser.name : "admin",
+                timestamp: new Date(),
+                action: "delete"
+            });
+            console.log("✅ 員工刪除已記錄到 Firebase");
+        }
+        
+        // 從本地資料中刪除
+        const grade = staffData[staffId].grade;
+        
+        // 從 staffData 中刪除
+        delete staffData[staffId];
+        
+        // 從 staffDatabase 中刪除
+        const staffIndex = staffDatabase[grade].findIndex(staff => staff.id === staffId);
+        if (staffIndex > -1) {
+            staffDatabase[grade].splice(staffIndex, 1);
+        }
+        
+        showSuccessMessage('🗑️', `員工「${staffName}」已刪除！`, '#e74c3c');
+        closeConfirmDialog();
+        
+        // 重新顯示員工列表
+        showStaffList(currentGrade);
+        
+    } catch (e) {
+        console.error("❌ 刪除員工失敗: ", e);
+        showSuccessMessage('❌', '刪除失敗，請重試', '#e74c3c');
+        closeConfirmDialog();
+    }
+}
+        
         // Enter鍵登入
 document.addEventListener('keypress', function(event) {
     if (event.key === 'Enter' && document.getElementById('loginPage').classList.contains('active')) {
@@ -3324,6 +3445,28 @@ try {
     }
 });
 
+    // 載入已刪除的員工並應用刪除
+const deletedStaffQuery = query(collection(db, "deleted-staff"), orderBy("timestamp", "desc"));
+const deletedStaffSnapshot = await getDocs(deletedStaffQuery);
+
+deletedStaffSnapshot.forEach((doc) => {
+  const data = doc.data();
+  
+  // 從 staffData 中移除
+  if (staffData[data.staffId]) {
+    delete staffData[data.staffId];
+    console.log(`🗑️ 應用刪除：員工 ${data.staffName}`);
+  }
+  
+  // 從 staffDatabase 中移除
+  Object.keys(staffDatabase).forEach(grade => {
+    const staffIndex = staffDatabase[grade].findIndex(staff => staff.id === data.staffId);
+    if (staffIndex > -1) {
+      staffDatabase[grade].splice(staffIndex, 1);
+    }
+  });
+});
+    
 } catch (e) {
   console.error("❌ 載入刪除記錄失敗: ", e);
 }
