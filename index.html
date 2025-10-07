@@ -2785,18 +2785,18 @@ if (type === 'assessment' || type === 'checklist') {
     const items = assessmentItems.split('\n').filter(item => item.trim());
     const passMark = parseInt(document.getElementById('passMark').value) || 50;
     
-    recordData.assessmentItems = items.map(item => {
-        const itemText = item.trim();
-        const isCritical = itemText.includes('[CRITICAL]');
-        
-        return {
-            name: itemText.replace('[CRITICAL]', '').trim(),
-            passed: false,
-            failed: false,
-            isCritical: isCritical,
-            notes: ''
-        };
-    });
+recordData.assessmentItems = items.map(item => {
+    const itemText = item.trim();
+    const isCritical = itemText.includes('[CRITICAL]');
+    
+    return {
+        name: itemText.replace('[CRITICAL]', '').trim(),
+        passed: false,
+        failed: false,
+        isCritical: isCritical || false,  // 🔧 確保是布林值
+        notes: ''
+    };
+});
     recordData.totalItems = items.length;
     recordData.completedItems = 0;
     recordData.passMark = passMark;
