@@ -2378,10 +2378,14 @@ function showStaffDetails(staffId) {
         // 設置評核項目結果
 // 設置評核項目結果
 async function setAssessmentItemResult(itemIndex, result) {
+    console.log(`🔧 設置評核項目結果: itemIndex=${itemIndex}, result=${result}`);
+    
     const staff = staffData[currentStaffId];
     const category = staff.trainingCategories[currentCategory];
     const record = category.records[currentRecordIndex];
     const item = record.assessmentItems[itemIndex];
+    
+    console.log(`📋 評核項目: ${item.name}, 當前狀態: passed=${item.passed}, failed=${item.failed}`);
     
     item.passed = false;
     item.failed = false;
@@ -2391,6 +2395,8 @@ async function setAssessmentItemResult(itemIndex, result) {
     } else if (result === 'fail') {
         item.failed = true;
     }
+    
+    console.log(`📋 更新後狀態: passed=${item.passed}, failed=${item.failed}`);
     
     const itemRow = document.getElementById(`assessmentItem${itemIndex}`);
     itemRow.className = `assessment-item-row ${result === 'pass' ? 'passed' : (result === 'fail' ? 'failed' : '')}`;
@@ -2410,10 +2416,10 @@ async function setAssessmentItemResult(itemIndex, result) {
     record.completedItems = passedItems;
     record.failedItems = failedItems;
     
-    // 🚨 新增：立即儲存評核項目狀態到 Firebase
+    // 🚨 立即儲存評核項目狀態到 Firebase
     try {
         if (window.addDoc && window.collection && window.db) {
-            await window.addDoc(window.collection(window.db, "assessment-item-results"), {
+            const docRef = await window.addDoc(window.collection(window.db, "assessment-item-results"), {
                 staffId: currentStaffId,
                 staffName: staff.name,
                 categoryKey: currentCategory,
@@ -2428,7 +2434,9 @@ async function setAssessmentItemResult(itemIndex, result) {
                 timestamp: new Date(),
                 updatedBy: currentUser ? currentUser.name : "admin"
             });
-            console.log(`✅ 評核項目結果已儲存: ${item.name} - ${result}`);
+            console.log(`✅ 評核項目結果已儲存到 Firebase: ${item.name} - ${result} (Doc ID: ${docRef.id})`);
+        } else {
+            console.warn("❌ Firebase 函數不可用");
         }
     } catch (e) {
         console.error("❌ 評核項目結果儲存失敗: ", e);
@@ -3047,8 +3055,22 @@ const categoriesSnapshot = await getDocs(categoriesQuery);
 
 console.log(`📥 找到 ${categoriesSnapshot.size} 個培訓項目記錄`);
 
+// 使用 Map 來追蹤最新的培訓項目
+const latestCategories = {};
+
 categoriesSnapshot.forEach((doc) => {
   const data = doc.data();
+  const { staffId, categoryKey, categoryData } = data;
+  const key = `${staffId}-${categoryKey}`;
+  
+  // 只保留最新的記錄
+  if (!latestCategories[key] || latestCategories[key].timestamp < data.timestamp) {
+    latestCategories[key] = data;
+  }
+});
+
+// 應用最新的培訓項目
+Object.values(latestCategories).forEach(data => {
   const { staffId, categoryKey, categoryData } = data;
   
   console.log(`🔍 處理培訓項目: ${data.staffName} - ${categoryData.name} (${categoryKey})`);
@@ -3059,16 +3081,21 @@ categoriesSnapshot.forEach((doc) => {
       staffData[staffId].trainingCategories = {};
     }
     
-    // 總是載入培訓項目，覆蓋現有的
-    staffData[staffId].trainingCategories[categoryKey] = {
-      ...categoryData,
-      // 保留現有的記錄和統計
-      records: staffData[staffId].trainingCategories[categoryKey]?.records || categoryData.records || [],
-      completed: staffData[staffId].trainingCategories[categoryKey]?.completed || categoryData.completed || 0,
-      total: staffData[staffId].trainingCategories[categoryKey]?.total || categoryData.total || 0
-    };
-    
-    console.log(`✅ 載入培訓項目：${data.staffName} - ${categoryData.name}`);
+    // 如果培訓項目不存在，則新增
+    if (!staffData[staffId].trainingCategories[categoryKey]) {
+      staffData[staffId].trainingCategories[categoryKey] = {
+        ...categoryData,
+        records: categoryData.records || [],
+        completed: categoryData.completed || 0,
+        total: categoryData.total || 0
+      };
+      console.log(`✅ 新增培訓項目：${data.staffName} - ${categoryData.name}`);
+    } else {
+      // 如果已存在，只更新基本資訊，保留記錄
+      staffData[staffId].trainingCategories[categoryKey].name = categoryData.name;
+      staffData[staffId].trainingCategories[categoryKey].icon = categoryData.icon;
+      console.log(`✅ 更新培訓項目：${data.staffName} - ${categoryData.name}`);
+    }
   } else {
     console.warn(`⚠️ 找不到員工 ID: ${staffId}`);
   }
@@ -3078,21 +3105,24 @@ categoriesSnapshot.forEach((doc) => {
 const recordsQuery = query(collection(db, "training-record-details"), orderBy("timestamp", "desc"));
 const recordsSnapshot = await getDocs(recordsQuery);
 
-// 首先重置所有培訓項目的記錄（避免重複）
-Object.keys(staffData).forEach(staffId => {
-  if (staffData[staffId].trainingCategories) {
-    Object.keys(staffData[staffId].trainingCategories).forEach(categoryKey => {
-      const category = staffData[staffId].trainingCategories[categoryKey];
-      // 只保留不是從 Firebase 載入的原始記錄
-      if (!category.records.some(r => r.fromFirebase)) {
-        category.records = category.records.filter(r => !r.fromFirebase);
-      }
-    });
-  }
-});
+console.log(`📥 找到 ${recordsSnapshot.size} 個培訓記錄`);
+
+// 使用 Map 來追蹤最新的培訓記錄
+const latestRecords = {};
 
 recordsSnapshot.forEach((doc) => {
   const data = doc.data();
+  const { staffId, categoryKey, recordData } = data;
+  const key = `${staffId}-${categoryKey}-${recordData.name}`;
+  
+  // 只保留最新的記錄
+  if (!latestRecords[key] || latestRecords[key].timestamp < data.timestamp) {
+    latestRecords[key] = data;
+  }
+});
+
+// 應用最新的培訓記錄
+Object.values(latestRecords).forEach(data => {
   const { staffId, categoryKey, recordData } = data;
   
   if (staffData[staffId] && 
@@ -3101,13 +3131,24 @@ recordsSnapshot.forEach((doc) => {
     
     const category = staffData[staffId].trainingCategories[categoryKey];
     
-    // 標記為從 Firebase 載入
-    recordData.fromFirebase = true;
+    // 檢查記錄是否已存在
+    const existingRecordIndex = category.records.findIndex(record => record.name === recordData.name);
     
-    const existingRecord = category.records.find(record => record.name === recordData.name);
-    if (!existingRecord) {
+    if (existingRecordIndex === -1) {
+      // 記錄不存在，新增
+      recordData.fromFirebase = true;
       category.records.push(recordData);
-      console.log(`✅ 載入培訓記錄：${data.staffName} - ${recordData.name}`);
+      console.log(`✅ 新增培訓記錄：${data.staffName} - ${recordData.name}`);
+    } else {
+      // 記錄已存在，只更新非進度相關的資料
+      const existingRecord = category.records[existingRecordIndex];
+      existingRecord.type = recordData.type;
+      existingRecord.assessmentItems = recordData.assessmentItems;
+      existingRecord.totalItems = recordData.totalItems;
+      existingRecord.passMark = recordData.passMark;
+      existingRecord.criticalItems = recordData.criticalItems;
+      existingRecord.fromFirebase = true;
+      console.log(`✅ 更新培訓記錄：${data.staffName} - ${recordData.name}`);
     }
   }
 });
