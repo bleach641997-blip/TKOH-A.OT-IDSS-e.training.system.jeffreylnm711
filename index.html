@@ -2930,24 +2930,25 @@ if (type === 'assessment' || type === 'checklist') {
     </script>
     
     <!-- Firebase SDK -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-      import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyBUCakw1zrm4atg5TQ6lFHgGJ88Gofm6G0",
-        authDomain: "tkoh-training-system-74b07.firebaseapp.com",
-        projectId: "tkoh-training-system-74b07",
-        storageBucket: "tkoh-training-system-74b07.firebasestorage.app",
-        messagingSenderId: "1044004131681",
-        appId: "1:1044004131681:web:8004fbf63324b98dc3eb20"
-      };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBUCakw1zrm4atg5TQ6lFHgGJ88Gofm6G0",
+    authDomain: "tkoh-training-system-74b07.firebaseapp.com",
+    projectId: "tkoh-training-system-74b07",
+    storageBucket: "tkoh-training-system-74b07.firebasestorage.app",
+    messagingSenderId: "1044004131681",
+    appId: "1:1044004131681:web:8004fbf63324b98dc3eb20"
+  };
 
-    const app = initializeApp(firebaseConfig);
+  console.log("🚀 正在初始化 Firebase...");
+  
+  const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // 📍 在這裡加入以下代碼 📍
-  // 將 Firebase 函數設為全域變數
+  // 設置全域變數
   window.db = db;
   window.collection = collection;
   window.addDoc = addDoc;
@@ -2958,29 +2959,120 @@ if (type === 'assessment' || type === 'checklist') {
   window.deleteDoc = deleteDoc;
   
   console.log("🔥 Firebase 全域變數已設置！");
-      console.log("🔥 Firebase 已成功連接！");
 
-      // Firebase 資料同步函數
-      window.saveAssessmentResultToFirebase = async function(staffId, assessmentType, result) {
-        if (typeof addDoc !== 'undefined') {
-          try {
-            await addDoc(collection(db, "assessments"), {
-              staffId: staffId,
-              staffName: staffData[staffId].name,
-              assessmentType: assessmentType,
-              result: result,
-              passed: result === 'pass',
-              failed: result === 'fail',
-              timestamp: new Date(),
-              updatedBy: currentUser ? currentUser.name : "admin",
-              date: getCurrentDate()
-            });
-            console.log("✅ 評估結果已儲存到 Firebase");
-          } catch (e) {
-            console.error("❌ 評估結果儲存失敗: ", e);
-          }
-        }
+  // 測試 Firebase 連接
+  try {
+    const testDoc = await addDoc(collection(db, "connection-test"), {
+      message: "Firebase 連接測試",
+      timestamp: new Date()
+    });
+    console.log("✅ Firebase 連接測試成功，文檔 ID:", testDoc.id);
+  } catch (e) {
+    console.error("❌ Firebase 連接測試失敗:", e);
+  }
+
+  // 強制設置儲存函數
+  window.saveTrainingCategoryToFirebase = async function(staffId, categoryKey, categoryData) {
+    console.log("📤 準備儲存培訓項目到 Firebase...");
+    console.log("參數:", { staffId, categoryKey, categoryData });
+    
+    try {
+      const docData = {
+        staffId: staffId,
+        staffName: staffData[staffId]?.name || "未知員工",
+        categoryKey: categoryKey,
+        categoryData: categoryData,
+        timestamp: new Date(),
+        createdBy: currentUser ? currentUser.name : "admin"
       };
+      
+      console.log("準備寫入的數據:", docData);
+      
+      const docRef = await addDoc(collection(db, "training-categories"), docData);
+      console.log("✅ 培訓項目已儲存到 Firebase，文檔 ID:", docRef.id);
+      
+      // 顯示成功訊息
+      showSuccessMessage('💾', `培訓項目已儲存到資料庫`, '#00b894');
+      
+    } catch (e) {
+      console.error("❌ 培訓項目儲存失敗:", e);
+      showSuccessMessage('❌', `儲存失敗: ${e.message}`, '#e74c3c');
+    }
+  };
+
+  window.saveTrainingRecordToFirebase = async function(staffId, categoryKey, recordData) {
+    console.log("📤 準備儲存培訓記錄到 Firebase...");
+    console.log("參數:", { staffId, categoryKey, recordData });
+    
+    try {
+      const docData = {
+        staffId: staffId,
+        staffName: staffData[staffId]?.name || "未知員工",
+        categoryKey: categoryKey,
+        recordData: recordData,
+        timestamp: new Date(),
+        createdBy: currentUser ? currentUser.name : "admin"
+      };
+      
+      console.log("準備寫入的數據:", docData);
+      
+      const docRef = await addDoc(collection(db, "training-record-details"), docData);
+      console.log("✅ 培訓記錄已儲存到 Firebase，文檔 ID:", docRef.id);
+      
+      showSuccessMessage('💾', `培訓記錄已儲存到資料庫`, '#fd79a8');
+      
+    } catch (e) {
+      console.error("❌ 培訓記錄儲存失敗:", e);
+      showSuccessMessage('❌', `儲存失敗: ${e.message}`, '#e74c3c');
+    }
+  };
+
+  // 其他 Firebase 函數...
+  window.saveAssessmentResultToFirebase = async function(staffId, assessmentType, result) {
+    console.log("📤 準備儲存評估結果到 Firebase...");
+    
+    try {
+      const docRef = await addDoc(collection(db, "assessments"), {
+        staffId: staffId,
+        staffName: staffData[staffId]?.name || "未知員工",
+        assessmentType: assessmentType,
+        result: result,
+        passed: result === 'pass',
+        failed: result === 'fail',
+        timestamp: new Date(),
+        updatedBy: currentUser ? currentUser.name : "admin",
+        date: getCurrentDate()
+      });
+      console.log("✅ 評估結果已儲存到 Firebase，文檔 ID:", docRef.id);
+    } catch (e) {
+      console.error("❌ 評估結果儲存失敗:", e);
+    }
+  };
+
+  // 標記 Firebase 已準備就緒
+  window.firebaseReady = true;
+  console.log("🎉 Firebase 初始化完成！");
+
+  // 載入資料...
+  window.loadStaffDataFromFirebase = async function() {
+    console.log("📥 開始載入 Firebase 資料...");
+    // 在這裡加入你現有的載入邏輯
+    return true;
+  };
+
+  // 頁面載入時執行
+  window.addEventListener('load', async function() {
+    console.log("🚀 系統啟動中...");
+    
+    // 等待一秒確保所有資源載入
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    await loadStaffDataFromFirebase();
+    
+    document.getElementById('loginId').focus();
+    console.log("✅ 系統準備就緒！");
+  });
+</script>
 
       window.saveTrainingProgressToFirebase = async function(staffId, categoryKey, recordIndex, completed, failed = false) {
         if (typeof addDoc !== 'undefined') {
