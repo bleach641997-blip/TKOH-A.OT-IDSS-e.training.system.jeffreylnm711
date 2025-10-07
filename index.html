@@ -2609,58 +2609,49 @@ document.addEventListener('keypress', function(event) {
             }
         }
 
-        async function addNewTrainingCategory() {
-            const name = document.getElementById('newTrainingName').value.trim();
-            const icon = document.getElementById('selectedIcon').value;
-            
-            if (!name) {
-                alert('❌ 請輸入項目名稱！');
-                return;
-            }
-            
-            const categoryKey = name.replace(/\s+/g, '_').toLowerCase();
-            
-            if (staffData[currentStaffId].trainingCategories[categoryKey]) {
-                alert('❌ 此項目已存在！');
-                return;
-            }
-            
-            staffData[currentStaffId].trainingCategories[categoryKey] = {
-                name: name,
-                icon: icon,
-                completed: 0,
-                total: 0,
-                records: []
-            };
-            
-            try {
-                if (window.saveTrainingCategoryToFirebase) {
-                    await window.saveTrainingCategoryToFirebase(currentStaffId, categoryKey, {
-                        name: name,
-                        icon: icon,
-                        completed: 0,
-                        total: 0,
-                        records: []
-                    });
-                }
-                
-                const successMsg = document.createElement('div');
-                successMsg.style.cssText = `
-                    position: fixed; top: 20px; right: 20px; z-index: 9999;
-                    background: #00b894; color: white; padding: 15px 25px;
-                    border-radius: 10px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                `;
-                successMsg.textContent = `✅ 新培訓項目「${name}」已成功新增！`;
-                document.body.appendChild(successMsg);
-                setTimeout(() => successMsg.remove(), 3000);
-                
-            } catch (e) {
-                console.error("❌ 儲存培訓項目失敗: ", e);
-            }
-            
-            closeModal();
-            showStaffDetails(currentStaffId);
+async function addNewTrainingCategory() {
+    const name = document.getElementById('newTrainingName').value.trim();
+    const icon = document.getElementById('selectedIcon').value;
+    
+    if (!name) {
+        alert('❌ 請輸入項目名稱！');
+        return;
+    }
+    
+    // 🔧 修正：使用時間戳確保唯一性
+    const categoryKey = `${name.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+    
+    console.log(`📝 準備新增培訓項目: ${name} (Key: ${categoryKey})`);
+    
+    const newCategoryData = {
+        name: name,
+        icon: icon,
+        completed: 0,
+        total: 0,
+        records: []
+    };
+    
+    // 先在本地新增
+    staffData[currentStaffId].trainingCategories[categoryKey] = newCategoryData;
+    
+    try {
+        if (window.saveTrainingCategoryToFirebase) {
+            await window.saveTrainingCategoryToFirebase(currentStaffId, categoryKey, newCategoryData);
+            console.log(`✅ 培訓項目已儲存: ${name}`);
         }
+        
+        showSuccessMessage('✅', `新培訓項目「${name}」已成功新增！`, '#00b894');
+        
+    } catch (e) {
+        console.error("❌ 儲存培訓項目失敗: ", e);
+        // 如果儲存失敗，回復本地變更
+        delete staffData[currentStaffId].trainingCategories[categoryKey];
+        showSuccessMessage('❌', '儲存失敗，請重試', '#e74c3c');
+    }
+    
+    closeModal();
+    showStaffDetails(currentStaffId);
+}
 
         // 新增培訓記錄明細功能
         function showAddRecordModal() {
