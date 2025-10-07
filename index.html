@@ -617,7 +617,6 @@
             border: 2px solid #ecf0f1;
             border-radius: 10px;
             transition: all 0.3s;
-            position: relative;
         }
         
         .assessment-item-row.passed {
@@ -965,72 +964,6 @@
         .assessment-action-btn:not(.active-pass):not(.active-fail):hover {
             background: #f8f9fa !important;
         }
-
-        /* Critical Point 樣式 */
-        .critical-point-indicator {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: #e74c3c;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .critical-point-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 10px;
-            background: #fff3cd;
-            border-radius: 8px;
-            border: 2px solid #ffd700;
-        }
-
-        .critical-point-checkbox input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-        }
-
-        .critical-point-checkbox label {
-            font-weight: bold;
-            color: #d68910;
-            cursor: pointer;
-        }
-
-        /* 培訓項目和記錄的 delete 按鈕 */
-        .delete-item-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            z-index: 10;
-        }
-
-        .delete-item-btn:hover {
-            background: #c0392b;
-            transform: scale(1.1);
-        }
-
-        /* 針對培訓記錄的 delete 按鈕特殊樣式 */
-        .record-item .delete-item-btn {
-            bottom: 15px;
-            right: 15px;
-        }
     </style>
 </head>
 <body>
@@ -1078,12 +1011,6 @@
                     ⚕️<br>PCA3
                 </button>
             </div>
-            <button class="btn" onclick="showPendingTrainingList()" style="background: linear-gradient(135deg, #fd79a8, #e84393);">
-    📚 需要被培訓的員工
-</button>
-<button class="btn" onclick="showUserManagement()" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
-    👥 帳戶管理
-</button>
             <button class="btn" onclick="showUserManagement()" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
                 👥 帳戶管理
             </button>
@@ -1679,9 +1606,6 @@
                     html += `
                         <div class="training-card ${isCompleted ? 'completed' : ''}" onclick="showTrainingDetails('${categoryKey}')">
                             ${isCompleted ? '<div class="completed-badge">✅ 完成</div>' : ''}
-                            <button class="delete-item-btn" onclick="event.stopPropagation(); confirmDeleteTrainingCategory('${categoryKey}', '${category.name}')">
-                                🗑️
-                            </button>
                             <div class="training-icon">${category.icon}</div>
                             <div class="training-name">${category.name}</div>
                             <div class="progress-circle">
@@ -1775,7 +1699,7 @@
                 
                 if (record.failed) {
                     statusClass = 'failed';
-                    statusText = '❌ 不合格需重做';
+                    statusText = '❌ 失敗需重做';
                     dateText = `評核日期：${record.date} | 狀態：需要重新評核`;
                 } else if (record.completed) {
                     statusClass = 'completed';
@@ -1790,16 +1714,12 @@
                 content.innerHTML += `
                     <div class="record-item ${statusClass}" onclick="openTrainingRecord(${index})">
                         <div class="record-status ${statusClass}">${statusText}</div>
-                        <button class="delete-item-btn" onclick="event.stopPropagation(); confirmDeleteTrainingRecord(${index}, '${record.name}')">
-                            🗑️
-                        </button>
-                        ${record.criticalPoint ? '<div class="critical-point-indicator">⚠️ Critical Point</div>' : ''}
                         <div class="record-name">${record.name}</div>
                         <div class="record-date">${dateText}</div>
                         ${record.type === 'assessment' || record.type === 'checklist' ? 
                             `<div style="margin-top: 10px; font-size: 14px; opacity: 0.8;">
                                 📋 ${record.type === 'assessment' ? '評核項目' : '檢查清單'} 
-                                ${record.assessmentItems ? `(${record.completedItems || 0}/${record.totalItems} 通過${record.failedItems ? `, ${record.failedItems} 不合格` : ''})` : ''}
+                                ${record.assessmentItems ? `(${record.completedItems || 0}/${record.totalItems} 通過${record.failedItems ? `, ${record.failedItems} 失敗` : ''})` : ''}
                             </div>` : ''
                         }
                     </div>
@@ -1889,14 +1809,13 @@
                     <div class="assessment-items">
                         ${record.assessmentItems ? record.assessmentItems.map((item, index) => `
                             <div class="assessment-item-row ${item.passed ? 'passed' : (item.failed ? 'failed' : '')}" id="assessmentItem${index}">
-                                ${item.criticalPoint ? '<div class="critical-point-indicator">⚠️ Critical Point</div>' : ''}
                                 <div class="assessment-item-text">${item.name}</div>
                                 <div class="assessment-controls">
                                     <button class="assessment-btn pass-btn" onclick="setAssessmentItemResult(${index}, 'pass')">
                                         ✅ 通過
                                     </button>
                                     <button class="assessment-btn fail-btn" onclick="setAssessmentItemResult(${index}, 'fail')">
-                                        ❌ 不合格
+                                        ❌ 失敗
                                     </button>
                                     <button class="assessment-btn reset-btn" onclick="setAssessmentItemResult(${index}, 'reset')">
                                         🔄 重設
@@ -1947,14 +1866,14 @@
             const totalItems = record.assessmentItems.length;
             const progressPercentage = Math.round((passedItems / totalItems) * 100);
             
-            const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項不合格` : ''}`;
+            const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項失敗` : ''}`;
             document.querySelector('.assessment-progress').textContent = progressText;
             
             record.completedItems = passedItems;
             record.failedItems = failedItems;
         }
 
-        // 完成評核邏輯（包含 Critical Point 檢查）
+        // 完成評核邏輯
         async function finishAssessment() {
             const staff = staffData[currentStaffId];
             const category = staff.trainingCategories[currentCategory];
@@ -1966,13 +1885,7 @@
                 record.assessmentItems.filter(item => item.failed).length : 0;
             const totalItems = record.assessmentItems ? record.assessmentItems.length : 0;
             
-            // 檢查 Critical Point
-            const criticalPointItems = record.assessmentItems ? 
-                record.assessmentItems.filter(item => item.criticalPoint) : [];
-            const failedCriticalPoints = criticalPointItems.filter(item => item.failed);
-            
-            if (failedCriticalPoints.length > 0) {
-                // 有 Critical Point 不合格，整個培訓不合格
+            if (failedItems > 0) {
                 record.completed = false;
                 record.failed = true;
                 record.date = getCurrentDate();
@@ -1982,23 +1895,9 @@
                     category.completed = category.records.filter(r => r.completed && !r.failed).length;
                 }
                 
-                showSuccessMessage('❌', `「${record.name}」不合格！Critical Point 未通過，需要重做`, '#e74c3c');
-                
-            } else if (failedItems > 0) {
-                // 有一般項目不合格
-                record.completed = false;
-                record.failed = true;
-                record.date = getCurrentDate();
-                record.status = 'failed';
-                
-                if (category.completed > 0) {
-                    category.completed = category.records.filter(r => r.completed && !r.failed).length;
-                }
-                
-                showSuccessMessage('❌', `「${record.name}」評核不合格，需要重做！共 ${failedItems} 項未通過`, '#e74c3c');
+                showSuccessMessage('❌', `「${record.name}」評核失敗，需要重做！共 ${failedItems} 項未通過`, '#e74c3c');
                 
             } else if (passedItems === totalItems && totalItems > 0) {
-                // 全部通過（包括 Critical Point）
                 record.completed = true;
                 record.failed = false;
                 record.date = getCurrentDate();
@@ -2009,7 +1908,6 @@
                 showSuccessMessage('🎉', `恭喜！「${record.name}」評核已完成！`, '#00b894');
                 
             } else {
-                // 進行中
                 record.completed = false;
                 record.failed = false;
                 record.status = 'in_progress';
@@ -2224,16 +2122,7 @@
                         </label>
                         <textarea id="assessmentItems" 
                                   style="width: 100%; height: 120px; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px; resize: vertical;"
-                                  placeholder="例如：&#10;準備一盤(約 2/3 滿)加醋清洗溶液及一盤(約 2/3 滿)清水作浸洗器械用&#10;檢查器械外表上的使用峰值指示器&#10;轉動圓盤將末端合閉的器械打開&#10;&#10;在項目前面加上 [CRITICAL] 表示 Critical Point：&#10;[CRITICAL] 必須檢查所有安全指標"></textarea>
-                        
-                        <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 10px; border: 2px solid #ffd700;">
-                            <h4 style="color: #d68910; margin-bottom: 10px;">⚠️ Critical Point 說明：</h4>
-                            <p style="color: #856404; font-size: 14px; line-height: 1.5;">
-                                • 在評核項目前面加上 <strong>[CRITICAL]</strong> 可標記為 Critical Point<br>
-                                • Critical Point 項目必須通過，否則整個培訓視為不合格<br>
-                                • 即使其他項目分數超過50%，Critical Point 未通過仍為不合格
-                            </p>
-                        </div>
+                                  placeholder="例如：&#10;準備一盤(約 2/3 滿)加醋清洗溶液及一盤(約 2/3 滿)清水作浸洗器械用&#10;檢查器械外表上的使用峰值指示器&#10;轉動圓盤將末端合閉的器械打開"></textarea>
                     </div>
                     
                     <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
@@ -2296,19 +2185,12 @@
             
             if (type === 'assessment' || type === 'checklist') {
                 const items = assessmentItems.split('\n').filter(item => item.trim());
-                recordData.assessmentItems = items.map(item => {
-                    const trimmedItem = item.trim();
-                    const isCritical = trimmedItem.startsWith('[CRITICAL]');
-                    const cleanName = isCritical ? trimmedItem.replace('[CRITICAL]', '').trim() : trimmedItem;
-                    
-                    return {
-                        name: cleanName,
-                        passed: false,
-                        failed: false,
-                        notes: '',
-                        criticalPoint: isCritical
-                    };
-                });
+                recordData.assessmentItems = items.map(item => ({
+                    name: item.trim(),
+                    passed: false,
+                    failed: false,
+                    notes: ''
+                }));
                 recordData.totalItems = items.length;
                 recordData.completedItems = 0;
             }
@@ -2343,98 +2225,6 @@
             showTrainingDetails(currentCategory);
         }
 
-        // 刪除培訓項目功能
-        function confirmDeleteTrainingCategory(categoryKey, categoryName) {
-            const confirmDialog = document.createElement('div');
-            confirmDialog.className = 'confirm-dialog';
-            
-            confirmDialog.innerHTML = `
-                <div class="confirm-content">
-                    <div class="confirm-title">⚠️ 確認刪除</div>
-                    <div class="confirm-message">
-                        確定要刪除培訓項目 <strong>「${categoryName}」</strong> 嗎？<br>
-                        <span style="color: #e74c3c; font-weight: bold;">此操作將永久刪除所有相關記錄，無法復原！</span>
-                    </div>
-                    <div class="confirm-buttons">
-                        <button class="confirm-btn confirm-no" onclick="closeConfirmDialog()">
-                            ❌ 取消
-                        </button>
-                        <button class="confirm-btn confirm-yes" onclick="deleteTrainingCategory('${categoryKey}')">
-                            🗑️ 確認刪除
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(confirmDialog);
-            window.currentConfirmDialog = confirmDialog;
-        }
-
-        async function deleteTrainingCategory(categoryKey) {
-            const staff = staffData[currentStaffId];
-            const categoryName = staff.trainingCategories[categoryKey].name;
-            
-            delete staff.trainingCategories[categoryKey];
-            
-            // TODO: 同時刪除 Firebase 資料
-            
-            showSuccessMessage('🗑️', `培訓項目「${categoryName}」已成功刪除！`, '#e74c3c');
-            
-            closeConfirmDialog();
-            showStaffDetails(currentStaffId);
-        }
-
-        // 刪除培訓記錄功能
-        function confirmDeleteTrainingRecord(recordIndex, recordName) {
-            const confirmDialog = document.createElement('div');
-            confirmDialog.className = 'confirm-dialog';
-            
-            confirmDialog.innerHTML = `
-                <div class="confirm-content">
-                    <div class="confirm-title">⚠️ 確認刪除</div>
-                    <div class="confirm-message">
-                        確定要刪除培訓記錄 <strong>「${recordName}」</strong> 嗎？<br>
-                        <span style="color: #e74c3c; font-weight: bold;">此操作無法復原！</span>
-                    </div>
-                    <div class="confirm-buttons">
-                        <button class="confirm-btn confirm-no" onclick="closeConfirmDialog()">
-                            ❌ 取消
-                        </button>
-                        <button class="confirm-btn confirm-yes" onclick="deleteTrainingRecord(${recordIndex})">
-                            🗑️ 確認刪除
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(confirmDialog);
-            window.currentConfirmDialog = confirmDialog;
-        }
-
-        async function deleteTrainingRecord(recordIndex) {
-            const staff = staffData[currentStaffId];
-            const category = staff.trainingCategories[currentCategory];
-            const recordName = category.records[recordIndex].name;
-            
-            category.records.splice(recordIndex, 1);
-            category.total = category.records.length;
-            category.completed = category.records.filter(record => record.completed && !record.failed).length;
-            
-            // TODO: 同時刪除 Firebase 資料
-            
-            showSuccessMessage('🗑️', `培訓記錄「${recordName}」已成功刪除！`, '#e74c3c');
-            
-            closeConfirmDialog();
-            showTrainingDetails(currentCategory);
-        }
-
-        function closeConfirmDialog() {
-            if (window.currentConfirmDialog) {
-                document.body.removeChild(window.currentConfirmDialog);
-                window.currentConfirmDialog = null;
-            }
-        }
-
         // 帳戶管理功能
         function showUserManagement() {
             if (currentUserRole !== 'admin') {
@@ -2447,76 +2237,6 @@
             displayUserList();
         }
 
-        // 顯示需要被培訓的員工
-function showPendingTrainingList() {
-    hideAllPages();
-    document.getElementById('pendingTrainingPage').classList.add('active');
-    displayPendingTraining();
-}
-
-function displayPendingTraining() {
-    const content = document.getElementById('pendingTrainingContent');
-    let html = '<div class="user-list">';
-    
-    // 遍歷所有員工
-    Object.keys(staffData).forEach(staffId => {
-        const staff = staffData[staffId];
-        let pendingItems = [];
-        
-        // 檢查評估項目
-        assessmentConfig.forEach(assessment => {
-            const assessmentStatus = calculateAssessmentStatus(
-                staff.joinDate, 
-                assessment.weeksDeadline, 
-                staff.assessments, 
-                assessment.type
-            );
-            
-            if (!staff.assessments[assessment.type].passed && !staff.assessments[assessment.type].failed) {
-                pendingItems.push(`📝 ${assessment.name} (${assessmentStatus.daysToDeadline >= 0 ? `${assessmentStatus.daysToDeadline} 天後到期` : `逾期 ${Math.abs(assessmentStatus.daysToDeadline)} 天`})`);
-            }
-        });
-        
-        // 檢查培訓項目
-        if (staff.trainingCategories) {
-            Object.keys(staff.trainingCategories).forEach(categoryKey => {
-                const category = staff.trainingCategories[categoryKey];
-                const uncompletedCount = category.total - category.completed;
-                if (uncompletedCount > 0) {
-                    pendingItems.push(`🎓 ${category.name} (${uncompletedCount} 項未完成)`);
-                }
-            });
-        }
-        
-        if (pendingItems.length > 0) {
-            html += `
-                <div class="user-item" onclick="showStaffDetails('${staffId}')">
-                    <div class="user-info">
-                        <div class="user-name">${staff.name} (${staff.employeeId})</div>
-                        <div class="user-role" style="color: #e74c3c;">
-                            🏥 ${staff.grade} | 📅 入職：${staff.joinDate} | ⚠️ ${pendingItems.length} 項待完成
-                        </div>
-                        <div style="margin-top: 10px; font-size: 14px;">
-                            ${pendingItems.slice(0, 3).join('<br>')}
-                            ${pendingItems.length > 3 ? `<br><span style="color: #95a5a6;">...還有 ${pendingItems.length - 3} 項</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <span style="color: #e74c3c; font-weight: bold;">點擊查看 →</span>
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    if (html === '<div class="user-list">') {
-        html += '<div style="text-align: center; padding: 50px; color: #00b894; font-size: 24px;">🎉 所有員工培訓都已完成！</div>';
-    }
-    
-    html += '</div>';
-    content.innerHTML = html;
-}
-        
         function displayUserList() {
             const userList = document.getElementById('userList');
             let html = '';
@@ -2743,7 +2463,7 @@ function displayPendingTraining() {
               record.failed = progress.failed;
               record.date = progress.date;
               
-              console.log(`✅ 載入培訓進度：${progress.staffName} - ${progress.recordName}: ${progress.completed ? '完成' : progress.failed ? '不合格' : '進行中'}`);
+              console.log(`✅ 載入培訓進度：${progress.staffName} - ${progress.recordName}: ${progress.completed ? '完成' : progress.failed ? '失敗' : '進行中'}`);
             }
           });
 
