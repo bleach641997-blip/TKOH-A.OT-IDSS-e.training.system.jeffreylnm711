@@ -3027,7 +3027,37 @@ if (type === 'assessment' || type === 'checklist') {
     }
   };
 
-  // 其他 Firebase 函數...
+  window.saveStaffToFirebase = async function(staffId, staffData) {
+    console.log("📤 準備儲存員工資料到 Firebase...");
+    
+    try {
+      const docRef = await addDoc(collection(db, "staff"), {
+        staffId: staffId,
+        staffData: staffData,
+        timestamp: new Date(),
+        createdBy: currentUser ? currentUser.name : "admin"
+      });
+      console.log("✅ 員工資料已儲存到 Firebase，文檔 ID:", docRef.id);
+    } catch (e) {
+      console.error("❌ 員工資料儲存失敗:", e);
+    }
+  };
+
+  window.saveAssessmentConfigToFirebase = async function(assessmentData) {
+    console.log("📤 準備儲存評估配置到 Firebase...");
+    
+    try {
+      const docRef = await addDoc(collection(db, "assessment-config"), {
+        ...assessmentData,
+        timestamp: new Date(),
+        createdBy: currentUser ? currentUser.name : "admin"
+      });
+      console.log("✅ 評估配置已儲存到 Firebase，文檔 ID:", docRef.id);
+    } catch (e) {
+      console.error("❌ 評估配置儲存失敗:", e);
+    }
+  };
+
   window.saveAssessmentResultToFirebase = async function(staffId, assessmentType, result) {
     console.log("📤 準備儲存評估結果到 Firebase...");
     
@@ -3049,24 +3079,290 @@ if (type === 'assessment' || type === 'checklist') {
     }
   };
 
+  window.saveTrainingProgressToFirebase = async function(staffId, categoryKey, recordIndex, completed, failed = false) {
+    console.log("📤 準備儲存培訓進度到 Firebase...");
+    
+    try {
+      const staff = staffData[staffId];
+      const category = staff.trainingCategories[categoryKey];
+      const record = category.records[recordIndex];
+      
+      const docRef = await addDoc(collection(db, "training-progress"), {
+        staffId: staffId,
+        staffName: staff.name,
+        categoryKey: categoryKey,
+        recordIndex: recordIndex,
+        recordName: record.name,
+        completed: completed,
+        failed: failed,
+        date: completed || failed ? getCurrentDate() : null,
+        timestamp: new Date(),
+        updatedBy: currentUser ? currentUser.name : "admin"
+      });
+      console.log("✅ 培訓進度已儲存到 Firebase，文檔 ID:", docRef.id);
+    } catch (e) {
+      console.error("❌ 培訓進度儲存失敗:", e);
+    }
+  };
+
+  // 載入 Firebase 資料函數
+  window.loadStaffDataFromFirebase = async function() {
+    try {
+      console.log("📥 開始載入 Firebase 資料...");
+      
+      // 載入新增的員工
+      const staffQuery = query(collection(db, "staff"), orderBy("timestamp", "desc"));
+      const staffSnapshot = await getDocs(staffQuery);
+
+      staffSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const { staffId, staffData: newStaffData } = data;
+        
+        staffData[staffId] = { ...staffData[staffId], ...newStaffData };
+        
+        if (!staffDatabase[newStaffData.grade]) {
+          staffDatabase[newStaffData.grade] = [];
+        }
+        
+        const existingStaff = staffDatabase[newStaffData.grade].find(s => s.id === staffId);
+        if (!existingStaff) {
+          staffDatabase[newStaffData.grade].push({id: staffId, name: newStaffData.name});
+          console.log(`✅ 載入新員工：${newStaffData.name} (${newStaffData.grade})`);
+        }
+      });
+
+      // 載入評估配置
+      const assessmentConfigQuery = query(collection(db, "assessment-config"), orderBy("timestamp", "desc"));
+      const assessmentConfigSnapshot = await getDocs(assessmentConfigQuery);
+      
+      assessmentConfigSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const existingConfig = assessmentConfig.find(a => a.id === data.id);
+        if (!existingConfig) {
+          assessmentConfig.push(data);
+          console.log(`✅ 載入評估配置：${data.name}`);
+        }
+      });
+
+      // 載入培訓項目
+      const categoriesQuery = query(collection(db, "training-categories"), orderBy("timestamp", "desc"));
+      const categoriesSnapshot = await getDocs(categoriesQuery);
+
+      const latestCategories = {};
+      categoriesSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const { staffId, categoryKey } = data;
+        const key = `${staffId}-${categoryKey}`;
+        
+        if (!latestCategories[key] || latestCategories[key].timestamp < data.timestamp) {
+          latestCategories[key] = data;
+        }
+      });
+
+      Object.values(latestCategories).forEach(data => {
+        const { staffId, categoryKey, categoryData } = data;
+        
+        if (staffData[staffId]) {
+          if (!staffData[staffId].trainingCategories) {
+            staffData[staffId].trainingCategories = {};
+          }
+          
+          if (!staffData[staffId].trainingCategories[categoryKey]) {
+            staffData[staffId].trainingCategories[categoryKey] = {
+              ...categoryData,
+              records: categoryData.records || [],
+              completed: categoryData.completed || 0,
+              total: categoryData.total || 0
+            };
+            console.log(`✅ 新增培訓項目：${data.staffName} - ${categoryData.name}`);
+          } else {
+            staffData[staffId].trainingCategories[categoryKey].name = categoryData.name;
+            staffData[staffId].trainingCategories[categoryKey].icon = categoryData.icon;
+            console.log(`✅ 更新培訓項目：${data.staffName} - ${categoryData.name}`);
+          }
+        }
+      });
+
+      // 載入培訓記錄
+      const recordsQuery = query(collection(db, "training-record-details"), orderBy("timestamp", "desc"));
+      const recordsSnapshot = await getDocs(recordsQuery);
+
+      const latestRecords = {};
+      recordsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const { staffId, categoryKey, recordData } = data;
+        const key = `${staffId}-${categoryKey}-${recordData.name}`;
+        
+        if (!latestRecords[key] || latestRecords[key].timestamp < data.timestamp) {
+          latestRecords[key] = data;
+        }
+      });
+
+      Object.values(latestRecords).forEach(data => {
+        const { staffId, categoryKey, recordData } = data;
+        
+        if (staffData[staffId] && 
+            staffData[staffId].trainingCategories && 
+            staffData[staffId].trainingCategories[categoryKey]) {
+          
+          const category = staffData[staffId].trainingCategories[categoryKey];
+          const existingRecordIndex = category.records.findIndex(record => record.name === recordData.name);
+          
+          if (existingRecordIndex === -1) {
+            recordData.fromFirebase = true;
+            category.records.push(recordData);
+            console.log(`✅ 新增培訓記錄：${data.staffName} - ${recordData.name}`);
+          } else {
+            const existingRecord = category.records[existingRecordIndex];
+            existingRecord.type = recordData.type;
+            existingRecord.assessmentItems = recordData.assessmentItems;
+            existingRecord.totalItems = recordData.totalItems;
+            existingRecord.passMark = recordData.passMark;
+            existingRecord.criticalItems = recordData.criticalItems;
+            existingRecord.fromFirebase = true;
+            console.log(`✅ 更新培訓記錄：${data.staffName} - ${recordData.name}`);
+          }
+        }
+      });
+
+      // 重新計算統計
+      Object.keys(staffData).forEach(staffId => {
+        if (staffData[staffId].trainingCategories) {
+          Object.keys(staffData[staffId].trainingCategories).forEach(categoryKey => {
+            const category = staffData[staffId].trainingCategories[categoryKey];
+            category.total = category.records.length;
+            category.completed = category.records.filter(record => record.completed && !record.failed).length;
+          });
+        }
+      });
+
+      // 載入評估結果
+      const assessmentsQuery = query(collection(db, "assessments"), orderBy("timestamp", "desc"));
+      const assessmentsSnapshot = await getDocs(assessmentsQuery);
+
+      const latestAssessments = {};
+      assessmentsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const key = `${data.staffId}-${data.assessmentType}`;
+        
+        if (!latestAssessments[key] || latestAssessments[key].timestamp < data.timestamp) {
+          latestAssessments[key] = data;
+        }
+      });
+
+      Object.values(latestAssessments).forEach(assessment => {
+        if (staffData[assessment.staffId]) {
+          if (!staffData[assessment.staffId].assessments) {
+            staffData[assessment.staffId].assessments = {};
+          }
+          
+          if (!staffData[assessment.staffId].assessments[assessment.assessmentType]) {
+            staffData[assessment.staffId].assessments[assessment.assessmentType] = { passed: false, failed: false };
+          }
+          
+          staffData[assessment.staffId].assessments[assessment.assessmentType] = {
+            passed: assessment.passed || false,
+            failed: assessment.failed || false
+          };
+          console.log(`✅ 載入評估結果：${assessment.staffName} - ${assessment.assessmentType}: ${assessment.result}`);
+        }
+      });
+
+      // 載入培訓進度
+      const progressQuery = query(collection(db, "training-progress"), orderBy("timestamp", "desc"));
+      const progressSnapshot = await getDocs(progressQuery);
+
+      const latestProgress = {};
+      progressSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const key = `${data.staffId}-${data.categoryKey}-${data.recordIndex}`;
+        
+        if (!latestProgress[key]) {
+          latestProgress[key] = data;
+        }
+      });
+
+      Object.values(latestProgress).forEach(progress => {
+        if (staffData[progress.staffId] && 
+            staffData[progress.staffId].trainingCategories &&
+            staffData[progress.staffId].trainingCategories[progress.categoryKey] &&
+            staffData[progress.staffId].trainingCategories[progress.categoryKey].records[progress.recordIndex]) {
+          
+          const record = staffData[progress.staffId].trainingCategories[progress.categoryKey].records[progress.recordIndex];
+          record.completed = progress.completed;
+          record.failed = progress.failed;
+          record.date = progress.date;
+          
+          console.log(`✅ 載入培訓進度：${progress.staffName} - ${progress.recordName}: ${progress.completed ? '完成' : progress.failed ? '失敗' : '進行中'}`);
+        }
+      });
+
+      // 載入評核項目結果
+      const assessmentItemsQuery = query(collection(db, "assessment-item-results"), orderBy("timestamp", "desc"));
+      const assessmentItemsSnapshot = await getDocs(assessmentItemsQuery);
+      
+      const latestItemResults = {};
+      assessmentItemsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const key = `${data.staffId}-${data.categoryKey}-${data.recordIndex}-${data.itemIndex}`;
+        
+        if (!latestItemResults[key] || latestItemResults[key].timestamp < data.timestamp) {
+          latestItemResults[key] = data;
+        }
+      });
+      
+      Object.values(latestItemResults).forEach(itemResult => {
+        if (staffData[itemResult.staffId] && 
+            staffData[itemResult.staffId].trainingCategories &&
+            staffData[itemResult.staffId].trainingCategories[itemResult.categoryKey] &&
+            staffData[itemResult.staffId].trainingCategories[itemResult.categoryKey].records[itemResult.recordIndex] &&
+            staffData[itemResult.staffId].trainingCategories[itemResult.categoryKey].records[itemResult.recordIndex].assessmentItems &&
+            staffData[itemResult.staffId].trainingCategories[itemResult.categoryKey].records[itemResult.recordIndex].assessmentItems[itemResult.itemIndex]) {
+          
+          const item = staffData[itemResult.staffId].trainingCategories[itemResult.categoryKey].records[itemResult.recordIndex].assessmentItems[itemResult.itemIndex];
+          item.passed = itemResult.passed;
+          item.failed = itemResult.failed;
+          
+          console.log(`✅ 載入評核項目結果：${itemResult.staffName} - ${itemResult.itemName}: ${itemResult.result}`);
+        }
+      });
+
+      // 重新計算評核統計
+      Object.keys(staffData).forEach(staffId => {
+        if (staffData[staffId].trainingCategories) {
+          Object.keys(staffData[staffId].trainingCategories).forEach(categoryKey => {
+            const category = staffData[staffId].trainingCategories[categoryKey];
+            category.records.forEach(record => {
+              if (record.assessmentItems) {
+                record.completedItems = record.assessmentItems.filter(item => item.passed).length;
+                record.failedItems = record.assessmentItems.filter(item => item.failed).length;
+              }
+            });
+            category.completed = category.records.filter(r => r.completed && !r.failed).length;
+          });
+        }
+      });
+
+      console.log("🎉 Firebase 資料載入完成！");
+      return true;
+      
+    } catch (e) {
+      console.error("❌ 載入 Firebase 資料失敗:", e);
+      return false;
+    }
+  };
+
   // 標記 Firebase 已準備就緒
   window.firebaseReady = true;
   console.log("🎉 Firebase 初始化完成！");
 
-  // 載入資料...
-  window.loadStaffDataFromFirebase = async function() {
-    console.log("📥 開始載入 Firebase 資料...");
-    // 在這裡加入你現有的載入邏輯
-    return true;
-  };
-
-  // 頁面載入時執行
+  // 頁面載入時自動載入 Firebase 資料
   window.addEventListener('load', async function() {
     console.log("🚀 系統啟動中...");
-    
-    // 等待一秒確保所有資源載入
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    window.staffData = staffData;
+    window.assessmentConfig = assessmentConfig;
+    window.staffDatabase = staffDatabase;
+
     await loadStaffDataFromFirebase();
     
     document.getElementById('loginId').focus();
