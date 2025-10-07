@@ -565,9 +565,6 @@
     color: white;
 }
 
-.record-status.failed::before {
-    content: "❌ 不合格需重做";
-}
         .record-status {
             position: absolute;
             top: 18px;
@@ -1961,12 +1958,18 @@ async function waitForFirebase() {
     }
 }
 
- // 處理登入按鈕點擊
-function handleLogin() {
-    if (!window.firebaseReady) {
-        showError('系統正在載入中，請稍後再試...');
-        return;
-    }
+// 處理登入按鈕點擊
+async function handleLogin() {
+    // 顯示載入中訊息
+    showError('系統載入中，請稍候...');
+    
+    // 等待 Firebase 準備就緒
+    await waitForFirebase();
+    
+    // 清除載入訊息
+    document.getElementById('errorMsg').style.display = 'none';
+    
+    // 執行登入
     login();
 }
         
@@ -2244,7 +2247,7 @@ function showStaffDetails(staffId) {
                         ${record.type === 'assessment' || record.type === 'checklist' ? 
                             `<div style="margin-top: 10px; font-size: 14px; opacity: 0.8;">
                                 📋 ${record.type === 'assessment' ? '評核項目' : '檢查清單'} 
-                                ${record.assessmentItems ? `(${record.completedItems || 0}/${record.totalItems} 通過${record.failedItems ? `, ${record.failedItems} 失敗` : ''})` : ''}
+                                ${record.assessmentItems ? `(${record.completedItems || 0}/${record.totalItems} 通過${record.failedItems ? `, ${record.failedItems} 不合格` : ''})` : ''}
                             </div>` : ''
                         }
                     </div>
@@ -2345,7 +2348,7 @@ function showStaffDetails(staffId) {
                                         ✅ 通過
                                     </button>
                                     <button class="assessment-btn fail-btn" onclick="setAssessmentItemResult(${index}, 'fail')">
-                                        ❌ 失敗
+                                        ❌ 不合格
                                     </button>
                                     <button class="assessment-btn reset-btn" onclick="setAssessmentItemResult(${index}, 'reset')">
                                         🔄 重設
@@ -2400,7 +2403,7 @@ const criticalPassed = record.assessmentItems ?
     record.assessmentItems.filter(item => item.isCritical && item.passed).length : 0;
 const totalCritical = record.criticalItems || 0;
 
-const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項失敗` : ''}${totalCritical > 0 ? ` | Critical: ${criticalPassed}/${totalCritical}` : ''}${record.passMark ? ` | 合格分數: ${record.passMark}/100` : ''}`;
+const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項不合格` : ''}${totalCritical > 0 ? ` | Critical: ${criticalPassed}/${totalCritical}` : ''}${record.passMark ? ` | 合格分數: ${record.passMark}/100` : ''}`;
 document.querySelector('.assessment-progress').textContent = progressText;
             
             record.completedItems = passedItems;
@@ -2432,7 +2435,6 @@ async function finishAssessment() {
     // 檢查合格條件
     const criticalPassed = totalCriticalItems === 0 || passedCriticalItems === totalCriticalItems;
     const scorePassed = score >= passMark;
-    const noFailedItems = failedItems === 0;
     
     if (!criticalPassed) {
         record.completed = false;
@@ -2454,17 +2456,7 @@ async function finishAssessment() {
         
         showSuccessMessage('❌', `「${record.name}」評核不合格！分數未達標準 (${score}/${passMark})`, '#e74c3c');
         
-    } else if (!noFailedItems) {
-        record.completed = false;
-        record.failed = true;
-        record.date = getCurrentDate();
-        record.status = 'failed';
-        
-        category.completed = category.records.filter(r => r.completed && !r.failed).length;
-        
-        showSuccessMessage('❌', `「${record.name}」評核不合格，需要重做！共 ${failedItems} 項未通過`, '#e74c3c');
-        
-    } else if (passedItems === totalItems && totalItems > 0) {
+    } else if (scorePassed && criticalPassed) {
         record.completed = true;
         record.failed = false;
         record.date = getCurrentDate();
@@ -3038,37 +3030,60 @@ categoriesSnapshot.forEach((doc) => {
       staffData[staffId].trainingCategories = {};
     }
     
-    // 只有當該培訓項目不存在時才添加
-    if (!staffData[staffId].trainingCategories[categoryKey]) {
-      staffData[staffId].trainingCategories[categoryKey] = categoryData;
-      console.log(`✅ 載入培訓項目：${data.staffName} - ${categoryData.name}`);
+    // 總是更新培訓項目（包括已存在的）
+    staffData[staffId].trainingCategories[categoryKey] = categoryData;
+    console.log(`✅ 載入培訓項目：${data.staffName} - ${categoryData.name}`);
+  }
+});
+
+// 載入新增的培訓記錄
+const recordsQuery = query(collection(db, "training-record-details"), orderBy("timestamp", "desc"));
+const recordsSnapshot = await getDocs(recordsQuery);
+
+// 首先重置所有培訓項目的記錄（避免重複）
+Object.keys(staffData).forEach(staffId => {
+  if (staffData[staffId].trainingCategories) {
+    Object.keys(staffData[staffId].trainingCategories).forEach(categoryKey => {
+      const category = staffData[staffId].trainingCategories[categoryKey];
+      // 只保留不是從 Firebase 載入的原始記錄
+      if (!category.records.some(r => r.fromFirebase)) {
+        category.records = category.records.filter(r => !r.fromFirebase);
+      }
+    });
+  }
+});
+
+recordsSnapshot.forEach((doc) => {
+  const data = doc.data();
+  const { staffId, categoryKey, recordData } = data;
+  
+  if (staffData[staffId] && 
+      staffData[staffId].trainingCategories && 
+      staffData[staffId].trainingCategories[categoryKey]) {
+    
+    const category = staffData[staffId].trainingCategories[categoryKey];
+    
+    // 標記為從 Firebase 載入
+    recordData.fromFirebase = true;
+    
+    const existingRecord = category.records.find(record => record.name === recordData.name);
+    if (!existingRecord) {
+      category.records.push(recordData);
+      console.log(`✅ 載入培訓記錄：${data.staffName} - ${recordData.name}`);
     }
   }
 });
 
-          // 載入新增的培訓記錄
-          const recordsQuery = query(collection(db, "training-record-details"), orderBy("timestamp", "desc"));
-          const recordsSnapshot = await getDocs(recordsQuery);
-          
-          recordsSnapshot.forEach((doc) => {
-            const data = doc.data();
-            const { staffId, categoryKey, recordData } = data;
-            
-            if (staffData[staffId] && 
-                staffData[staffId].trainingCategories && 
-                staffData[staffId].trainingCategories[categoryKey]) {
-              
-              const category = staffData[staffId].trainingCategories[categoryKey];
-              
-              const existingRecord = category.records.find(record => record.name === recordData.name);
-              if (!existingRecord) {
-                category.records.push(recordData);
-                category.total = category.records.length;
-                category.completed = category.records.filter(record => record.completed).length;
-                console.log(`✅ 載入培訓記錄：${data.staffName} - ${recordData.name}`);
-              }
-            }
-          });
+// 重新計算所有項目的統計
+Object.keys(staffData).forEach(staffId => {
+  if (staffData[staffId].trainingCategories) {
+    Object.keys(staffData[staffId].trainingCategories).forEach(categoryKey => {
+      const category = staffData[staffId].trainingCategories[categoryKey];
+      category.total = category.records.length;
+      category.completed = category.records.filter(record => record.completed && !record.failed).length;
+    });
+  }
+});
 
 // 載入評估結果
 const assessmentsQuery = query(collection(db, "assessments"), orderBy("timestamp", "desc"));
