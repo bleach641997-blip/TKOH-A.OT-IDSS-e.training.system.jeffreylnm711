@@ -1157,6 +1157,41 @@
     </div>
 
     <script>
+        // 資料驗證函數
+function validateAssessmentItems(record) {
+    if (!record.assessmentItems) return;
+    
+    console.log("🔍 驗證評核項目資料...");
+    
+    record.assessmentItems.forEach((item, index) => {
+        // 修正所有可能的 undefined 值
+        if (item.isCritical === undefined || item.isCritical === null) {
+            item.isCritical = false;
+            console.log(`⚠️ 修正項目 ${index} 的 isCritical: false`);
+        }
+        
+        if (item.passed === undefined || item.passed === null) {
+            item.passed = false;
+        }
+        
+        if (item.failed === undefined || item.failed === null) {
+            item.failed = false;
+        }
+        
+        if (!item.name || item.name === undefined) {
+            item.name = `評核項目 ${index + 1}`;
+        }
+        
+        // 強制轉換為正確的類型
+        item.isCritical = Boolean(item.isCritical);
+        item.passed = Boolean(item.passed);
+        item.failed = Boolean(item.failed);
+        item.name = String(item.name);
+    });
+    
+    console.log("✅ 評核項目資料驗證完成");
+}
+        
         // 資料庫 - 加入 OTA
         const staffDatabase = {
             'PCA1': [
@@ -2316,9 +2351,12 @@ function showStaffDetails(staffId) {
         }
 
         // 顯示評核彈窗
-        function showAssessmentModal(record) {
-            const modal = document.createElement('div');
-            modal.className = 'assessment-modal';
+function showAssessmentModal(record) {
+    // 🔧 添加資料驗證
+    validateAssessmentItems(record);
+    
+    const modal = document.createElement('div');
+    modal.className = 'assessment-modal';
             
             const completedItems = record.assessmentItems ? 
                 record.assessmentItems.filter(item => item.passed).length : 0;
@@ -2378,10 +2416,20 @@ function showStaffDetails(staffId) {
         // 設置評核項目結果
 // 設置評核項目結果
 async function setAssessmentItemResult(itemIndex, result) {
+    console.log(`🔧 設置評核項目結果: itemIndex=${itemIndex}, result=${result}`);
+    
     const staff = staffData[currentStaffId];
     const category = staff.trainingCategories[currentCategory];
     const record = category.records[currentRecordIndex];
     const item = record.assessmentItems[itemIndex];
+    
+    console.log(`📋 評核項目資料:`, item);
+    
+    // 🔧 確保 item 有正確的結構
+    if (!item.hasOwnProperty('isCritical')) {
+        item.isCritical = false;
+        console.log(`⚠️ 為項目 ${item.name} 設置默認 isCritical: false`);
+    }
     
     item.passed = false;
     item.failed = false;
@@ -2393,7 +2441,9 @@ async function setAssessmentItemResult(itemIndex, result) {
     }
     
     const itemRow = document.getElementById(`assessmentItem${itemIndex}`);
-    itemRow.className = `assessment-item-row ${result === 'pass' ? 'passed' : (result === 'fail' ? 'failed' : '')}`;
+    if (itemRow) {
+        itemRow.className = `assessment-item-row ${result === 'pass' ? 'passed' : (result === 'fail' ? 'failed' : '')}`;
+    }
     
     const passedItems = record.assessmentItems.filter(item => item.passed).length;
     const failedItems = record.assessmentItems.filter(item => item.failed).length;
@@ -2401,38 +2451,56 @@ async function setAssessmentItemResult(itemIndex, result) {
     const progressPercentage = Math.round((passedItems / totalItems) * 100);
     
     const criticalPassed = record.assessmentItems ? 
-        record.assessmentItems.filter(item => item.isCritical && item.passed).length : 0;
+        record.assessmentItems.filter(item => (item.isCritical === true) && item.passed).length : 0;
     const totalCritical = record.criticalItems || 0;
 
     const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項失敗` : ''}${totalCritical > 0 ? ` | Critical: ${criticalPassed}/${totalCritical}` : ''}${record.passMark ? ` | 合格分數: ${record.passMark}/100` : ''}`;
-    document.querySelector('.assessment-progress').textContent = progressText;
+    
+    const progressElement = document.querySelector('.assessment-progress');
+    if (progressElement) {
+        progressElement.textContent = progressText;
+    }
     
     record.completedItems = passedItems;
     record.failedItems = failedItems;
     
-    // 🚨 修正：確保所有值都不是 undefined
+    // 🚨 修正：嚴格確保所有值都不是 undefined
     try {
         if (window.addDoc && window.collection && window.db) {
+            
+            // 🔧 嚴格清理所有可能的 undefined 值
             const firebaseData = {
-                staffId: currentStaffId,
-                staffName: staff.name || "未知員工",
-                categoryKey: currentCategory,
-                recordIndex: currentRecordIndex,
-                recordName: record.name || "未知記錄",
-                itemIndex: itemIndex,
-                itemName: item.name || "未知項目",
-                result: result,
-                passed: item.passed || false,
-                failed: item.failed || false,
-                isCritical: item.isCritical || false,  // 🔧 修正：確保不是 undefined
+                staffId: String(currentStaffId || "unknown"),
+                staffName: String(staff?.name || "未知員工"),
+                categoryKey: String(currentCategory || "unknown"),
+                recordIndex: Number(currentRecordIndex) || 0,
+                recordName: String(record?.name || "未知記錄"),
+                itemIndex: Number(itemIndex) || 0,
+                itemName: String(item?.name || "未知項目"),
+                result: String(result || "unknown"),
+                passed: Boolean(item?.passed),
+                failed: Boolean(item?.failed),
+                isCritical: Boolean(item?.isCritical),  // 🔧 強制轉為布林值
                 timestamp: new Date(),
-                updatedBy: currentUser ? currentUser.name : "admin"
+                updatedBy: String(currentUser?.name || "admin")
             };
             
-            console.log("準備儲存評核項目資料:", firebaseData);
+            // 🔍 驗證資料
+            console.log("🔍 驗證 Firebase 資料:", firebaseData);
+            
+            // 檢查是否有 undefined 值
+            const hasUndefined = Object.entries(firebaseData).find(([key, value]) => value === undefined);
+            if (hasUndefined) {
+                console.error(`❌ 發現 undefined 值: ${hasUndefined[0]} = ${hasUndefined[1]}`);
+                showSuccessMessage('❌', `資料驗證失敗: ${hasUndefined[0]}`, '#e74c3c');
+                return;
+            }
             
             const docRef = await window.addDoc(window.collection(window.db, "assessment-item-results"), firebaseData);
             console.log(`✅ 評核項目結果已儲存: ${item.name} - ${result} (Doc ID: ${docRef.id})`);
+            
+        } else {
+            console.warn("❌ Firebase 函數不可用");
         }
     } catch (e) {
         console.error("❌ 評核項目結果儲存失敗: ", e);
@@ -2776,17 +2844,21 @@ if (type === 'assessment' || type === 'checklist') {
     const items = assessmentItems.split('\n').filter(item => item.trim());
     const passMark = parseInt(document.getElementById('passMark').value) || 50;
     
-recordData.assessmentItems = items.map(item => {
-    const itemText = item.trim();
+recordData.assessmentItems = items.map((item, index) => {
+    const itemText = String(item).trim();
     const isCritical = itemText.includes('[CRITICAL]');
     
-    return {
-        name: itemText.replace('[CRITICAL]', '').trim(),
+    const assessmentItem = {
+        name: itemText.replace(/\[CRITICAL\]/g, '').trim(),
         passed: false,
         failed: false,
-        isCritical: isCritical || false,  // 🔧 確保是布林值
-        notes: ''
+        isCritical: Boolean(isCritical),  // 🔧 強制轉為布林值
+        notes: '',
+        index: index
     };
+    
+    console.log(`🔧 創建評核項目 ${index}:`, assessmentItem);
+    return assessmentItem;
 });
     recordData.totalItems = items.length;
     recordData.completedItems = 0;
