@@ -1510,12 +1510,79 @@ function calculateAssessmentStatus(joinDate, weeksDeadline, assessments, assessm
         }
 
         // 顯示評估時間表
-        function displayAssessments(staffId) {
-            const staff = staffData[staffId];
-            if (!staff) return;
-            
-            const assessmentGrid = document.getElementById('assessmentGrid');
-            let html = '';
+function displayAssessments(staffId) {
+    const staff = staffData[staffId];
+    if (!staff) {
+        console.error(`❌ 找不到員工資料: ${staffId}`);
+        return;
+    }
+    
+    // 確保評估資料結構完整
+    if (!staff.assessments) {
+        staff.assessments = {
+            'safety': { passed: false, failed: false },
+            'written': { passed: false, failed: false },
+            'training': { passed: false, failed: false }
+        };
+    }
+    
+    const assessmentGrid = document.getElementById('assessmentGrid');
+    if (!assessmentGrid) {
+        console.error('❌ 找不到評估網格元素');
+        return;
+    }
+    
+    let html = '';
+    
+    assessmentConfig.forEach(assessment => {
+        // 確保特定評估類型存在
+        if (!staff.assessments[assessment.type]) {
+            staff.assessments[assessment.type] = { passed: false, failed: false };
+        }
+        
+        const assessmentStatus = calculateAssessmentStatus(
+            staff.joinDate, 
+            assessment.weeksDeadline, 
+            staff.assessments, 
+            assessment.type
+        );
+        
+        html += `
+            <div class="assessment-item ${assessmentStatus.status}">
+                <button class="delete-btn-corner" onclick="deleteAssessmentItem('${assessment.id}')" title="刪除評估項目">🗑️</button>
+                <div class="assessment-info">
+                    <div class="assessment-name">${assessment.name}</div>
+                    <div class="assessment-deadline">
+                        截止日期：${assessmentStatus.deadline}
+                        ${assessmentStatus.daysToDeadline >= 0 ? 
+                            ` (入職後 ${assessment.weeksDeadline} 週)` : 
+                            ` (已逾期 ${Math.abs(assessmentStatus.daysToDeadline)} 天)`
+                        }
+                    </div>
+                </div>
+                <div class="assessment-status">
+                    <div class="status-badge status-${assessmentStatus.status}">
+                        ${assessmentStatus.badge}
+                    </div>
+                    <div class="checkbox-group">
+                        <button class="assessment-action-btn ${staff.assessments[assessment.type].passed ? 'active-pass' : ''}"
+                                onclick="saveAssessmentResult('${staffId}', '${assessment.type}', 'pass')"
+                                style="padding: 10px 20px; border: 2px solid #00b894; border-radius: 8px; background: ${staff.assessments[assessment.type].passed ? '#00b894' : 'white'}; color: ${staff.assessments[assessment.type].passed ? 'white' : '#00b894'}; font-weight: bold; cursor: pointer; transition: all 0.3s; margin-right: 10px;">
+                            ${staff.assessments[assessment.type].passed ? '✅ 已合格 (點擊取消)' : '⭕ 標記合格'}
+                        </button>
+                        <button class="assessment-action-btn ${staff.assessments[assessment.type].failed ? 'active-fail' : ''}"
+                                onclick="saveAssessmentResult('${staffId}', '${assessment.type}', 'fail')"
+                                style="padding: 10px 20px; border: 2px solid #e74c3c; border-radius: 8px; background: ${staff.assessments[assessment.type].failed ? '#e74c3c' : 'white'}; color: ${staff.assessments[assessment.type].failed ? 'white' : '#e74c3c'}; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+                            ${staff.assessments[assessment.type].failed ? '❌ 不合格 (點擊取消)' : '⭕ 標記不合格'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    assessmentGrid.innerHTML = html;
+}
             
             assessmentConfig.forEach(assessment => {
                 const assessmentStatus = calculateAssessmentStatus(
