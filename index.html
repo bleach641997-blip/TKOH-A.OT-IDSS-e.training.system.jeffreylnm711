@@ -946,36 +946,7 @@
             background: #95a5a6;
             color: white;
         }
-/* Delete 按鈕樣式 */
-        .delete-btn-corner {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            width: 35px;
-            height: 35px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 10;
-        }
 
-        .training-card:hover .delete-btn-corner,
-        .record-item:hover .delete-btn-corner {
-            opacity: 1;
-        }
-
-        .delete-btn-corner:hover {
-            background: #c0392b;
-            transform: scale(1.1);
-        }
         /* 評估動作按鈕樣式 */
         .assessment-action-btn:hover {
             transform: translateY(-2px);
@@ -1039,12 +1010,10 @@
                 <button class="grade-btn" onclick="showStaffList('PCA3')">
                     ⚕️<br>PCA3
                 </button>
-</div>
-
-            <button class="btn" onclick="showPendingTrainingList()" style="background: linear-gradient(135deg, #fd79a8, #e84393);">
-                📚 需要被培訓的員工
+            </div>
+            <button class="btn" onclick="showUserManagement()" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
+                👥 帳戶管理
             </button>
-
             <button class="btn logout-btn" onclick="logout()">🚪 登出系統</button>
         </div>
 
@@ -1105,17 +1074,6 @@
             <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
         </div>
 
-    <!-- 需要被培訓的員工頁面 -->
-    <div id="pendingTrainingPage" class="page">
-        <div class="title">📚 需要被培訓的員工</div>
-        <div class="subtitle">查看所有需要培訓的員工狀況</div>
-        
-        <div id="pendingTrainingContent"></div>
-        
-        <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
-    </div>
-
-    <!-- 培訓詳情 -->
         <!-- 培訓詳情 -->
         <div id="trainingDetailsPage" class="page training-details">
             <div class="title">📚 培訓詳情</div>
@@ -1646,8 +1604,7 @@
                     const isCompleted = percentage === 100;
                     
                     html += `
-                      <div class="training-card ${isCompleted ? 'completed' : ''}" onclick="showTrainingDetails('${categoryKey}')">
-                            <button class="delete-btn-corner" onclick="event.stopPropagation(); deleteTrainingCategory('${categoryKey}')" title="刪除培訓項目">🗑️</button>
+                        <div class="training-card ${isCompleted ? 'completed' : ''}" onclick="showTrainingDetails('${categoryKey}')">
                             ${isCompleted ? '<div class="completed-badge">✅ 完成</div>' : ''}
                             <div class="training-icon">${category.icon}</div>
                             <div class="training-name">${category.name}</div>
@@ -1755,9 +1712,8 @@
                 }
                 
                 content.innerHTML += `
-<div class="record-item ${statusClass}" onclick="openTrainingRecord(${index})">
-    <button class="delete-btn-corner" onclick="event.stopPropagation(); deleteTrainingRecord(${index})" title="刪除培訓記錄">🗑️</button>
-    <div class="record-status ${statusClass}">${statusText}</div>
+                    <div class="record-item ${statusClass}" onclick="openTrainingRecord(${index})">
+                        <div class="record-status ${statusClass}">${statusText}</div>
                         <div class="record-name">${record.name}</div>
                         <div class="record-date">${dateText}</div>
                         ${record.type === 'assessment' || record.type === 'checklist' ? 
@@ -1853,10 +1809,7 @@
                     <div class="assessment-items">
                         ${record.assessmentItems ? record.assessmentItems.map((item, index) => `
                             <div class="assessment-item-row ${item.passed ? 'passed' : (item.failed ? 'failed' : '')}" id="assessmentItem${index}">
-<div class="assessment-item-text">
-                                    ${item.isCritical ? '⚠️ ' : ''}${item.name}
-                                    ${item.isCritical ? '<span style="color: #e74c3c; font-size: 12px; font-weight: bold;"> (Critical Point)</span>' : ''}
-                                </div>
+                                <div class="assessment-item-text">${item.name}</div>
                                 <div class="assessment-controls">
                                     <button class="assessment-btn pass-btn" onclick="setAssessmentItemResult(${index}, 'pass')">
                                         ✅ 通過
@@ -1919,7 +1872,8 @@
             record.completedItems = passedItems;
             record.failedItems = failedItems;
         }
-// 完成評核邏輯
+
+        // 完成評核邏輯
         async function finishAssessment() {
             const staff = staffData[currentStaffId];
             const category = staff.trainingCategories[currentCategory];
@@ -1931,14 +1885,7 @@
                 record.assessmentItems.filter(item => item.failed).length : 0;
             const totalItems = record.assessmentItems ? record.assessmentItems.length : 0;
             
-            // 檢查 Critical Points
-            const criticalItems = record.assessmentItems ? 
-                record.assessmentItems.filter(item => item.isCritical) : [];
-            const failedCriticalItems = criticalItems.filter(item => item.failed);
-            
-            const passPercentage = totalItems > 0 ? (passedItems / totalItems) * 100 : 0;
-            
-            if (failedItems > 0 || failedCriticalItems.length > 0) {
+            if (failedItems > 0) {
                 record.completed = false;
                 record.failed = true;
                 record.date = getCurrentDate();
@@ -1948,14 +1895,7 @@
                     category.completed = category.records.filter(r => r.completed && !r.failed).length;
                 }
                 
-                let failReason = '';
-                if (failedCriticalItems.length > 0) {
-                    failReason = `Critical Points 失敗 (${failedCriticalItems.length} 項)`;
-                } else {
-                    failReason = `一般項目失敗 (${failedItems} 項)`;
-                }
-                
-                showSuccessMessage('❌', `「${record.name}」評核失敗！${failReason}`, '#e74c3c');
+                showSuccessMessage('❌', `「${record.name}」評核失敗，需要重做！共 ${failedItems} 項未通過`, '#e74c3c');
                 
             } else if (passedItems === totalItems && totalItems > 0) {
                 record.completed = true;
@@ -1965,16 +1905,17 @@
                 
                 category.completed = category.records.filter(r => r.completed && !r.failed).length;
                 
-                showSuccessMessage('🎉', `恭喜！「${record.name}」評核已完成！所有 Critical Points 通過`, '#00b894');
+                showSuccessMessage('🎉', `恭喜！「${record.name}」評核已完成！`, '#00b894');
                 
             } else {
                 record.completed = false;
                 record.failed = false;
                 record.status = 'in_progress';
                 
-                showSuccessMessage('💾', `評核進度已保存 (${passedItems}/${totalItems} 通過, ${passPercentage.toFixed(1)}%)`, '#f39c12');
+                showSuccessMessage('💾', `評核進度已保存 (${passedItems}/${totalItems} 通過)`, '#f39c12');
             }
 
+            // 儲存到 Firebase
             if (window.saveTrainingProgressToFirebase) {
                 await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, record.completed, record.failed);
             }
@@ -2181,18 +2122,7 @@
                         </label>
                         <textarea id="assessmentItems" 
                                   style="width: 100%; height: 120px; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px; resize: vertical;"
-placeholder="例如：&#10;準備一盤(約 2/3 滿)加醋清洗溶液及一盤(約 2/3 滿)清水作浸洗器械用&#10;檢查器械外表上的使用峰值指示器&#10;轉動圓盤將末端合閉的器械打開"></textarea>
-                        <div style="margin-top: 15px;">
-                            <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #e74c3c;">
-                                ⚠️ Critical Points (重要項目序號，例如：1,3,5)：
-                            </label>
-                            <input type="text" id="criticalPoints" 
-                                   style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;"
-                                   placeholder="輸入需要必須通過的項目序號，用逗號分隔">
-                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
-                                💡 Critical Points 必須全部通過才算合格，即使總分過50%
-                            </div>
-                        </div>
+                                  placeholder="例如：&#10;準備一盤(約 2/3 滿)加醋清洗溶液及一盤(約 2/3 滿)清水作浸洗器械用&#10;檢查器械外表上的使用峰值指示器&#10;轉動圓盤將末端合閉的器械打開"></textarea>
                     </div>
                     
                     <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
@@ -2253,22 +2183,16 @@ placeholder="例如：&#10;準備一盤(約 2/3 滿)加醋清洗溶液及一盤(
                 type: type
             };
             
-if (type === 'assessment' || type === 'checklist') {
+            if (type === 'assessment' || type === 'checklist') {
                 const items = assessmentItems.split('\n').filter(item => item.trim());
-                const criticalPoints = document.getElementById('criticalPoints').value.trim();
-                const criticalIndexes = criticalPoints ? 
-                    criticalPoints.split(',').map(num => parseInt(num.trim()) - 1).filter(num => !isNaN(num)) : [];
-
-                recordData.assessmentItems = items.map((item, index) => ({
+                recordData.assessmentItems = items.map(item => ({
                     name: item.trim(),
                     passed: false,
                     failed: false,
-                    notes: '',
-                    isCritical: criticalIndexes.includes(index)
+                    notes: ''
                 }));
                 recordData.totalItems = items.length;
                 recordData.completedItems = 0;
-                recordData.criticalPoints = criticalIndexes;
             }
             
             const staff = staffData[currentStaffId];
@@ -2302,89 +2226,6 @@ if (type === 'assessment' || type === 'checklist') {
         }
 
         // 帳戶管理功能
-
-        // 顯示需要被培訓的員工
-function showPendingTrainingList() {
-    hideAllPages();
-    document.getElementById('pendingTrainingPage').classList.add('active');
-    displayPendingTraining();
-}
-
-function displayPendingTraining() {
-    const content = document.getElementById('pendingTrainingContent');
-    let html = '<div class="user-list">';
-    
-    // 遍歷所有員工
-    Object.keys(staffData).forEach(staffId => {
-        const staff = staffData[staffId];
-        let pendingItems = [];
-        
-        // 檢查評估項目
-        assessmentConfig.forEach(assessment => {
-            const assessmentStatus = calculateAssessmentStatus(
-                staff.joinDate, 
-                assessment.weeksDeadline, 
-                staff.assessments, 
-                assessment.type
-            );
-            
-            if (!staff.assessments[assessment.type].passed && !staff.assessments[assessment.type].failed) {
-                pendingItems.push(`📝 ${assessment.name} (${assessmentStatus.daysToDeadline >= 0 ? `${assessmentStatus.daysToDeadline} 天後到期` : `逾期 ${Math.abs(assessmentStatus.daysToDeadline)} 天`})`);
-            }
-        });
-        
-        // 檢查培訓項目
-        if (staff.trainingCategories) {
-            Object.keys(staff.trainingCategories).forEach(categoryKey => {
-                const category = staff.trainingCategories[categoryKey];
-                const uncompletedCount = category.total - category.completed;
-                if (uncompletedCount > 0) {
-                    pendingItems.push(`🎓 ${category.name} (${uncompletedCount} 項未完成)`);
-                }
-            });
-        }
-        
-        if (pendingItems.length > 0) {
-            html += `
-                <div class="user-item" onclick="showStaffDetails('${staffId}')">
-                    <div class="user-info">
-                        <div class="user-name">${staff.name} (${staff.employeeId})</div>
-                        <div class="user-role" style="color: #e74c3c;">
-                            🏥 ${staff.grade} | 📅 入職：${staff.joinDate} | ⚠️ ${pendingItems.length} 項待完成
-                        </div>
-                        <div style="margin-top: 10px; font-size: 14px;">
-                            ${pendingItems.slice(0, 3).join('<br>')}
-                            ${pendingItems.length > 3 ? `<br><span style="color: #95a5a6;">...還有 ${pendingItems.length - 3} 項</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <span style="color: #e74c3c; font-weight: bold;">點擊查看 →</span>
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    if (html === '<div class="user-list">') {
-        html += '<div style="text-align: center; padding: 50px; color: #00b894; font-size: 24px;">🎉 所有員工培訓都已完成！</div>';
-    }
-    
-    html += '</div>';
-    content.innerHTML = html;
-}
-
-// 原本的 showUserManagement 函數保持不變
-        
-function showUserManagement() {
-    if (currentUserRole !== 'admin') {
-        alert('❌ 權限不足！只有管理員可以訪問帳戶管理！');
-        return;
-    }
-    
-    hideAllPages();
-    document.getElementById('userManagementPage').classList.add('active');
-    displayUserList();
-}
         function showUserManagement() {
             if (currentUserRole !== 'admin') {
                 alert('❌ 權限不足！只有管理員可以訪問帳戶管理！');
@@ -2451,39 +2292,9 @@ function showUserManagement() {
             alert('刪除功能開發中...');
         }
 
-        // 刪除培訓項目
-        async function deleteTrainingCategory(categoryKey) {
-            const staff = staffData[currentStaffId];
-            const category = staff.trainingCategories[categoryKey];
-            
-            if (confirm(`⚠️ 確定要刪除培訓項目「${category.name}」嗎？\n\n此操作無法復原！`)) {
-                delete staff.trainingCategories[categoryKey];
-                
-                showSuccessMessage('🗑️', `培訓項目「${category.name}」已刪除！`, '#e74c3c');
-                showStaffDetails(currentStaffId);
-            }
-        }
-
-        // 刪除培訓記錄
-        async function deleteTrainingRecord(recordIndex) {
-            const staff = staffData[currentStaffId];
-            const category = staff.trainingCategories[currentCategory];
-            const record = category.records[recordIndex];
-            
-            if (confirm(`⚠️ 確定要刪除培訓記錄「${record.name}」嗎？\n\n此操作無法復原！`)) {
-                category.records.splice(recordIndex, 1);
-                category.total = category.records.length;
-                category.completed = category.records.filter(r => r.completed && !r.failed).length;
-                
-                showSuccessMessage('🗑️', `培訓記錄「${record.name}」已刪除！`, '#e74c3c');
-                showTrainingDetails(currentCategory);
-            }
-        }
-
         // Firebase 儲存函數
         window.saveTrainingCategoryToFirebase = async function(staffId, categoryKey, categoryData) {
             console.log("✅ 培訓項目已標記為儲存（Firebase 離線模式）");
-
         };
 
         window.saveTrainingRecordToFirebase = async function(staffId, categoryKey, recordData) {
