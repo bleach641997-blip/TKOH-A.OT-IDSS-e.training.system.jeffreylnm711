@@ -1975,10 +1975,20 @@ async function deleteTrainingRecord(recordIndex) {
     }
 }
 
-        // 登入功能
-        function login() {
-            const loginId = document.getElementById('loginId').value.trim();
-            const password = document.getElementById('password').value.trim();
+// 等待 Firebase 初始化完成
+async function waitForFirebase() {
+    while (!window.firebaseReady) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+}
+
+// 登入功能
+async function login() {
+    // 等待 Firebase 準備就緒
+    await waitForFirebase();
+    
+    const loginId = document.getElementById('loginId').value.trim();
+    const password = document.getElementById('password').value.trim();
             
             if (!loginId || !password) {
                 showError('請輸入Login ID和Password');
@@ -3079,8 +3089,11 @@ function showStaffDetails(staffId) {
         
         document.getElementById('loginId').focus();
         
-        console.log("✅ 系統準備就緒！");
-      });
+       console.log("✅ 系統準備就緒！");
+        
+// 標記 Firebase 已準備就緒
+window.firebaseReady = true;
+          });
 
       // 重新定義儲存函數為 Firebase 版本
       window.saveTrainingCategoryToFirebase = async function(staffId, categoryKey, categoryData) {
