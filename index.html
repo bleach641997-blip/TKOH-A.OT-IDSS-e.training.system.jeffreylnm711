@@ -321,11 +321,26 @@
             color: white;
         }
         
-        .status-pending {
-            background: #95a5a6;
-            color: white;
-        }
-        
+.status-pending {
+    background: #95a5a6;
+    color: white;
+}
+
+/* 新增：不合格評估項目樣式 */
+.assessment-item.assessment-failed {
+    border-left: 6px solid #e74c3c;
+    background: linear-gradient(135deg, #ffebee, #ffcdd2) !important;
+    border: 2px solid #e74c3c !important;
+}
+
+.assessment-item.assessment-failed .assessment-name {
+    color: #c62828 !important;
+}
+
+.assessment-item.assessment-failed .assessment-deadline {
+    color: #d32f2f !important;
+}
+
         .checkbox-group {
             display: flex;
             gap: 15px;
@@ -545,10 +560,14 @@
             color: #c62828;
         }
         
-        .record-status.failed {
-            background: #e74c3c;
-            color: white;
-        }
+.record-status.failed {
+    background: #e74c3c;
+    color: white;
+}
+
+.record-status.failed::before {
+    content: "❌ 不合格需重做";
+}
         .record-status {
             position: absolute;
             top: 18px;
@@ -1547,8 +1566,12 @@ function displayAssessments(staffId) {
             assessment.type
         );
         
-        html += `
-            <div class="assessment-item ${assessmentStatus.status}">
+// 判斷是否不合格
+const isFailedAssessment = staff.assessments[assessment.type].failed;
+const assessmentItemClass = isFailedAssessment ? 'assessment-failed' : assessmentStatus.status;
+
+html += `
+    <div class="assessment-item ${assessmentItemClass}">
                 <button class="delete-btn-corner" onclick="deleteAssessmentItem('${assessment.id}')" title="刪除評估項目">🗑️</button>
                 <div class="assessment-info">
                     <div class="assessment-name">${assessment.name}</div>
@@ -2200,7 +2223,7 @@ function showStaffDetails(staffId) {
                 
                 if (record.failed) {
                     statusClass = 'failed';
-                    statusText = '❌ 失敗需重做';
+                    statusText = '❌ 不合格需重做';
                     dateText = `評核日期：${record.date} | 狀態：需要重新評核`;
                 } else if (record.completed) {
                     statusClass = 'completed';
@@ -2303,15 +2326,20 @@ function showStaffDetails(staffId) {
                 <div class="assessment-content">
                     <div class="assessment-header">
                         <h3 style="color: #2c3e50; margin-bottom: 10px;">📋 ${record.name}</h3>
-                        <div class="assessment-progress">
-                            進度：${completedItems}/${totalItems} (${progressPercentage}%)
-                        </div>
+<div class="assessment-progress">
+    進度：${completedItems}/${totalItems} (${progressPercentage}%)
+    ${record.criticalItems ? ` | Critical Items: ${record.assessmentItems ? record.assessmentItems.filter(item => item.isCritical && item.passed).length : 0}/${record.criticalItems}` : ''}
+    ${record.passMark ? ` | 合格分數: ${record.passMark}/100` : ''}
+</div>
                     </div>
                     
                     <div class="assessment-items">
                         ${record.assessmentItems ? record.assessmentItems.map((item, index) => `
                             <div class="assessment-item-row ${item.passed ? 'passed' : (item.failed ? 'failed' : '')}" id="assessmentItem${index}">
-                                <div class="assessment-item-text">${item.name}</div>
+                              <div class="assessment-item-text">
+    ${item.isCritical ? '<span style="color: #e74c3c; font-weight: bold;">[CRITICAL] </span>' : ''}
+    ${item.name}
+</div>
                                 <div class="assessment-controls">
                                     <button class="assessment-btn pass-btn" onclick="setAssessmentItemResult(${index}, 'pass')">
                                         ✅ 通過
@@ -2368,63 +2396,100 @@ function showStaffDetails(staffId) {
             const totalItems = record.assessmentItems.length;
             const progressPercentage = Math.round((passedItems / totalItems) * 100);
             
-            const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項失敗` : ''}`;
-            document.querySelector('.assessment-progress').textContent = progressText;
+const criticalPassed = record.assessmentItems ? 
+    record.assessmentItems.filter(item => item.isCritical && item.passed).length : 0;
+const totalCritical = record.criticalItems || 0;
+
+const progressText = `進度：${passedItems}/${totalItems} 通過 (${progressPercentage}%)${failedItems > 0 ? ` | ${failedItems} 項失敗` : ''}${totalCritical > 0 ? ` | Critical: ${criticalPassed}/${totalCritical}` : ''}${record.passMark ? ` | 合格分數: ${record.passMark}/100` : ''}`;
+document.querySelector('.assessment-progress').textContent = progressText;
             
             record.completedItems = passedItems;
             record.failedItems = failedItems;
         }
 
         // 完成評核邏輯
-        async function finishAssessment() {
-            const staff = staffData[currentStaffId];
-            const category = staff.trainingCategories[currentCategory];
-            const record = category.records[currentRecordIndex];
-            
-            const passedItems = record.assessmentItems ? 
-                record.assessmentItems.filter(item => item.passed).length : 0;
-            const failedItems = record.assessmentItems ? 
-                record.assessmentItems.filter(item => item.failed).length : 0;
-            const totalItems = record.assessmentItems ? record.assessmentItems.length : 0;
-            
-            if (failedItems > 0) {
-                record.completed = false;
-                record.failed = true;
-                record.date = getCurrentDate();
-                record.status = 'failed';
-                
-                if (category.completed > 0) {
-                    category.completed = category.records.filter(r => r.completed && !r.failed).length;
-                }
-                
-                showSuccessMessage('❌', `「${record.name}」評核失敗，需要重做！共 ${failedItems} 項未通過`, '#e74c3c');
-                
-            } else if (passedItems === totalItems && totalItems > 0) {
-                record.completed = true;
-                record.failed = false;
-                record.date = getCurrentDate();
-                record.status = 'completed';
-                
-                category.completed = category.records.filter(r => r.completed && !r.failed).length;
-                
-                showSuccessMessage('🎉', `恭喜！「${record.name}」評核已完成！`, '#00b894');
-                
-            } else {
-                record.completed = false;
-                record.failed = false;
-                record.status = 'in_progress';
-                
-                showSuccessMessage('💾', `評核進度已保存 (${passedItems}/${totalItems} 通過)`, '#f39c12');
-            }
+async function finishAssessment() {
+    const staff = staffData[currentStaffId];
+    const category = staff.trainingCategories[currentCategory];
+    const record = category.records[currentRecordIndex];
+    
+    const passedItems = record.assessmentItems ? 
+        record.assessmentItems.filter(item => item.passed).length : 0;
+    const failedItems = record.assessmentItems ? 
+        record.assessmentItems.filter(item => item.failed).length : 0;
+    const totalItems = record.assessmentItems ? record.assessmentItems.length : 0;
+    
+    // 檢查 Critical Items
+    const criticalItems = record.assessmentItems ? 
+        record.assessmentItems.filter(item => item.isCritical) : [];
+    const passedCriticalItems = criticalItems.filter(item => item.passed).length;
+    const totalCriticalItems = criticalItems.length;
+    
+    // 計算分數
+    const score = totalItems > 0 ? Math.round((passedItems / totalItems) * 100) : 0;
+    const passMark = record.passMark || 50;
+    
+    // 檢查合格條件
+    const criticalPassed = totalCriticalItems === 0 || passedCriticalItems === totalCriticalItems;
+    const scorePassed = score >= passMark;
+    const noFailedItems = failedItems === 0;
+    
+    if (!criticalPassed) {
+        record.completed = false;
+        record.failed = true;
+        record.date = getCurrentDate();
+        record.status = 'failed';
+        
+        category.completed = category.records.filter(r => r.completed && !r.failed).length;
+        
+        showSuccessMessage('❌', `「${record.name}」評核不合格！Critical Items 未全部通過 (${passedCriticalItems}/${totalCriticalItems})`, '#e74c3c');
+        
+    } else if (!scorePassed) {
+        record.completed = false;
+        record.failed = true;
+        record.date = getCurrentDate();
+        record.status = 'failed';
+        
+        category.completed = category.records.filter(r => r.completed && !r.failed).length;
+        
+        showSuccessMessage('❌', `「${record.name}」評核不合格！分數未達標準 (${score}/${passMark})`, '#e74c3c');
+        
+    } else if (!noFailedItems) {
+        record.completed = false;
+        record.failed = true;
+        record.date = getCurrentDate();
+        record.status = 'failed';
+        
+        category.completed = category.records.filter(r => r.completed && !r.failed).length;
+        
+        showSuccessMessage('❌', `「${record.name}」評核不合格，需要重做！共 ${failedItems} 項未通過`, '#e74c3c');
+        
+    } else if (passedItems === totalItems && totalItems > 0) {
+        record.completed = true;
+        record.failed = false;
+        record.date = getCurrentDate();
+        record.status = 'completed';
+        
+        category.completed = category.records.filter(r => r.completed && !r.failed).length;
+        
+        showSuccessMessage('🎉', `恭喜！「${record.name}」評核已完成！分數：${score}/100`, '#00b894');
+        
+    } else {
+        record.completed = false;
+        record.failed = false;
+        record.status = 'in_progress';
+        
+        showSuccessMessage('💾', `評核進度已保存 (${score}/100，Critical: ${passedCriticalItems}/${totalCriticalItems})`, '#f39c12');
+    }
 
-            // 儲存到 Firebase
-            if (window.saveTrainingProgressToFirebase) {
-                await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, record.completed, record.failed);
-            }
-            
-            closeAssessmentModal();
-            showTrainingDetails(currentCategory);
-        }
+    // 儲存到 Firebase
+    if (window.saveTrainingProgressToFirebase) {
+        await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, record.completed, record.failed);
+    }
+    
+    closeAssessmentModal();
+    showTrainingDetails(currentCategory);
+}
 
         function goBackToStaffList() {
             showStaffList(currentGrade);
@@ -2599,25 +2664,40 @@ document.addEventListener('keypress', function(event) {
                                placeholder="例如：處理機械臂儀器評核">
                     </div>
                     
-                    <div style="margin-bottom: 25px;">
-                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
-                            📊 記錄類型：
-                        </label>
-                        <select id="recordType" style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;">
-                            <option value="simple">簡單記錄 (完成/未完成)</option>
-                            <option value="assessment">評核項目 (包含詳細評核表)</option>
-                            <option value="checklist">檢查清單 (多項檢查項目)</option>
-                        </select>
-                    </div>
+<div style="margin-bottom: 25px;">
+    <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+        📊 記錄類型：
+    </label>
+    <select id="recordType" style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;">
+        <option value="simple">簡單記錄 (完成/未完成)</option>
+        <option value="assessment">評核項目 (包含詳細評核表)</option>
+        <option value="checklist">檢查清單 (多項檢查項目)</option>
+    </select>
+</div>
+
+<div id="passMarkDetails" style="display: none; margin-bottom: 25px;">
+    <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+        🎯 合格分數設定：
+    </label>
+    <input type="number" id="passMark" min="0" max="100" value="50"
+           style="width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;"
+           placeholder="請輸入合格分數 (0-100)">
+    <div style="font-size: 14px; color: #7f8c8d; margin-top: 5px;">
+        💡 學員必須達到此分數才能通過評核
+    </div>
+</div>
                     
-                    <div id="assessmentDetails" style="display: none; margin-bottom: 25px;">
-                        <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
-                            📋 評核項目 (每行一個項目)：
-                        </label>
-                        <textarea id="assessmentItems" 
-                                  style="width: 100%; height: 120px; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px; resize: vertical;"
-                                  placeholder="例如：&#10;準備一盤(約 2/3 滿)加醋清洗溶液及一盤(約 2/3 滿)清水作浸洗器械用&#10;檢查器械外表上的使用峰值指示器&#10;轉動圓盤將末端合閉的器械打開"></textarea>
-                    </div>
+<div id="assessmentDetails" style="display: none; margin-bottom: 25px;">
+    <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+        📋 評核項目 (每行一個項目)：
+    </label>
+    <textarea id="assessmentItems" 
+              style="width: 100%; height: 120px; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px; resize: vertical;"
+              placeholder="例如：&#10;準備一盤(約 2/3 滿)加醋清洗溶液及一盤(約 2/3 滿)清水作浸洗器械用&#10;檢查器械外表上的使用峰值指示器 [CRITICAL]&#10;轉動圓盤將末端合閉的器械打開"></textarea>
+    <div style="font-size: 14px; color: #e74c3c; margin-top: 5px;">
+        ⚠️ <strong>Critical Item 標記：</strong>在項目後加上 [CRITICAL] 表示關鍵項目，必須通過
+    </div>
+</div>
                     
                     <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
                         <button onclick="closeRecordModal()" 
@@ -2637,13 +2717,15 @@ document.addEventListener('keypress', function(event) {
             const recordTypeSelect = modal.querySelector('#recordType');
             const assessmentDetails = modal.querySelector('#assessmentDetails');
             
-            recordTypeSelect.addEventListener('change', function() {
-                if (this.value === 'assessment' || this.value === 'checklist') {
-                    assessmentDetails.style.display = 'block';
-                } else {
-                    assessmentDetails.style.display = 'none';
-                }
-            });
+recordTypeSelect.addEventListener('change', function() {
+    if (this.value === 'assessment' || this.value === 'checklist') {
+        assessmentDetails.style.display = 'block';
+        document.getElementById('passMarkDetails').style.display = 'block';
+    } else {
+        assessmentDetails.style.display = 'none';
+        document.getElementById('passMarkDetails').style.display = 'none';
+    }
+});
             
             window.currentRecordModal = modal;
         }
@@ -2677,17 +2759,27 @@ document.addEventListener('keypress', function(event) {
                 type: type
             };
             
-            if (type === 'assessment' || type === 'checklist') {
-                const items = assessmentItems.split('\n').filter(item => item.trim());
-                recordData.assessmentItems = items.map(item => ({
-                    name: item.trim(),
-                    passed: false,
-                    failed: false,
-                    notes: ''
-                }));
-                recordData.totalItems = items.length;
-                recordData.completedItems = 0;
-            }
+if (type === 'assessment' || type === 'checklist') {
+    const items = assessmentItems.split('\n').filter(item => item.trim());
+    const passMark = parseInt(document.getElementById('passMark').value) || 50;
+    
+    recordData.assessmentItems = items.map(item => {
+        const itemText = item.trim();
+        const isCritical = itemText.includes('[CRITICAL]');
+        
+        return {
+            name: itemText.replace('[CRITICAL]', '').trim(),
+            passed: false,
+            failed: false,
+            isCritical: isCritical,
+            notes: ''
+        };
+    });
+    recordData.totalItems = items.length;
+    recordData.completedItems = 0;
+    recordData.passMark = passMark;
+    recordData.criticalItems = items.filter(item => item.includes('[CRITICAL]')).length;
+}
             
             const staff = staffData[currentStaffId];
             const category = staff.trainingCategories[currentCategory];
@@ -2932,19 +3024,27 @@ staffSnapshot.forEach((doc) => {
             }
           });
           
-          // 載入新增的培訓項目
-          const categoriesQuery = query(collection(db, "training-categories"), orderBy("timestamp", "desc"));
-          const categoriesSnapshot = await getDocs(categoriesQuery);
-          
-          categoriesSnapshot.forEach((doc) => {
-            const data = doc.data();
-            const { staffId, categoryKey, categoryData } = data;
-            
-            if (staffData[staffId] && staffData[staffId].trainingCategories) {
-              staffData[staffId].trainingCategories[categoryKey] = categoryData;
-              console.log(`✅ 載入培訓項目：${data.staffName} - ${categoryData.name}`);
-            }
-          });
+// 載入新增的培訓項目
+const categoriesQuery = query(collection(db, "training-categories"), orderBy("timestamp", "desc"));
+const categoriesSnapshot = await getDocs(categoriesQuery);
+
+categoriesSnapshot.forEach((doc) => {
+  const data = doc.data();
+  const { staffId, categoryKey, categoryData } = data;
+  
+  if (staffData[staffId]) {
+    // 確保 trainingCategories 存在
+    if (!staffData[staffId].trainingCategories) {
+      staffData[staffId].trainingCategories = {};
+    }
+    
+    // 只有當該培訓項目不存在時才添加
+    if (!staffData[staffId].trainingCategories[categoryKey]) {
+      staffData[staffId].trainingCategories[categoryKey] = categoryData;
+      console.log(`✅ 載入培訓項目：${data.staffName} - ${categoryData.name}`);
+    }
+  }
+});
 
           // 載入新增的培訓記錄
           const recordsQuery = query(collection(db, "training-record-details"), orderBy("timestamp", "desc"));
