@@ -2410,28 +2410,33 @@ async function setAssessmentItemResult(itemIndex, result) {
     record.completedItems = passedItems;
     record.failedItems = failedItems;
     
-    // 🚨 新增：立即儲存評核項目狀態到 Firebase
+    // 🚨 修正：確保所有值都不是 undefined
     try {
         if (window.addDoc && window.collection && window.db) {
-            await window.addDoc(window.collection(window.db, "assessment-item-results"), {
+            const firebaseData = {
                 staffId: currentStaffId,
-                staffName: staff.name,
+                staffName: staff.name || "未知員工",
                 categoryKey: currentCategory,
                 recordIndex: currentRecordIndex,
-                recordName: record.name,
+                recordName: record.name || "未知記錄",
                 itemIndex: itemIndex,
-                itemName: item.name,
+                itemName: item.name || "未知項目",
                 result: result,
-                passed: item.passed,
-                failed: item.failed,
-                isCritical: item.isCritical,
+                passed: item.passed || false,
+                failed: item.failed || false,
+                isCritical: item.isCritical || false,  // 🔧 修正：確保不是 undefined
                 timestamp: new Date(),
                 updatedBy: currentUser ? currentUser.name : "admin"
-            });
-            console.log(`✅ 評核項目結果已儲存: ${item.name} - ${result}`);
+            };
+            
+            console.log("準備儲存評核項目資料:", firebaseData);
+            
+            const docRef = await window.addDoc(window.collection(window.db, "assessment-item-results"), firebaseData);
+            console.log(`✅ 評核項目結果已儲存: ${item.name} - ${result} (Doc ID: ${docRef.id})`);
         }
     } catch (e) {
         console.error("❌ 評核項目結果儲存失敗: ", e);
+        showSuccessMessage('❌', `儲存失敗: ${e.message}`, '#e74c3c');
     }
 }
 
