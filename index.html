@@ -1735,28 +1735,47 @@ function displayAssessments(staffId) {
         }
 
         // 刪除評估項目
-        function deleteAssessmentItem(assessmentId) {
-            const assessment = assessmentConfig.find(a => a.id === assessmentId);
-            if (!assessment) return;
-            
-            if (confirm(`⚠️ 確定要刪除評估項目「${assessment.name}」嗎？\n\n此操作會影響所有員工，且無法復原！`)) {
-                // 從配置中移除
-                const index = assessmentConfig.findIndex(a => a.id === assessmentId);
-                if (index > -1) {
-                    assessmentConfig.splice(index, 1);
-                }
-                
-                // 從所有員工記錄中移除
-                Object.keys(staffData).forEach(staffId => {
-                    if (staffData[staffId].assessments[assessment.type]) {
-                        delete staffData[staffId].assessments[assessment.type];
-                    }
+async function deleteAssessmentItem(assessmentId) {
+    const assessment = assessmentConfig.find(a => a.id === assessmentId);
+    if (!assessment) return;
+    
+    if (confirm(`⚠️ 確定要刪除評估項目「${assessment.name}」嗎？\n\n此操作會影響所有員工，且無法復原！`)) {
+        try {
+            // 記錄刪除操作到 Firebase
+            if (window.addDoc && window.collection && window.db) {
+                await window.addDoc(window.collection(window.db, "deleted-assessments"), {
+                    assessmentId: assessmentId,
+                    assessmentName: assessment.name,
+                    assessmentType: assessment.type,
+                    deletedBy: currentUser ? currentUser.name : "admin",
+                    timestamp: new Date(),
+                    action: "delete"
                 });
-                
-                showSuccessMessage('🗑️', `評估項目「${assessment.name}」已刪除！`, '#e74c3c');
-                displayAssessments(currentStaffId);
+                console.log("✅ 評估項目刪除已記錄到 Firebase");
             }
+            
+            // 從配置中移除
+            const index = assessmentConfig.findIndex(a => a.id === assessmentId);
+            if (index > -1) {
+                assessmentConfig.splice(index, 1);
+            }
+            
+            // 從所有員工記錄中移除
+            Object.keys(staffData).forEach(staffId => {
+                if (staffData[staffId].assessments[assessment.type]) {
+                    delete staffData[staffId].assessments[assessment.type];
+                }
+            });
+            
+            showSuccessMessage('🗑️', `評估項目「${assessment.name}」已刪除！`, '#e74c3c');
+            displayAssessments(currentStaffId);
+            
+        } catch (e) {
+            console.error("❌ 刪除評估項目失敗: ", e);
+            showSuccessMessage('❌', '刪除失敗，請重試', '#e74c3c');
         }
+    }
+}
 
         // 新增員工功能
         function showAddStaffModal() {
@@ -1887,41 +1906,74 @@ function displayAssessments(staffId) {
         }
 
         // 刪除培訓項目
-        async function deleteTrainingCategory(categoryKey) {
-            const staff = staffData[currentStaffId];
-            const category = staff.trainingCategories[categoryKey];
-            
-            if (confirm(`⚠️ 確定要刪除培訓項目「${category.name}」嗎？\n\n此操作無法復原！`)) {
-                delete staff.trainingCategories[categoryKey];
-                
-                if (window.deleteTrainingCategoryFromFirebase) {
-                    await window.deleteTrainingCategoryFromFirebase(currentStaffId, categoryKey);
-                }
-                
-                showSuccessMessage('🗑️', `培訓項目「${category.name}」已刪除！`, '#e74c3c');
-                (currentStaffId);
+async function deleteTrainingCategory(categoryKey) {
+    const staff = staffData[currentStaffId];
+    const category = staff.trainingCategories[categoryKey];
+    
+    if (confirm(`⚠️ 確定要刪除培訓項目「${category.name}」嗎？\n\n此操作無法復原！`)) {
+        try {
+            // 記錄刪除操作到 Firebase
+            if (window.addDoc && window.collection && window.db) {
+                await window.addDoc(window.collection(window.db, "deleted-training-categories"), {
+                    staffId: currentStaffId,
+                    staffName: staff.name,
+                    categoryKey: categoryKey,
+                    categoryName: category.name,
+                    deletedBy: currentUser ? currentUser.name : "admin",
+                    timestamp: new Date(),
+                    action: "delete"
+                });
+                console.log("✅ 培訓項目刪除已記錄到 Firebase");
             }
+            
+            delete staff.trainingCategories[categoryKey];
+            
+            showSuccessMessage('🗑️', `培訓項目「${category.name}」已刪除！`, '#e74c3c');
+            showStaffDetails(currentStaffId);
+            
+        } catch (e) {
+            console.error("❌ 刪除培訓項目失敗: ", e);
+            showSuccessMessage('❌', '刪除失敗，請重試', '#e74c3c');
         }
+    }
+}
 
         // 刪除培訓記錄
-        async function deleteTrainingRecord(recordIndex) {
-            const staff = staffData[currentStaffId];
-            const category = staff.trainingCategories[currentCategory];
-            const record = category.records[recordIndex];
-            
-            if (confirm(`⚠️ 確定要刪除培訓記錄「${record.name}」嗎？\n\n此操作無法復原！`)) {
-                category.records.splice(recordIndex, 1);
-                category.total = category.records.length;
-                category.completed = category.records.filter(r => r.completed && !r.failed).length;
-                
-                if (window.deleteTrainingRecordFromFirebase) {
-                    await window.deleteTrainingRecordFromFirebase(currentStaffId, currentCategory, recordIndex);
-                }
-                
-                showSuccessMessage('🗑️', `培訓記錄「${record.name}」已刪除！`, '#e74c3c');
-                showTrainingDetails(currentCategory);
+async function deleteTrainingRecord(recordIndex) {
+    const staff = staffData[currentStaffId];
+    const category = staff.trainingCategories[currentCategory];
+    const record = category.records[recordIndex];
+    
+    if (confirm(`⚠️ 確定要刪除培訓記錄「${record.name}」嗎？\n\n此操作無法復原！`)) {
+        try {
+            // 記錄刪除操作到 Firebase
+            if (window.addDoc && window.collection && window.db) {
+                await window.addDoc(window.collection(window.db, "deleted-training-records"), {
+                    staffId: currentStaffId,
+                    staffName: staff.name,
+                    categoryKey: currentCategory,
+                    recordIndex: recordIndex,
+                    recordName: record.name,
+                    deletedBy: currentUser ? currentUser.name : "admin",
+                    timestamp: new Date(),
+                    action: "delete"
+                });
+                console.log("✅ 培訓記錄刪除已記錄到 Firebase");
             }
+            
+            category.records.splice(recordIndex, 1);
+            category.total = category.records.length;
+            category.completed = category.records.filter(r => r.completed && !r.failed).length;
+            
+            showSuccessMessage('🗑️', `培訓記錄「${record.name}」已刪除！`, '#e74c3c');
+            showTrainingDetails(currentCategory);
+            
+        } catch (e) {
+            console.error("❌ 刪除培訓記錄失敗: ", e);
+            showSuccessMessage('❌', '刪除失敗，請重試', '#e74c3c');
         }
+    }
+}
 
         // 登入功能
         function login() {
@@ -2799,9 +2851,21 @@ function showStaffDetails(staffId) {
         appId: "1:1044004131681:web:8004fbf63324b98dc3eb20"
       };
 
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
+  // 📍 在這裡加入以下代碼 📍
+  // 將 Firebase 函數設為全域變數
+  window.db = db;
+  window.collection = collection;
+  window.addDoc = addDoc;
+  window.getDocs = getDocs;
+  window.query = query;
+  window.orderBy = orderBy;
+  window.doc = doc;
+  window.deleteDoc = deleteDoc;
+  
+  console.log("🔥 Firebase 全域變數已設置！");
       console.log("🔥 Firebase 已成功連接！");
 
       // Firebase 資料同步函數
