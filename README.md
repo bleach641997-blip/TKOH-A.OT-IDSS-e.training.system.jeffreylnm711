@@ -1,2 +1,2 @@
-# tkoh-training-system
-tkoh-training-system
+# tkoh-a.ot-idss-training-system-lnm711
+tkoh-a.ot-idss-training-system-lnm711
