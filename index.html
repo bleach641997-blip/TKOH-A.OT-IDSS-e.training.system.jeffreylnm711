@@ -2004,16 +2004,15 @@ async function waitForFirebase() {
 
 // 處理登入按鈕點擊
 async function handleLogin() {
-    // 顯示載入中訊息
-    showError('系統載入中，請稍候...');
+    const loginId = document.getElementById('loginId').value.trim();
+    const password = document.getElementById('password').value.trim();
     
-    // 等待 Firebase 準備就緒
-    await waitForFirebase();
+    if (!loginId || !password) {
+        showError('請輸入Login ID和Password');
+        return;
+    }
     
-    // 清除載入訊息
-    document.getElementById('errorMsg').style.display = 'none';
-    
-    // 執行登入
+    // 立即執行登入邏輯
     login();
 }
         
