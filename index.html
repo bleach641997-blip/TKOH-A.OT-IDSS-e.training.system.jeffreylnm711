@@ -18,7 +18,6 @@
     .form-group input,.form-group select{width:100%;padding:14px;border:2px solid #ecf0f1;border-radius:10px;font-size:18px;transition:border-color .3s;background:#fff}
     .form-group input:focus,.form-group select:focus{outline:none;border-color:#3498db}
 
-    /* 讓登入按鈕置中 */
     .login-actions{display:flex;justify-content:center}
     .login-btn,.btn{padding:16px 28px;background:linear-gradient(135deg,#3498db,#2980b9);color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:600;cursor:pointer;transition:transform .15s;margin:10px}
     .login-btn:hover,.btn:hover{transform:translateY(-2px)}
@@ -114,7 +113,6 @@
     .confirm-yes{background:#e74c3c;color:#fff}
     .confirm-no{background:#95a5a6;color:#fff}
 
-    /* 更改培訓項目介面 */
     .manage-layout{display:grid;grid-template-columns:1fr;gap:16px}
     .card{background:#fff;border:2px solid #ecf0f1;border-radius:14px;padding:18px}
     .card-title{font-size:18px;font-weight:800;margin-bottom:10px;color:#2c3e50}
@@ -274,12 +272,10 @@
 
   <script>
     // 角色: admin(系統管理員), supervisor(主管), staff(員工)
-    // 1) 刪除現有主管及員工帳號，僅保留系統管理員
     const userAccounts = {
       'tkohot': { username:'tkohot', password:'A123456*#', role:'admin', name:'系統管理員', email:'admin@tkoh.hk', createdDate:'01/01/2024' }
     };
 
-    // 3) 清除所有員工：起始時不包含任何員工
     const staffDatabase = {
       'PCA1': [],
       'PCA2': [],
@@ -287,7 +283,6 @@
       'OTA':  []
     };
 
-    // 空的員工資料容器
     const staffData = {};
 
     // 全域評估配置（可由管理頁新增/刪除）
@@ -341,7 +336,6 @@
       applyRoleVisibility();
     }
     function goBackToStaffList(){
-      // 明確返回到員工列表
       hideAll();
       document.getElementById('staffListPage').classList.add('active');
     }
@@ -350,7 +344,6 @@
       document.getElementById('staffDetailsPage').classList.add('active');
     }
 
-    // 權限控制：主選單按鈕顯示
     function applyRoleVisibility(){
       const isAdmin = currentUserRole==='admin';
       const isSupervisor = currentUserRole==='supervisor';
@@ -358,7 +351,6 @@
       document.getElementById('btnGoManage')?.classList.toggle('hidden', !(isAdmin||isSupervisor));
     }
 
-    // 同步模板到員工（當前起始無員工，僅在新增員工後有作用）
     function syncTemplatesToAllStaff(){
       Object.keys(staffData).forEach(staffId=>{
         const staff = staffData[staffId];
@@ -368,7 +360,7 @@
         });
         if (!staff.trainingCategories) staff.trainingCategories = {};
         Object.entries(trainingTemplates).forEach(([key, tpl])=>{
-          const targetMatch = (staff.grade==='OTA') ? tpl.target.ota : tpl.target.pca;
+          const targetMatch = (staff.grade==='OTA') ? tpl.target?.ota : tpl.target?.pca;
           if (targetMatch){
             if (!staff.trainingCategories[key]){
               staff.trainingCategories[key] = {
@@ -405,7 +397,6 @@
       });
     }
 
-    // 登入
     async function handleLogin(){
       const loginId=document.getElementById('loginId').value.trim();
       const password=document.getElementById('password').value.trim();
@@ -435,7 +426,6 @@
       }
     }
 
-    // 主選單 → 員工列表
     function showStaffList(grade){
       if (!(currentUserRole==='admin' || currentUserRole==='supervisor')){ alert('❌ 權限不足！'); return; }
       currentGrade=grade;
@@ -448,7 +438,6 @@
         list.map(s=>`<button class="staff-btn" onclick="showStaffDetails('${s.id}')">👤 ${s.name}</button>`).join('');
     }
 
-    // 計算評估狀態
     function calcAssessmentStatus(joinDate, weeksDeadline, assessments, type){
       const deadline = addWeeksToDate(joinDate, weeksDeadline);
       const now = getCurrentDate();
@@ -461,7 +450,6 @@
       return {status:'pending',deadline,d,badge:`📅 ${d} 天後到期`};
     }
 
-    // 員工詳情頁
     function showStaffDetails(staffId){
       currentStaffId = staffId;
       const staff = staffData[staffId];
@@ -736,7 +724,6 @@
       closeAnyDialog(); showTrainingDetails(currentCategory);
     }
 
-    // 主選單：更改培訓項目
     function showManagePage(){
       if (!(currentUserRole==='admin' || currentUserRole==='supervisor')){ alert('❌ 權限不足！'); return; }
       hideAll(); document.getElementById('managePage').classList.add('active');
@@ -745,7 +732,6 @@
       renderTemplateRecords();
     }
 
-    // 管理頁：評估項目清單
     function renderManageAssessments(){
       const box=document.getElementById('manageAssessList');
       box.innerHTML = assessmentConfig.map(a=>`
@@ -759,7 +745,6 @@
       `).join('') || `<div class="row"><div>尚未新增任何評估項目</div></div>`;
     }
 
-    // 新增評估項目
     function openAddAssessmentConfig(){
       if (currentUserRole!=='admin'){ alert('僅系統管理員可新增'); return; }
       const dlg=document.createElement('div'); dlg.className='confirm-dialog';
@@ -820,7 +805,6 @@
       renderManageAssessments();
     }
 
-    // 管理頁：培訓項目（模板）清單
     function renderManageCategories(){
       const box=document.getElementById('manageCategoryList');
       const entries = Object.entries(trainingTemplates);
@@ -832,7 +816,7 @@
         <div class="row">
           <div style="display:flex;flex-direction:column;gap:4px;cursor:pointer" onclick="selectTemplate('${key}')">
             <div style="font-weight:800">${tpl.icon||'📚'} ${tpl.name}</div>
-            <div style="font-size:12px;color:#7f8c8d">key: ${key} | 對象：${tpl.target.pca?'PCA':''}${tpl.target.pca && tpl.target.ota ? ' / ':''}${tpl.target.ota?'OTA':''} | 記錄數：${(tpl.recordsTemplate||[]).length}</div>
+            <div style="font-size:12px;color:#7f8c8d">key: ${key} | 對象：${tpl.target?.pca?'PCA':''}${tpl.target?.pca && tpl.target?.ota ? ' / ':''}${tpl.target?.ota?'OTA':''} | 記錄數：${(tpl.recordsTemplate||[]).length}</div>
           </div>
           ${currentUserRole==='admin'? `
             <div>
@@ -859,8 +843,8 @@
         <div class="confirm-content">
           <div class="card-title">適用對象</div>
           <div style="margin:10px 0">
-            <label style="margin-right:10px"><input id="chkPCA" type="checkbox" ${tpl.target.pca?'checked':''}> PCA</label>
-            <label><input id="chkOTA" type="checkbox" ${tpl.target.ota?'checked':''}> OTA</label>
+            <label style="margin-right:10px"><input id="chkPCA" type="checkbox" ${tpl.target?.pca?'checked':''}> PCA</label>
+            <label><input id="chkOTA" type="checkbox" ${tpl.target?.ota?'checked':''}> OTA</label>
           </div>
           <div class="confirm-buttons">
             <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">取消</button>
@@ -897,6 +881,14 @@
           <div class="form-group" style="margin:auto">
             <label>圖標（Emoji）</label>
             <input id="tplIcon" type="text" value="📚">
+            <div style="font-size:12px;color:#7f8c8d;margin:8px 0 6px">常用圖標</div>
+            <div id="emojiQuick" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start">
+              ${['📚','📘','🧪','🧬','🩺','🏥','⚕️','🧼','🧯','🧤','🩹','💉','🔬','🔧','🛡️','✅','❌','⏳','🔔','📅','📝','🗂️','🧭','🧰','🎓','📈','📉'].map(e=>`<button type="button" class="mini-btn" style="background:#eaf5ff;color:#2c3e50" data-emoji="${e}">${e}</button>`).join('')}
+            </div>
+            <div style="font-size:12px;color:#7f8c8d;margin:10px 0 6px">醫護/設備/進度</div>
+            <div id="emojiSets" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start">
+              ${['🩺','🏥','⚕️','💊','🧫','🧪','🧬','🧴','🧼','🧯','🧤','🩹','💉','🧠','🫁','🫀','🦴','🔬','🔧','🧰','🛡️','✅','❌','⏳','🔔','📅','📈','📉','📝','📚','📘','🎓'].map(e=>`<button type="button" class="mini-btn" style="background:#eefaf3;color:#2c3e50" data-emoji="${e}">${e}</button>`).join('')}
+            </div>
           </div>
           <div class="form-group" style="margin:auto">
             <label>適用對象（可多選）</label>
@@ -912,6 +904,15 @@
         </div>
       `;
       document.body.appendChild(dlg); window.currentConfirmDialog=dlg;
+
+      // 綁定 Emoji 選擇
+      Array.from(dlg.querySelectorAll('#emojiQuick button, #emojiSets button')).forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const input = dlg.querySelector('#tplIcon');
+          input.value = btn.getAttribute('data-emoji');
+          input.focus();
+        });
+      });
     }
     async function addTrainingTemplate(){
       const name=document.getElementById('tplName').value.trim();
@@ -1068,7 +1069,6 @@
       renderTemplateRecords();
     }
 
-    // 帳戶管理
     function showUserManagement(){
       if (currentUserRole!=='admin'){ alert('❌ 權限不足！只有系統管理員可使用帳戶管理！'); return; }
       hideAll(); document.getElementById('userManagementPage').classList.add('active');
@@ -1235,7 +1235,6 @@
       renderUsers();
     }
 
-    // 匯出用戶資料（簡單示意）
     function exportUserData(){
       const data = Object.values(userAccounts);
       const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
@@ -1244,7 +1243,7 @@
       URL.revokeObjectURL(url);
     }
 
-    // Firebase 占位（如需改 Firestore 結構，將 addDoc 改成 setDoc(doc(...), ...)）
+    // Firebase 佔位
     window.saveAssessmentConfigToFirebase = async function(){};
     window.saveTrainingTemplateToFirebase = async function(){};
     window.saveTemplateRecordToFirebase = async function(){};
@@ -1254,12 +1253,10 @@
     window.saveTrainingProgressToFirebase = async function(){};
     window.addDoc = null; window.collection=null; window.db=null; window.getDocs=null; window.query=null; window.orderBy=null; window.doc=null; window.deleteDoc=null;
 
-    // 鍵盤 Enter 登入
     document.addEventListener('keypress', e=>{
       if (e.key==='Enter' && document.getElementById('loginPage').classList.contains('active')) handleLogin();
     });
 
-    // 初始同步（目前無員工，僅確保函式存在）
     syncTemplatesToAllStaff();
   </script>
 
@@ -1269,13 +1266,13 @@
     import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
     const firebaseConfig = {
-  apiKey: "AIzaSyBlLQdM2xL9U0uczsi4eJjyBU56_U9qGUE",
-  authDomain: "tkoh-otidss-training.firebaseapp.com",
-  projectId: "tkoh-otidss-training",
-  storageBucket: "tkoh-otidss-training.firebasestorage.app",
-  messagingSenderId: "362761345155",
-  appId: "1:362761345155:web:729b2534075b29db01a3b6"
-};
+      apiKey: "AIzaSyBlLQdM2xL9U0uczsi4eJjyBU56_U9qGUE",
+      authDomain: "tkoh-otidss-training.firebaseapp.com",
+      projectId: "tkoh-otidss-training",
+      storageBucket: "tkoh-otidss-training.firebasestorage.app",
+      messagingSenderId: "362761345155",
+      appId: "1:362761345155:web:729b2534075b29db01a3b6"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -1324,25 +1321,30 @@
       });
     };
 
-    // 載入已有配置與模板
+    // 新增：啟動時載入 users 與 staff，合併入本地記憶體
     async function loadAllFromFirebase(){
       try{
+        // 1) 載入評估配置
         const acSnap = await getDocs(query(collection(db,'assessment-config'), orderBy('timestamp','asc')));
-        const seenAss = new Set(assessmentConfig.map(a=>a.id));
+        const seenAss = new Set(window.assessmentConfig.map(a=>a.id));
         acSnap.forEach(doc=>{
           const d=doc.data();
-          if (!seenAss.has(d.id)){
-            assessmentConfig.push({id:d.id,name:d.name,weeksDeadline:d.weeksDeadline,type:d.type});
+          if (d && d.id && !seenAss.has(d.id)){
+            window.assessmentConfig.push({id:d.id,name:d.name,weeksDeadline:d.weeksDeadline,type:d.type});
             seenAss.add(d.id);
           }
         });
 
+        // 2) 載入培訓模板
         const tplSnap = await getDocs(query(collection(db,'training-templates'), orderBy('timestamp','asc')));
         tplSnap.forEach(doc=>{
           const d=doc.data();
-          window.trainingTemplates[d.key] = d.template;
+          if (d && d.key) {
+            window.trainingTemplates[d.key] = d.template;
+          }
         });
 
+        // 3) 載入模板記錄
         const tplRecSnap = await getDocs(query(collection(db,'training-template-records'), orderBy('timestamp','asc')));
         tplRecSnap.forEach(doc=>{
           const d=doc.data();
@@ -1354,6 +1356,7 @@
           }
         });
 
+        // 4) 重放刪除事件（記錄模板）
         const delTplRecSnap = await getDocs(query(collection(db,'deleted-training-record-templates'), orderBy('timestamp','asc')));
         delTplRecSnap.forEach(doc=>{
           const d=doc.data();
@@ -1364,6 +1367,7 @@
           }
         });
 
+        // 5) 重放刪除事件（評估配置）
         const delAssSnap = await getDocs(query(collection(db,'deleted-assessments'), orderBy('timestamp','asc')));
         delAssSnap.forEach(doc=>{
           const d=doc.data();
@@ -1376,6 +1380,7 @@
           });
         });
 
+        // 6) 重放刪除事件（培訓模板）
         const delTplSnap = await getDocs(query(collection(db,'deleted-training-templates'), orderBy('timestamp','asc')));
         delTplSnap.forEach(doc=>{
           const d=doc.data();
@@ -1387,10 +1392,46 @@
           });
         });
 
-        // 同步模板到員工（目前無員工，呼叫亦安全）
+        // 7) 載入 users（合併）
+        const usersSnap = await getDocs(query(collection(db,'users'), orderBy('timestamp','asc')));
+        usersSnap.forEach(doc=>{
+          const u = doc.data();
+          if (u && u.username && !window.userAccounts[u.username]) {
+            window.userAccounts[u.username] = {
+              username: u.username,
+              password: u.password,
+              role: u.role,
+              name: u.name,
+              email: u.email || '',
+              createdDate: u.createdDate || '',
+              grade: u.grade,
+              staffId: u.staffId
+            };
+          }
+        });
+
+        // 8) 載入 staff（合併）
+        const staffSnap = await getDocs(query(collection(db,'staff'), orderBy('timestamp','asc')));
+        staffSnap.forEach(doc=>{
+          const d = doc.data();
+          const staffId = d?.staffId;
+          const s = d?.staffData;
+          if (staffId && s){
+            if (!window.staffData[staffId]) {
+              window.staffData[staffId] = s;
+              const g = s.grade;
+              window.staffDatabase[g] = window.staffDatabase[g] || [];
+              if (!window.staffDatabase[g].some(x=>x.id===staffId)) {
+                window.staffDatabase[g].push({ id: staffId, name: s.name });
+              }
+            }
+          }
+        });
+
+        // 9) 同步模板到員工
         syncTemplatesToAllStaff();
 
-        console.log('🎉 Firebase 載入完成且已同步模板/配置');
+        console.log('🎉 Firebase 載入完成且已同步 users/staff 與模板/配置');
       }catch(e){
         console.error('❌ 載入 Firebase 失敗：', e);
       }
