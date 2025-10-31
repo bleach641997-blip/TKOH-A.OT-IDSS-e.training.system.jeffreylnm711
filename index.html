@@ -17,6 +17,9 @@
     .form-group label{display:block;margin-bottom:8px;font-weight:bold;color:#2c3e50;font-size:18px}
     .form-group input,.form-group select{width:100%;padding:14px;border:2px solid #ecf0f1;border-radius:10px;font-size:18px;transition:border-color .3s;background:#fff}
     .form-group input:focus,.form-group select:focus{outline:none;border-color:#3498db}
+
+    /* 讓登入按鈕置中 */
+    .login-actions{display:flex;justify-content:center}
     .login-btn,.btn{padding:16px 28px;background:linear-gradient(135deg,#3498db,#2980b9);color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:600;cursor:pointer;transition:transform .15s;margin:10px}
     .login-btn:hover,.btn:hover{transform:translateY(-2px)}
     .back-btn{padding:16px 28px;background:#636e72;color:#fff;border:none;border-radius:12px;font-size:18px;cursor:pointer;transition:background .3s;margin-top:15px}
@@ -24,6 +27,9 @@
     .logout-btn{background:#e17055}
     .logout-btn:hover{background:#d63031}
     .error-msg{color:#e74c3c;font-size:16px;margin-top:10px;text-align:center}
+
+    .toolbar{display:flex;gap:12px;justify-content:center;margin:10px 0 20px}
+    .hidden{display:none!important}
 
     .grade-buttons{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:20px 0 30px}
     .grade-btn{padding:28px 32px;background:linear-gradient(135deg,#00b894,#00a085);color:#fff;border:none;border-radius:16px;font-size:22px;font-weight:700;cursor:pointer;transition:all .25s;min-width:180px;box-shadow:0 6px 20px rgba(0,0,0,.1)}
@@ -82,10 +88,6 @@
     .status-pending{background:#95a5a6;color:#fff}
     .assessment-failed{border-left:6px solid #e74c3c;background:linear-gradient(135deg,#ffebee,#ffcdd2)!important;border:2px solid #e74c3c!important}
 
-    .delete-btn-corner{position:absolute;bottom:10px;right:10px;width:32px;height:32px;background:#e74c3c;color:#fff;border:none;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:all .25s;z-index:10}
-    .training-card:hover .delete-btn-corner,.record-item:hover .delete-btn-corner,.assessment-item:hover .delete-btn-corner{opacity:1}
-    .delete-btn-corner:hover{background:#c0392b;transform:scale(1.08)}
-
     .user-list{display:grid;gap:16px;margin-bottom:24px}
     .user-item{background:#fff;border:2px solid #ecf0f1;border-radius:14px;padding:20px;display:flex;align-items:center;justify-content:space-between;transition:all .25s}
     .user-item:hover{box-shadow:0 8px 25px rgba(0,0,0,.1)}
@@ -111,9 +113,6 @@
     .confirm-btn{padding:12px 20px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;transition:all .25s}
     .confirm-yes{background:#e74c3c;color:#fff}
     .confirm-no{background:#95a5a6;color:#fff}
-
-    .toolbar{display:flex;gap:12px;justify-content:center;margin:10px 0 20px}
-    .hidden{display:none!important}
 
     /* 更改培訓項目介面 */
     .manage-layout{display:grid;grid-template-columns:1fr;gap:16px}
@@ -151,7 +150,9 @@
         <label>Password</label>
         <input id="password" type="password" placeholder="請輸入密碼"/>
       </div>
-      <button class="login-btn" onclick="handleLogin()">登入系統</button>
+      <div class="login-actions">
+        <button class="login-btn" onclick="handleLogin()">登入系統</button>
+      </div>
       <div id="errorMsg" class="error-msg" style="display:none"></div>
       <div style="text-align:center;margin-top:16px;font-size:14px;color:#95a5a6">Created by Leung Nok Man Jeffrey (10/2025)</div>
     </div>
@@ -185,7 +186,7 @@
       </div>
     </div>
 
-    <!-- 員工詳情（僅查看與評核；新增/刪除已移至管理頁） -->
+    <!-- 員工詳情 -->
     <div id="staffDetailsPage" class="page">
       <div class="title">📋 員工培訓記錄</div>
       <div id="staffInfoSection" class="staff-info"></div>
@@ -233,13 +234,13 @@
       </div>
     </div>
 
-    <!-- 更改培訓項目介面（集中新增/刪除：培訓項目/評估項目/培訓記錄） -->
+    <!-- 更改培訓項目介面 -->
     <div id="managePage" class="page">
       <div class="title">🛠️ 更改培訓項目</div>
       <div class="toolbar" style="margin-top:-6px">
         <button class="btn" onclick="openAddAssessmentConfig()">➕ 新增評估項目</button>
         <button class="btn" onclick="openAddTrainingCategory()">➕ 新增培訓項目</button>
-        <button class="btn logout-btn" onclick="showMainMenu()">⬅️ 返回</button>
+        <button class="btn logout-btn" onclick="showMainMenu()">⬅️ 返回主選單</button>
       </div>
 
       <div class="manage-layout">
@@ -278,51 +279,25 @@
       'tkohot': { username:'tkohot', password:'A123456*#', role:'admin', name:'系統管理員', email:'admin@tkoh.hk', createdDate:'01/01/2024' }
     };
 
-    // 員工資料與職級名單
+    // 3) 清除所有員工：起始時不包含任何員工
     const staffDatabase = {
-      'PCA1': [
-        {id:'leung_noah', name:'梁諾文'},
-        {id:'chan_david', name:'陳大衛'},
-        {id:'wong_mary', name:'黃美麗'},
-        {id:'li_peter', name:'李彼得'}
-      ],
-      'PCA2': [
-        {id:'tam_susan', name:'譚素珊'},
-        {id:'lau_john', name:'劉約翰'},
-        {id:'ng_linda', name:'吳琳達'}
-      ],
-      'PCA3': [
-        {id:'ho_michael', name:'何米高'},
-        {id:'cheung_anna', name:'張安娜'},
-        {id:'yip_thomas', name:'葉湯馬士'}
-      ],
-      'OTA': [
-        {id:'chu_kevin', name:'朱凱文'},
-        {id:'lee_sammy', name:'李森美'}
-      ]
+      'PCA1': [],
+      'PCA2': [],
+      'PCA3': [],
+      'OTA':  []
     };
 
-    // 以員工為單位的培訓與評估狀態
-    const staffData = {
-      'leung_noah': { name:'梁諾文', employeeId:'224813', grade:'PCA1', joinDate:'08/10/2025', assessments:{}, trainingCategories:{} },
-      'chan_david': { name:'陳大衛', employeeId:'224814', grade:'PCA1', joinDate:'15/09/2025', assessments:{}, trainingCategories:{} },
-      'wong_mary': { name:'黃美麗', employeeId:'224815', grade:'PCA1', joinDate:'22/08/2025', assessments:{}, trainingCategories:{} },
-      'chu_kevin': { name:'朱凱文', employeeId:'224816', grade:'OTA', joinDate:'01/09/2025', assessments:{}, trainingCategories:{} },
-      'lee_sammy': { name:'李森美', employeeId:'224817', grade:'OTA', joinDate:'15/09/2025', assessments:{}, trainingCategories:{} }
-    };
+    // 空的員工資料容器
+    const staffData = {};
 
-    // 全域評估配置（所有人共用，同步）
+    // 全域評估配置（可由管理頁新增/刪除）
     let assessmentConfig = [
       { id:'safety_001', name:'職安健簡介及測試', weeksDeadline:1, type:'safety' },
       { id:'written_001', name:'筆試',                weeksDeadline:20, type:'written' },
       { id:'training_001', name:'完成培訓項目',        weeksDeadline:24, type:'training' }
     ];
 
-    // 培訓項目模板（定義對象與記錄模板）
-    // 結構：
-    // trainingTemplates = {
-    //   catKey: { name, icon, target: {pca:boolean, ota:boolean}, recordsTemplate: [ {name,type,assessmentItems?,passMark?}, ... ] }
-    // }
+    // 培訓項目模板
     let trainingTemplates = {};
 
     // 當前狀態
@@ -332,8 +307,6 @@
     let currentStaffId = '';
     let currentCategory = '';
     let currentRecordIndex = -1;
-
-    // 管理頁面：選中的培訓項目 key
     let selectedTemplateKey = null;
 
     // 工具
@@ -362,28 +335,37 @@
     function clearLoginForm(){ document.getElementById('loginId').value=''; document.getElementById('password').value=''; document.getElementById('errorMsg').style.display='none'; }
     function hideAll(){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); }
 
+    function showMainMenu(){
+      hideAll();
+      document.getElementById('mainMenu').classList.add('active');
+      applyRoleVisibility();
+    }
+    function goBackToStaffList(){
+      // 明確返回到員工列表
+      hideAll();
+      document.getElementById('staffListPage').classList.add('active');
+    }
+    function goBackToStaffDetails(){
+      hideAll();
+      document.getElementById('staffDetailsPage').classList.add('active');
+    }
+
     // 權限控制：主選單按鈕顯示
     function applyRoleVisibility(){
       const isAdmin = currentUserRole==='admin';
       const isSupervisor = currentUserRole==='supervisor';
-      const isStaff = currentUserRole==='staff';
-      // 帳戶管理只給 admin
       document.getElementById('btnUserMgmt')?.classList.toggle('hidden', !isAdmin);
-      // 更改培訓項目：admin 與 supervisor 可進入
       document.getElementById('btnGoManage')?.classList.toggle('hidden', !(isAdmin||isSupervisor));
     }
 
-    // 初始化：把模板同步至員工（按對象）
+    // 同步模板到員工（當前起始無員工，僅在新增員工後有作用）
     function syncTemplatesToAllStaff(){
       Object.keys(staffData).forEach(staffId=>{
         const staff = staffData[staffId];
-        // 確保 assessments 初始化
         if (!staff.assessments) staff.assessments = {};
-        // 初始化評估 keys
         assessmentConfig.forEach(a=>{
           if (!staff.assessments[a.type]) staff.assessments[a.type] = {passed:false, failed:false};
         });
-        // 同步訓練模板
         if (!staff.trainingCategories) staff.trainingCategories = {};
         Object.entries(trainingTemplates).forEach(([key, tpl])=>{
           const targetMatch = (staff.grade==='OTA') ? tpl.target.ota : tpl.target.pca;
@@ -393,20 +375,19 @@
                 name: tpl.name, icon: tpl.icon, total: (tpl.recordsTemplate?.length||0),
                 completed: 0, records: (tpl.recordsTemplate||[]).map(r=>({
                   name: r.name, type: r.type || 'simple', completed:false, failed:false, date:null,
-                  assessmentItems: r.assessmentItems ? r.assessmentItems.map((t,i)=>({name:t.name, isCritical:!!t.isCritical, passed:false, failed:false})) : null,
+                  assessmentItems: r.assessmentItems ? r.assessmentItems.map((t)=>({name:t.name, isCritical:!!t.isCritical, passed:false, failed:false})) : null,
                   totalItems: r.assessmentItems ? r.assessmentItems.length : undefined,
                   completedItems: 0, failedItems: 0, passMark: r.passMark || (r.type==='assessment'||r.type==='checklist'?50:undefined)
                 }))
               };
             } else {
-              // 更新模板差異：新增新記錄
               const cat = staff.trainingCategories[key];
               const existingNames = new Set(cat.records.map(r=>r.name));
               (tpl.recordsTemplate||[]).forEach(r=>{
                 if (!existingNames.has(r.name)){
                   cat.records.push({
                     name:r.name, type:r.type||'simple', completed:false, failed:false, date:null,
-                    assessmentItems: r.assessmentItems ? r.assessmentItems.map((t,i)=>({name:t.name, isCritical:!!t.isCritical, passed:false, failed:false})) : null,
+                    assessmentItems: r.assessmentItems ? r.assessmentItems.map((t)=>({name:t.name, isCritical:!!t.isCritical, passed:false, failed:false})) : null,
                     totalItems: r.assessmentItems ? r.assessmentItems.length : undefined,
                     completedItems: 0, failedItems: 0, passMark: r.passMark || (r.type==='assessment'||r.type==='checklist'?50:undefined)
                   });
@@ -414,12 +395,10 @@
               });
               cat.total = cat.records.length;
               cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-              // 若模板改名或icon，同步更新
               cat.name = tpl.name;
               cat.icon = tpl.icon;
             }
           } else {
-            // 不匹配對象，從員工記錄中移除該分類
             if (staff.trainingCategories[key]) delete staff.trainingCategories[key];
           }
         });
@@ -438,8 +417,7 @@
       hideAll();
       if (currentUserRole==='admin' || currentUserRole==='supervisor'){
         document.getElementById('mainMenu').classList.add('active');
-      } else if (currentUserRole==='staff'){
-        // 員工：直入自己的詳情（本版本默認無員工登入帳號）
+      } else {
         showError('本系統目前只開放系統管理員/主管登入');
         document.getElementById('loginPage').classList.add('active');
         return;
@@ -466,9 +444,8 @@
       const list = staffDatabase[grade] || [];
       document.getElementById('staffCount').textContent = `共 ${list.length} 位員工`;
       const grid=document.getElementById('staffGrid');
-      grid.innerHTML = list.map(s=>`
-        <button class="staff-btn" onclick="showStaffDetails('${s.id}')">👤 ${s.name}</button>
-      `).join('');
+      grid.innerHTML = list.length===0 ? `<div class="subtitle" style="font-size:18px;color:#95a5a6">此職級目前沒有員工</div>` :
+        list.map(s=>`<button class="staff-btn" onclick="showStaffDetails('${s.id}')">👤 ${s.name}</button>`).join('');
     }
 
     // 計算評估狀態
@@ -484,22 +461,19 @@
       return {status:'pending',deadline,d,badge:`📅 ${d} 天後到期`};
     }
 
-    // 員工詳情頁（查看與評核）
+    // 員工詳情頁
     function showStaffDetails(staffId){
       currentStaffId = staffId;
       const staff = staffData[staffId];
       if (!staff){ alert('找不到員工資料'); return; }
 
-      // 確保 assessments keys
       if (!staff.assessments) staff.assessments = {};
       assessmentConfig.forEach(a=>{ if (!staff.assessments[a.type]) staff.assessments[a.type] = {passed:false,failed:false}; });
 
-      // 同步模板（確保該員工擁有相應訓練分類）
       syncTemplatesToAllStaff();
 
       hideAll(); document.getElementById('staffDetailsPage').classList.add('active');
 
-      // 基本資料
       document.getElementById('staffInfoSection').innerHTML = `
         <div class="info-grid">
           <div class="info-item"><div class="info-label">👤 姓名：</div><div class="info-value">${staff.name}</div></div>
@@ -509,7 +483,6 @@
         </div>
       `;
 
-      // 評估
       const aGrid=document.getElementById('assessmentGrid');
       aGrid.innerHTML = assessmentConfig.map(a=>{
         const s=calcAssessmentStatus(staff.joinDate,a.weeksDeadline,staff.assessments,a.type);
@@ -527,7 +500,6 @@
         `;
       }).join('');
 
-      // 培訓分類
       const tGrid=document.getElementById('trainingGrid');
       const cats = staff.trainingCategories || {};
       tGrid.innerHTML = Object.entries(cats).map(([key,cat])=>{
@@ -550,7 +522,7 @@
             <div class="progress-info">${cat.completed}/${cat.total} 項目完成 ${done?'<br/>🎉 全部完成！':''}</div>
           </div>
         `;
-      }).join('');
+      }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此員工暫無培訓項目</div>`;
     }
 
     function showTrainingDetails(categoryKey){
@@ -609,7 +581,7 @@
             `:''}
           </div>
         `;
-      }).join('');
+      }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此分類尚無記錄</div>`;
     }
 
     function openRecord(index){
@@ -618,16 +590,13 @@
       const rec=cat.records[index];
       currentRecordIndex=index;
 
-      // 管理頁移除了在詳情頁的新增/刪除；評核動作仍允許 admin/supervisor
       if (rec.type==='assessment' || rec.type==='checklist'){
         openAssessmentModal(rec);
       } else {
-        // 簡單記錄允許 admin/supervisor 切換
         if (currentUserRole==='admin' || currentUserRole==='supervisor'){
           rec.completed = !rec.completed;
           rec.date = rec.completed ? getCurrentDate() : null;
           cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-          // 寫入 Firebase
           if (window.saveTrainingProgressToFirebase) window.saveTrainingProgressToFirebase(currentStaffId,currentCategory,index,rec.completed,false);
           showTrainingDetails(currentCategory);
           showToast(rec.completed?'✅':'⏳', `「${rec.name}」已${rec.completed?'完成':'取消完成'}！`, rec.completed?'#00b894':'#f39c12');
@@ -671,7 +640,6 @@
       `;
       document.body.appendChild(modal);
       window.currentConfirmDialog = modal;
-      // 標記狀態顏色
       if (record.assessmentItems){
         record.assessmentItems.forEach((it,idx)=>{
           const row=document.getElementById(`assRow${idx}`);
@@ -712,14 +680,12 @@
       if (result==='pass') item.passed=true;
       if (result==='fail') item.failed=true;
 
-      // 更新行背景
       const row=document.getElementById(`assRow${idx}`);
       if (row){
         row.style.background = item.passed? 'linear-gradient(135deg,#d4edda,#c3e6cb)' :
                              item.failed? 'linear-gradient(135deg,#f8d7da,#f5c6cb)' : '#f9fbfd';
       }
 
-      // Firebase 記錄
       try{
         if (window.addDoc && window.collection && window.db){
           await window.addDoc(window.collection(window.db,'assessment-item-results'), {
@@ -790,7 +756,7 @@
           </div>
           ${currentUserRole==='admin'? `<button class="mini-btn del" onclick="deleteAssessmentConfig('${a.id}','${a.type}','${a.name}')">刪除</button>`:''}
         </div>
-      `).join('');
+      `).join('') || `<div class="row"><div>尚未新增任何評估項目</div></div>`;
     }
 
     // 新增評估項目
@@ -822,13 +788,11 @@
       if (!name || !weeks || weeks<1){ alert('請輸入有效名稱與週數'); return; }
       const item={ id:`assessment_${Date.now()}`, name, weeksDeadline:weeks, type:`custom_${Date.now()}` };
       assessmentConfig.push(item);
-      // 同步到所有員工 assessments 結構
       Object.keys(staffData).forEach(sid=>{
         const s=staffData[sid];
         if (!s.assessments) s.assessments = {};
         if (!s.assessments[item.type]) s.assessments[item.type] = {passed:false, failed:false};
       });
-      // Firebase
       try{
         if (window.saveAssessmentConfigToFirebase) await window.saveAssessmentConfigToFirebase(item);
         showToast('✅','已新增評估項目','#f39c12');
@@ -911,13 +875,11 @@
       const ota = document.getElementById('chkOTA').checked;
       if (!pca && !ota){ alert('至少選擇一個對象'); return; }
       trainingTemplates[key].target = {pca, ota};
-      // 寫入 Firebase
       try{
         if (window.saveTrainingTemplateToFirebase) await window.saveTrainingTemplateToFirebase(key, trainingTemplates[key]);
         showToast('✅','已更新對象','#00b894');
       }catch(e){ console.error(e); showToast('❌','儲存失敗','#e74c3c'); }
       closeAnyDialog();
-      // 同步到所有員工（移除或加入）
       syncTemplatesToAllStaff();
       renderManageCategories();
     }
@@ -960,17 +922,14 @@
       const key = `${name.replace(/\s+/g,'_').toLowerCase()}_${Date.now()}`;
       trainingTemplates[key] = { name, icon, target:{pca,ota}, recordsTemplate:[] };
 
-      // Firebase
       try{
         if (window.saveTrainingTemplateToFirebase) await window.saveTrainingTemplateToFirebase(key, trainingTemplates[key]);
         showToast('✅','已新增培訓項目','#00b894');
       }catch(e){ console.error(e); showToast('❌','儲存失敗','#e74c3c'); }
 
       closeAnyDialog();
-      // 同步到所有員工
       syncTemplatesToAllStaff();
       renderManageCategories();
-      // 自動選取新項目
       selectTemplate(key);
       renderManageAssessments();
     }
@@ -979,13 +938,10 @@
       if (currentUserRole!=='admin'){ alert('僅系統管理員可刪除'); return; }
       if (!confirm(`刪除培訓項目「${trainingTemplates[key].name}」？此操作會同步移除所有員工該分類。`)) return;
       const name = trainingTemplates[key].name;
-      // 從模板刪除
       delete trainingTemplates[key];
-      // 從所有員工刪除
       Object.keys(staffData).forEach(sid=>{
         if (staffData[sid].trainingCategories && staffData[sid].trainingCategories[key]) delete staffData[sid].trainingCategories[key];
       });
-      // Firebase紀錄
       try{
         if (window.addDoc && window.collection && window.db){
           await window.addDoc(window.collection(window.db,'deleted-training-templates'), {
@@ -1077,14 +1033,12 @@
       tpl.recordsTemplate = tpl.recordsTemplate || [];
       tpl.recordsTemplate.push(rec);
 
-      // 寫入 Firebase
       try{
         if (window.saveTemplateRecordToFirebase) await window.saveTemplateRecordToFirebase(selectedTemplateKey, rec);
         showToast('✅','已新增培訓記錄模板','#00b894');
       }catch(e){ console.error(e); showToast('❌','儲存失敗','#e74c3c'); }
 
       closeAnyDialog();
-      // 同步到所有員工
       syncTemplatesToAllStaff();
       renderTemplateRecords();
     }
@@ -1095,7 +1049,6 @@
       const rec=tpl.recordsTemplate[idx];
       if (!confirm(`刪除記錄模板「${rec.name}」？將同步從所有員工的此分類中移除相同名稱的記錄。`)) return;
       tpl.recordsTemplate.splice(idx,1);
-      // 從所有員工此分類中，刪除同名記錄
       Object.keys(staffData).forEach(sid=>{
         const cat = staffData[sid].trainingCategories?.[selectedTemplateKey];
         if (cat){
@@ -1165,9 +1118,7 @@
           </div>
           <div class="form-group" style="margin:auto" id="gradeRow">
             <label>職級</label>
-            <select id="newUserGrade">
-              <!-- 依角色動態切換：主管顯示 RN/APN/WM；員工顯示 PCA1/2/3/OTA -->
-            </select>
+            <select id="newUserGrade"></select>
           </div>
           <div class="form-group" style="margin:auto">
             <label>Login ID</label>
@@ -1191,12 +1142,10 @@
         const role=roleSel.value;
         gradeSel.innerHTML='';
         if (role==='supervisor'){
-          // 2) 主管職級選 RN/APN/WM
           ['RN','APN','WM'].forEach(g=>{
             const opt=document.createElement('option'); opt.value=g; opt.textContent=g; gradeSel.appendChild(opt);
           });
         }else{
-          // 2) 員工職級選 PCA1/2/3 或 OTA
           ['PCA1','PCA2','PCA3','OTA'].forEach(g=>{
             const opt=document.createElement('option'); opt.value=g; opt.textContent=g; gradeSel.appendChild(opt);
           });
@@ -1220,24 +1169,20 @@
       const newUser = { username:login, password:pw, role, name, email:'', createdDate:getCurrentDate() };
 
       if (role==='staff'){
-        // 創建員工資料並綁定
         const staffId = `${name.replace(/\s+/g,'_').toLowerCase()}_${Date.now().toString().slice(-4)}`;
         const newStaff = { name, employeeId:`${Math.floor(100000+Math.random()*900000)}`, grade, joinDate:getCurrentDate(), assessments:{}, trainingCategories:{} };
-        // 初始化評估
         assessmentConfig.forEach(a=>{ newStaff.assessments[a.type] = {passed:false, failed:false}; });
         staffData[staffId] = newStaff;
         if (!staffDatabase[grade]) staffDatabase[grade]=[];
         staffDatabase[grade].push({id:staffId, name});
         newUser.staffId = staffId;
         newUser.grade = grade;
-        // 同步模板
         syncTemplatesToAllStaff();
         try{ if (window.saveStaffToFirebase) await window.saveStaffToFirebase(staffId,newStaff); }catch(e){ console.error(e); }
       }
 
       if (role==='supervisor'){
-        // 主管也保存其 grade（RN/APN/WM），不加入 staffDatabase
-        newUser.grade = grade;
+        newUser.grade = grade; // RN/APN/WM
       }
 
       userAccounts[login] = newUser;
@@ -1267,7 +1212,6 @@
     async function deleteUser(username){
       const user=userAccounts[username];
       if (!user){ closeAnyDialog(); return; }
-      // 若是員工，一併刪 staff
       if (user.role==='staff' && user.staffId && staffData[user.staffId]){
         const grade=staffData[user.staffId].grade;
         try{
@@ -1291,7 +1235,16 @@
       renderUsers();
     }
 
-    // Firebase 占位
+    // 匯出用戶資料（簡單示意）
+    function exportUserData(){
+      const data = Object.values(userAccounts);
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='users.json'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Firebase 占位（如需改 Firestore 結構，將 addDoc 改成 setDoc(doc(...), ...)）
     window.saveAssessmentConfigToFirebase = async function(){};
     window.saveTrainingTemplateToFirebase = async function(){};
     window.saveTemplateRecordToFirebase = async function(){};
@@ -1306,7 +1259,7 @@
       if (e.key==='Enter' && document.getElementById('loginPage').classList.contains('active')) handleLogin();
     });
 
-    // 初始同步一次（以現有樣本，不含模板 -> 空）
+    // 初始同步（目前無員工，僅確保函式存在）
     syncTemplatesToAllStaff();
   </script>
 
@@ -1335,36 +1288,27 @@
     window.query = query;
     window.orderBy = orderBy;
 
-    // 寫入：評估配置
     window.saveAssessmentConfigToFirebase = async function(assessment){
       await addDoc(collection(db,'assessment-config'), {
         ...assessment, timestamp:new Date(), createdBy: window.currentUser? window.currentUser.name:'admin'
       });
     };
-
-    // 寫入：訓練模板（新增或更新）
     window.saveTrainingTemplateToFirebase = async function(key, template){
       await addDoc(collection(db,'training-templates'), {
         key, template, timestamp:new Date(), updatedBy: window.currentUser? window.currentUser.name:'admin'
       });
     };
-
-    // 寫入：模板記錄
     window.saveTemplateRecordToFirebase = async function(templateKey, record){
       await addDoc(collection(db,'training-template-records'), {
         templateKey, record, timestamp:new Date(), createdBy: window.currentUser? window.currentUser.name:'admin'
       });
     };
-
-    // 寫入：用戶
     window.saveUserToFirebase = async function(user){
       await addDoc(collection(db,'users'), { ...user, timestamp:new Date(), createdBy: window.currentUser? window.currentUser.name:'admin' });
     };
     window.deleteUserFromFirebase = async function(username){
       await addDoc(collection(db,'deleted-users'), { username, deletedBy: window.currentUser? window.currentUser.name:'admin', timestamp:new Date(), action:'delete' });
     };
-
-    // 寫入：員工與訓練進度
     window.saveStaffToFirebase = async function(staffId, data){
       await addDoc(collection(db,'staff'), { staffId, staffData:data, timestamp:new Date(), createdBy: window.currentUser? window.currentUser.name:'admin' });
     };
@@ -1380,15 +1324,9 @@
       });
     };
 
-    // 寫入：評核項目結果
-    window.addAssessmentItemResultToFirebase = async function(payload){
-      await addDoc(collection(db,'assessment-item-results'), payload);
-    };
-
-    // 載入所有需要的資料，確保重新登入仍能看到變更
+    // 載入已有配置與模板
     async function loadAllFromFirebase(){
       try{
-        // 讀：評估配置
         const acSnap = await getDocs(query(collection(db,'assessment-config'), orderBy('timestamp','asc')));
         const seenAss = new Set(assessmentConfig.map(a=>a.id));
         acSnap.forEach(doc=>{
@@ -1399,14 +1337,12 @@
           }
         });
 
-        // 讀：訓練模板
         const tplSnap = await getDocs(query(collection(db,'training-templates'), orderBy('timestamp','asc')));
         tplSnap.forEach(doc=>{
           const d=doc.data();
           window.trainingTemplates[d.key] = d.template;
         });
 
-        // 讀：模板記錄（補充到模板）
         const tplRecSnap = await getDocs(query(collection(db,'training-template-records'), orderBy('timestamp','asc')));
         tplRecSnap.forEach(doc=>{
           const d=doc.data();
@@ -1418,7 +1354,6 @@
           }
         });
 
-        // 讀：刪除模板記錄
         const delTplRecSnap = await getDocs(query(collection(db,'deleted-training-record-templates'), orderBy('timestamp','asc')));
         delTplRecSnap.forEach(doc=>{
           const d=doc.data();
@@ -1429,7 +1364,6 @@
           }
         });
 
-        // 讀：刪除評估項目
         const delAssSnap = await getDocs(query(collection(db,'deleted-assessments'), orderBy('timestamp','asc')));
         delAssSnap.forEach(doc=>{
           const d=doc.data();
@@ -1442,7 +1376,6 @@
           });
         });
 
-        // 讀：刪除模板（培訓項目）
         const delTplSnap = await getDocs(query(collection(db,'deleted-training-templates'), orderBy('timestamp','asc')));
         delTplSnap.forEach(doc=>{
           const d=doc.data();
@@ -1454,7 +1387,7 @@
           });
         });
 
-        // 同步模板到所有員工
+        // 同步模板到員工（目前無員工，呼叫亦安全）
         syncTemplatesToAllStaff();
 
         console.log('🎉 Firebase 載入完成且已同步模板/配置');
@@ -1463,7 +1396,6 @@
       }
     }
 
-    // 啟動
     window.addEventListener('load', async ()=>{
       await loadAllFromFirebase();
       document.getElementById('loginId').focus();
