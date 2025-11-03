@@ -253,6 +253,11 @@
             color: white;
         }
 
+        .badge-info {
+            background: #1e90ff;
+            color: white;
+        }
+
         /* 培訓進度圓餅圖 */
         .progress-container {
             display: flex;
@@ -575,6 +580,13 @@
         .export-btn {
             margin-top: 20px;
         }
+
+        .loading-message {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.2em;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -585,13 +597,14 @@
             <div class="login-form">
                 <div class="input-group">
                     <label>👤 帳號</label>
-                    <input type="text" id="loginId" placeholder="請輸入帳號" value="tkohot">
+                    <input type="text" id="loginId" placeholder="請輸入帳號">
                 </div>
                 <div class="input-group">
                     <label>🔒 密碼</label>
-                    <input type="password" id="loginPw" placeholder="請輸入密碼" value="A123456*#">
+                    <input type="password" id="loginPw" placeholder="請輸入密碼">
                 </div>
                 <button class="btn btn-primary" onclick="login()">🚀 登入系統</button>
+                <div id="loginStatus" class="loading-message" style="display:none;"></div>
             </div>
         </div>
 
@@ -717,7 +730,6 @@
     
     <!-- jsPDF 用於匯出 PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         // ==================== Firebase 初始化 ====================
@@ -739,62 +751,115 @@
         let currentStaffId = '';
         let currentCategoryId = '';
         let selectedEmoji = '📚';
+        let systemInitialized = false;
 
         // ==================== 初始化系統 ====================
         async function initializeSystem() {
+            if (systemInitialized) return;
+            
             try {
-                // 檢查是否有系統管理員帳戶
-                const adminDoc = await db.collection('accounts').doc('admin').get();
+                console.log('🔧 開始初始化系統...');
                 
-                if (!adminDoc.exists) {
-                    // 創建系統管理員帳戶
-                    await db.collection('accounts').doc('admin').set({
+                // 檢查是否有系統管理員帳戶
+                const adminSnapshot = await db.collection('accounts')
+                    .where('id', '==', 'tkohot')
+                    .get();
+                
+                if (adminSnapshot.empty) {
+                    console.log('📝 創建系統管理員帳戶...');
+                    await db.collection('accounts').add({
                         id: 'tkohot',
                         password: 'A123456*#',
                         name: '系統管理員',
                         role: 'admin',
-                        level: null,
-                        createdAt: new Date().toISOString()
+                        level: 'ADMIN',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     console.log('✅ 系統管理員帳戶已創建');
                 }
 
                 // 檢查是否有預設培訓分類
-                const categoriesSnapshot = await db.collection('trainingCategories').get();
+                const categoriesSnapshot = await db.collection('trainingCategories').limit(1).get();
                 
                 if (categoriesSnapshot.empty) {
+                    console.log('📝 創建預設培訓分類...');
+                    
+                    const batch = db.batch();
+                    
                     // 創建預設培訓分類
-                    const defaultCategories = [
-                        { id: 'cat001', name: '基礎培訓', emoji: '📚', order: 1 },
-                        { id: 'cat002', name: '安全培訓', emoji: '🛡️', order: 2 },
-                        { id: 'cat003', name: '專業技能', emoji: '💼', order: 3 }
-                    ];
+                    const cat1Ref = db.collection('trainingCategories').doc();
+                    batch.set(cat1Ref, {
+                        id: cat1Ref.id,
+                        name: '基礎培訓',
+                        emoji: '📚',
+                        order: 1,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
 
-                    for (const cat of defaultCategories) {
-                        await db.collection('trainingCategories').doc(cat.id).set({
-                            ...cat,
-                            createdAt: new Date().toISOString()
-                        });
-                    }
+                    const cat2Ref = db.collection('trainingCategories').doc();
+                    batch.set(cat2Ref, {
+                        id: cat2Ref.id,
+                        name: '安全培訓',
+                        emoji: '🛡️',
+                        order: 2,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    const cat3Ref = db.collection('trainingCategories').doc();
+                    batch.set(cat3Ref, {
+                        id: cat3Ref.id,
+                        name: '專業技能',
+                        emoji: '💼',
+                        order: 3,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
 
                     // 創建預設培訓項目
-                    const defaultItems = [
-                        { id: 'item001', categoryId: 'cat001', name: '設備清潔', deadline: { type: 'weeks', value: 2 }, order: 1 },
-                        { id: 'item002', categoryId: 'cat001', name: '消防安全', deadline: { type: 'weeks', value: 2 }, order: 2 },
-                        { id: 'item003', categoryId: 'cat002', name: '急救訓練', deadline: { type: 'months', value: 1 }, order: 1 },
-                        { id: 'item004', categoryId: 'cat003', name: '專業證照', deadline: { type: 'months', value: 3 }, order: 1 }
-                    ];
+                    const item1Ref = db.collection('trainingItems').doc();
+                    batch.set(item1Ref, {
+                        id: item1Ref.id,
+                        categoryId: cat1Ref.id,
+                        name: '設備清潔',
+                        deadline: { type: 'weeks', value: '2' },
+                        order: 1,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
 
-                    for (const item of defaultItems) {
-                        await db.collection('trainingItems').doc(item.id).set({
-                            ...item,
-                            createdAt: new Date().toISOString()
-                        });
-                    }
+                    const item2Ref = db.collection('trainingItems').doc();
+                    batch.set(item2Ref, {
+                        id: item2Ref.id,
+                        categoryId: cat1Ref.id,
+                        name: '消防安全',
+                        deadline: { type: 'weeks', value: '2' },
+                        order: 2,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
 
+                    const item3Ref = db.collection('trainingItems').doc();
+                    batch.set(item3Ref, {
+                        id: item3Ref.id,
+                        categoryId: cat2Ref.id,
+                        name: '急救訓練',
+                        deadline: { type: 'months', value: '1' },
+                        order: 1,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    const item4Ref = db.collection('trainingItems').doc();
+                    batch.set(item4Ref, {
+                        id: item4Ref.id,
+                        categoryId: cat3Ref.id,
+                        name: '專業證照',
+                        deadline: { type: 'months', value: '3' },
+                        order: 1,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    await batch.commit();
                     console.log('✅ 預設培訓資料已創建');
                 }
 
+                systemInitialized = true;
                 console.log('✅ 系統初始化完成');
             } catch (error) {
                 console.error('❌ 系統初始化失敗:', error);
@@ -810,6 +875,7 @@
         async function login() {
             const id = document.getElementById('loginId').value.trim();
             const pw = document.getElementById('loginPw').value;
+            const statusDiv = document.getElementById('loginStatus');
 
             if (!id || !pw) {
                 showToast('❌ 請輸入帳號和密碼', 'error');
@@ -817,26 +883,36 @@
             }
 
             try {
-                // 查詢所有帳戶
-                const accountsSnapshot = await db.collection('accounts').get();
-                let foundAccount = null;
+                statusDiv.style.display = 'block';
+                statusDiv.textContent = '🔍 正在驗證...';
 
-                accountsSnapshot.forEach(doc => {
-                    const account = doc.data();
-                    if (account.id === id && account.password === pw) {
-                        foundAccount = { docId: doc.id, ...account };
-                    }
-                });
+                // 確保系統已初始化
+                await initializeSystem();
 
-                if (foundAccount) {
-                    currentUser = foundAccount;
-                    showToast(`✅ 歡迎，${foundAccount.name}！`, 'success');
+                console.log('🔍 搜尋帳號:', id);
+
+                // 查詢帳號
+                const accountsSnapshot = await db.collection('accounts')
+                    .where('id', '==', id)
+                    .where('password', '==', pw)
+                    .get();
+
+                if (!accountsSnapshot.empty) {
+                    const doc = accountsSnapshot.docs[0];
+                    currentUser = { docId: doc.id, ...doc.data() };
+                    
+                    console.log('✅ 登入成功:', currentUser);
+                    statusDiv.style.display = 'none';
+                    showToast(`✅ 歡迎，${currentUser.name}！`, 'success');
                     showMainPage();
                 } else {
+                    console.log('❌ 找不到符合的帳號');
+                    statusDiv.style.display = 'none';
                     showToast('❌ 帳號或密碼錯誤', 'error');
                 }
             } catch (error) {
-                console.error('登入錯誤:', error);
+                console.error('❌ 登入錯誤:', error);
+                statusDiv.style.display = 'none';
                 showToast('❌ 登入失敗，請稍後再試', 'error');
             }
         }
@@ -916,14 +992,17 @@
         // ==================== 載入帳戶列表 ====================
         async function loadAccounts() {
             try {
-                const accountsSnapshot = await db.collection('accounts').orderBy('createdAt', 'desc').get();
+                const accountsSnapshot = await db.collection('accounts')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
                 const accountListHtml = [];
 
                 accountsSnapshot.forEach(doc => {
                     const account = doc.data();
                     
-                    // 不顯示系統管理員帳戶（無法刪除）
-                    if (doc.id === 'admin') return;
+                    // 不顯示系統管理員帳戶
+                    if (account.role === 'admin') return;
 
                     const roleBadge = account.role === 'supervisor' 
                         ? '<span class="badge badge-supervisor">主管</span>'
@@ -1038,30 +1117,24 @@
 
             try {
                 // 檢查帳號是否已存在
-                const accountsSnapshot = await db.collection('accounts').get();
-                let idExists = false;
+                const existingSnapshot = await db.collection('accounts')
+                    .where('id', '==', id)
+                    .get();
 
-                accountsSnapshot.forEach(doc => {
-                    if (doc.data().id === id) {
-                        idExists = true;
-                    }
-                });
-
-                if (idExists) {
+                if (!existingSnapshot.empty) {
                     showToast('❌ 此帳號已存在', 'error');
                     return;
                 }
 
                 // 創建新帳戶
-                const docId = 'user_' + Date.now();
-                await db.collection('accounts').doc(docId).set({
+                await db.collection('accounts').add({
                     id: id,
                     password: pw,
                     name: name,
                     role: role,
                     level: level,
                     joinDate: joinDate,
-                    createdAt: new Date().toISOString()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 showToast('✅ 帳戶新增成功', 'success');
@@ -1243,13 +1316,13 @@
                     maxOrder = categoriesSnapshot.docs[0].data().order;
                 }
 
-                const docId = 'cat_' + Date.now();
-                await db.collection('trainingCategories').doc(docId).set({
-                    id: docId,
+                const newCatRef = db.collection('trainingCategories').doc();
+                await newCatRef.set({
+                    id: newCatRef.id,
                     name: name,
                     emoji: selectedEmoji,
                     order: maxOrder + 1,
-                    createdAt: new Date().toISOString()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 showToast('✅ 分類新增成功', 'success');
@@ -1358,9 +1431,9 @@
                     maxOrder = itemsSnapshot.docs[0].data().order;
                 }
 
-                const docId = 'item_' + Date.now();
-                await db.collection('trainingItems').doc(docId).set({
-                    id: docId,
+                const newItemRef = db.collection('trainingItems').doc();
+                await newItemRef.set({
+                    id: newItemRef.id,
                     categoryId: categoryId,
                     name: name,
                     deadline: {
@@ -1368,7 +1441,7 @@
                         value: deadlineValue
                     },
                     order: maxOrder + 1,
-                    createdAt: new Date().toISOString()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 showToast('✅ 培訓項目新增成功', 'success');
@@ -1651,8 +1724,7 @@
                     };
 
                     if (recordsSnapshot.empty) {
-                        const docId = 'record_' + Date.now();
-                        await db.collection('trainingRecords').doc(docId).set(recordData);
+                        await db.collection('trainingRecords').add(recordData);
                     } else {
                         await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
                     }
