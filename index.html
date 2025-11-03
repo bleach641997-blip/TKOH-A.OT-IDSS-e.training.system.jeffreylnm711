@@ -280,21 +280,192 @@
             background: #2ed573; color: white; 
         }
 
-        /* 培訓進度圓餅圖 */
-        .progress-container {
+        /* ========== 新設計：員工培訓記錄頁面 ========== */
+        .staff-header {
+            background: #f8f9fa;
+            border-left: 4px solid #2ed573;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .staff-header-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .staff-header-item {
             display: flex;
-            justify-content: center;
             align-items: center;
-            margin: 30px 0;
+            gap: 10px;
         }
 
-        .progress-chart {
+        .staff-header-item .icon {
+            font-size: 1.5em;
+        }
+
+        .staff-header-item .label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .staff-header-item .value {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        /* 各評估時間表 */
+        .timeline-section {
+            background: #fff9e6;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timeline-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline-items {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timeline-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-left: 4px solid #26d0ce;
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .timeline-item:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .timeline-item.overdue {
+            border-left-color: #ff4757;
+            background: #fff5f5;
+        }
+
+        .timeline-item.upcoming {
+            border-left-color: #ffa502;
+            background: #fff9e6;
+        }
+
+        .timeline-item-info {
+            flex: 1;
+        }
+
+        .timeline-item-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .timeline-item-deadline {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .timeline-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Dashboard 培訓項目進度 */
+        .dashboard-section {
+            margin-bottom: 30px;
+        }
+
+        .dashboard-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dashboard-hint {
+            text-align: center;
+            color: #ffa502;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .category-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
             position: relative;
-            width: 200px;
-            height: 200px;
+            overflow: hidden;
         }
 
-        .progress-text {
+        .category-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .category-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .category-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .category-card-emoji {
+            font-size: 2em;
+        }
+
+        .category-progress-circle {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 20px auto;
+        }
+
+        .category-progress-text {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -302,22 +473,175 @@
             text-align: center;
         }
 
-        .progress-percent {
-            font-size: 2.5em;
+        .category-progress-percent {
+            font-size: 2em;
             font-weight: bold;
             color: #667eea;
         }
 
-        .progress-label {
-            font-size: 0.9em;
+        .category-progress-label {
+            font-size: 0.85em;
             color: #666;
+            margin-top: 5px;
         }
 
-        /* 培訓項目列表 */
-        .training-list {
-            margin-top: 20px;
+        .category-card-footer {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
         }
 
+        /* 新增培訓項目卡片 */
+        .add-category-card {
+            background: transparent;
+            border: 3px dashed #667eea;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+        }
+
+        .add-category-card:hover {
+            background: #f0f4ff;
+            border-color: #764ba2;
+        }
+
+        .add-category-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .add-category-text {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .add-category-hint {
+            font-size: 0.9em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* ========== 培訓詳情頁面 ========== */
+        .training-detail-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .training-detail-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .training-detail-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 1.1em;
+        }
+
+        .training-detail-stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .training-detail-stat .number {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .stat-completed .number { color: #2ed573; }
+        .stat-failed .number { color: #ff4757; }
+        .stat-total .number { color: #667eea; }
+
+        .training-items-section {
+            margin-top: 30px;
+        }
+
+        .training-items-hint {
+            text-align: center;
+            color: #ffa502;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .training-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .training-item-card {
+            background: #fff9e6;
+            border-left: 4px solid #ffa502;
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .training-item-card:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .training-item-card.completed {
+            background: #d4edda;
+            border-left-color: #2ed573;
+        }
+
+        .training-item-card.failed {
+            background: #f8d7da;
+            border-left-color: #ff4757;
+        }
+
+        .training-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .training-item-info-section {
+            flex: 1;
+        }
+
+        .training-item-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .training-item-deadline {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+
+        .training-item-evaluated {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        .training-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 培訓分類列表（管理員） */
         .training-category {
             background: white;
             border: 2px solid #e0e0e0;
@@ -609,6 +933,21 @@
             font-size: 1.2em;
             padding: 20px;
         }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .empty-state-text {
+            font-size: 1.2em;
+        }
     </style>
 </head>
 <body>
@@ -710,28 +1049,71 @@
             </div>
         </div>
 
-        <!-- 培訓進度頁面 -->
-        <div id="trainingProgressPage" class="page">
+        <!-- ========== 新設計：員工培訓記錄頁面 ========== -->
+        <div id="staffTrainingPage" class="page">
             <div class="top-bar">
-                <h2 id="progressStaffName">培訓進度</h2>
+                <h2>📋 員工培訓記錄</h2>
                 <div>
                     <button class="btn btn-info btn-small" onclick="exportToPDF()">📄 匯出 PDF</button>
                     <button class="btn btn-secondary btn-small" onclick="backToStaffList()">🔙 返回</button>
                 </div>
             </div>
-            <div id="trainingProgress">
-                <!-- 動態生成培訓進度 -->
+
+            <!-- 員工資訊 -->
+            <div class="staff-header">
+                <div class="staff-header-content" id="staffHeaderContent">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+
+            <!-- 各評估時間表 -->
+            <div class="timeline-section">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        <span>📅</span>
+                        <span>各評估時間表</span>
+                    </div>
+                    <button class="btn btn-warning btn-small" onclick="showAddEvaluationModal()">➕ 新增評核</button>
+                </div>
+                <div class="timeline-items" id="timelineItems">
+                    <!-- 動態生成即將到期的培訓 -->
+                </div>
+            </div>
+
+            <!-- Dashboard 培訓項目進度 -->
+            <div class="dashboard-section">
+                <div class="dashboard-title">
+                    <span>🎓</span>
+                    <span>培訓項目進度</span>
+                </div>
+                <div class="dashboard-hint">💡 點擊培訓項目查看詳情並進行評核</div>
+                <div class="category-grid" id="categoryGrid">
+                    <!-- 動態生成培訓分類卡片 -->
+                </div>
             </div>
         </div>
 
-        <!-- 培訓分類詳情頁面 -->
+        <!-- ========== 培訓詳情頁面 ========== -->
         <div id="categoryDetailPage" class="page">
             <div class="top-bar">
-                <h2 id="categoryDetailTitle">培訓項目</h2>
-                <button class="btn btn-secondary" onclick="backToProgress()">🔙 返回</button>
+                <h2>📚 培訓詳情</h2>
+                <button class="btn btn-secondary" onclick="backToStaffTraining()">🔙 返回</button>
             </div>
-            <div id="categoryDetailContent">
-                <!-- 動態生成培訓項目 -->
+
+            <div class="training-detail-header">
+                <div class="training-detail-title" id="detailCategoryTitle">
+                    <!-- 動態生成 -->
+                </div>
+                <div class="training-detail-stats" id="detailCategoryStats">
+                    <!-- 動態生成統計 -->
+                </div>
+            </div>
+
+            <div class="training-items-section">
+                <div class="training-items-hint">💡 點擊按鈕進行評核或查看評核紀錄</div>
+                <div class="training-items-list" id="trainingItemsList">
+                    <!-- 動態生成培訓項目 -->
+                </div>
             </div>
         </div>
     </div>
@@ -798,7 +1180,6 @@
             try {
                 console.log('🔧 開始初始化系統...');
                 
-                // 檢查是否有系統管理員帳戶
                 const adminSnapshot = await db.collection('accounts')
                     .where('id', '==', 'tkohot')
                     .limit(1)
@@ -817,13 +1198,11 @@
                     console.log('✅ 系統管理員帳戶已創建');
                 }
 
-                // 檢查是否有預設培訓分類
                 const categoriesSnapshot = await db.collection('trainingCategories').limit(1).get();
                 
                 if (categoriesSnapshot.empty) {
                     console.log('📝 創建預設培訓分類...');
                     
-                    // 創建預設培訓分類
                     const cat1Ref = await db.collection('trainingCategories').add({
                         name: '🎓 基礎培訓',
                         emoji: '🎓',
@@ -845,7 +1224,6 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // 創建預設培訓項目
                     await db.collection('trainingItems').add({
                         categoryId: cat1Ref.id,
                         name: '🧹 設備清潔',
@@ -889,7 +1267,6 @@
             }
         }
 
-        // 頁面載入時初始化
         window.addEventListener('load', () => {
             initializeSystem();
         });
@@ -909,12 +1286,10 @@
                 statusDiv.style.display = 'block';
                 statusDiv.textContent = '🔍 正在驗證...';
 
-                // 確保系統已初始化
                 await initializeSystem();
 
                 console.log('🔍 搜尋帳號:', id);
 
-                // 查詢帳號（不使用複合索引）
                 const accountsSnapshot = await db.collection('accounts')
                     .where('id', '==', id)
                     .limit(1)
@@ -924,7 +1299,6 @@
                     const doc = accountsSnapshot.docs[0];
                     const account = doc.data();
                     
-                    // 驗證密碼
                     if (account.password === pw) {
                         currentUser = { docId: doc.id, ...account };
                         
@@ -967,7 +1341,6 @@
 
             const menuHtml = [];
 
-            // 所有角色都能看到選擇員工職級（但員工看到的是自己的進度）
             if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
                 menuHtml.push(`
                     <div class="menu-card" onclick="showPage('staffLevelPage')">
@@ -976,7 +1349,6 @@
                     </div>
                 `);
             } else if (currentUser.role === 'staff') {
-                // 員工直接查看自己的培訓進度
                 menuHtml.push(`
                     <div class="menu-card" onclick="viewMyProgress()">
                         <div class="emoji">📈</div>
@@ -985,7 +1357,6 @@
                 `);
             }
 
-            // 只有系統管理員能看到帳戶管理
             if (currentUser.role === 'admin') {
                 menuHtml.push(`
                     <div class="menu-card" onclick="showAccountManage()">
@@ -995,7 +1366,6 @@
                 `);
             }
 
-            // 只有系統管理員能看到更改培訓資料
             if (currentUser.role === 'admin') {
                 menuHtml.push(`
                     <div class="menu-card" onclick="showTrainingManage()">
@@ -1012,7 +1382,7 @@
         // ==================== 員工查看自己的進度 ====================
         function viewMyProgress() {
             currentStaffId = currentUser.docId;
-            showTrainingProgress(currentStaffId);
+            showStaffTrainingPage(currentStaffId);
         }
 
         // ==================== 顯示帳戶管理 ====================
@@ -1031,7 +1401,6 @@
                 accountsSnapshot.forEach(doc => {
                     const account = doc.data();
                     
-                    // 不顯示系統管理員帳戶
                     if (account.role === 'admin') return;
 
                     const roleBadge = account.role === 'supervisor' 
@@ -1083,7 +1452,7 @@
                         <option value="PCA1">PCA1</option>
                         <option value="PCA2">PCA2</option>
                         <option value="PCA3">PCA3</option>
-                        <option value="OTA">OTA </option>
+                        <option value="OTA">OTA</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -1148,7 +1517,6 @@
             }
 
             try {
-                // 檢查帳號是否已存在
                 const existingSnapshot = await db.collection('accounts')
                     .where('id', '==', id)
                     .limit(1)
@@ -1159,7 +1527,6 @@
                     return;
                 }
 
-                // 創建新帳戶
                 await db.collection('accounts').add({
                     id: id,
                     password: pw,
@@ -1186,10 +1553,8 @@
             }
 
             try {
-                // 刪除帳戶
                 await db.collection('accounts').doc(docId).delete();
 
-                // 刪除該員工的所有培訓記錄
                 const recordsSnapshot = await db.collection('trainingRecords')
                     .where('userId', '==', docId)
                     .get();
@@ -1219,7 +1584,6 @@
             try {
                 const categoriesSnapshot = await db.collection('trainingCategories').get();
                 
-                // 手動排序
                 const categories = [];
                 categoriesSnapshot.forEach(doc => {
                     categories.push({ docId: doc.id, ...doc.data() });
@@ -1229,7 +1593,6 @@
                 const categoryListHtml = [];
 
                 for (const category of categories) {
-                    // 獲取該分類下的培訓項目
                     const itemsSnapshot = await db.collection('trainingItems')
                         .where('categoryId', '==', category.docId)
                         .get();
@@ -1244,7 +1607,9 @@
                     items.forEach(item => {
                         let deadlineText = '';
                         
-                        if (item.deadline.type === 'date') {
+                        if (item.deadline.type === 'none') {
+                            deadlineText = '⏰ 沒有指定日期';
+                        } else if (item.deadline.type === 'date') {
                             deadlineText = `📅 截止日期: ${item.deadline.value}`;
                         } else if (item.deadline.type === 'weeks') {
                             deadlineText = `⏱️ 入職後 ${item.deadline.value} 周內完成`;
@@ -1342,7 +1707,6 @@
             }
 
             try {
-                // 獲取當前最大的 order
                 const categoriesSnapshot = await db.collection('trainingCategories').get();
                 
                 let maxOrder = 0;
@@ -1374,7 +1738,6 @@
             }
 
             try {
-                // 刪除該分類下的所有培訓項目
                 const itemsSnapshot = await db.collection('trainingItems')
                     .where('categoryId', '==', docId)
                     .get();
@@ -1384,7 +1747,6 @@
                     batch.delete(doc.ref);
                 });
                 
-                // 刪除分類
                 batch.delete(db.collection('trainingCategories').doc(docId));
                 
                 await batch.commit();
@@ -1397,7 +1759,7 @@
             }
         }
 
-        // ==================== 顯示新增培訓項目視窗 ====================
+        // ==================== 顯示新增培訓項目視窗（修改版） ====================
         function showAddItemModal(categoryId) {
             const modalBody = `
                 <div class="input-group">
@@ -1408,11 +1770,12 @@
                     <label>⏰ 完成期限</label>
                     <div class="deadline-selector">
                         <select id="deadlineType" onchange="updateDeadlineInput()">
+                            <option value="none">⏰ 沒有指定日期</option>
                             <option value="weeks">📅 周</option>
                             <option value="months">📆 月</option>
                             <option value="date">📌 指定日期</option>
                         </select>
-                        <input type="number" id="deadlineValue" placeholder="輸入數字" min="1">
+                        <input type="number" id="deadlineValue" placeholder="選擇期限類型" disabled>
                     </div>
                 </div>
                 <div class="modal-buttons">
@@ -1424,35 +1787,45 @@
             showModal('➕ 新增培訓項目', modalBody);
         }
 
-        // ==================== 更新期限輸入框 ====================
+        // ==================== 更新期限輸入框（修改版） ====================
         function updateDeadlineInput() {
             const type = document.getElementById('deadlineType').value;
             const valueInput = document.getElementById('deadlineValue');
 
-            if (type === 'date') {
+            if (type === 'none') {
+                valueInput.disabled = true;
+                valueInput.value = '';
+                valueInput.placeholder = '無需填寫';
+            } else if (type === 'date') {
+                valueInput.disabled = false;
                 valueInput.type = 'date';
                 valueInput.placeholder = '';
                 valueInput.min = '';
             } else {
+                valueInput.disabled = false;
                 valueInput.type = 'number';
                 valueInput.placeholder = '輸入數字';
                 valueInput.min = '1';
             }
         }
 
-        // ==================== 創建培訓項目 ====================
+        // ==================== 創建培訓項目（修改版） ====================
         async function createTrainingItem(categoryId) {
             const name = document.getElementById('newItemName').value.trim();
             const deadlineType = document.getElementById('deadlineType').value;
             const deadlineValue = document.getElementById('deadlineValue').value;
 
-            if (!name || !deadlineValue) {
-                showToast('❌ 請填寫所有欄位', 'error');
+            if (!name) {
+                showToast('❌ 請填寫項目名稱', 'error');
+                return;
+            }
+
+            if (deadlineType !== 'none' && !deadlineValue) {
+                showToast('❌ 請填寫完成期限', 'error');
                 return;
             }
 
             try {
-                // 獲取當前分類下最大的 order
                 const itemsSnapshot = await db.collection('trainingItems')
                     .where('categoryId', '==', categoryId)
                     .get();
@@ -1468,7 +1841,7 @@
                     name: name,
                     deadline: {
                         type: deadlineType,
-                        value: deadlineValue
+                        value: deadlineType === 'none' ? '' : deadlineValue
                     },
                     order: maxOrder + 1,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1527,7 +1900,7 @@
                 accountsSnapshot.forEach(doc => {
                     const account = doc.data();
                     staffListHtml.push(`
-                        <div class="staff-card level-${level}" onclick="showTrainingProgress('${doc.id}')">
+                        <div class="staff-card level-${level}" onclick="showStaffTrainingPage('${doc.id}')">
                             <div class="staff-card-name">👤 ${account.name}</div>
                             <div class="staff-card-info">
                                 📅 入職日期: ${account.joinDate || '未設定'}
@@ -1547,19 +1920,217 @@
             }
         }
 
-        // ==================== 顯示培訓進度 ====================
-        async function showTrainingProgress(staffId) {
+        // ==================== 顯示員工培訓記錄頁面（新設計） ====================
+        async function showStaffTrainingPage(staffId) {
             currentStaffId = staffId;
-            showPage('trainingProgressPage');
+            showPage('staffTrainingPage');
 
             try {
                 // 獲取員工資料
                 const staffDoc = await db.collection('accounts').doc(staffId).get();
                 const staff = staffDoc.data();
 
-                document.getElementById('progressStaffName').textContent = `📈 ${staff.name} - 培訓進度`;
+                // 顯示員工資訊
+                const staffHeaderHtml = `
+                    <div class="staff-header-item">
+                        <div class="icon">👤</div>
+                        <div>
+                            <div class="label">姓名：</div>
+                            <div class="value">${staff.name}</div>
+                        </div>
+                    </div>
+                    <div class="staff-header-item">
+                        <div class="icon">📋</div>
+                        <div>
+                            <div class="label">職級：</div>
+                            <div class="value">${staff.level}</div>
+                        </div>
+                    </div>
+                    <div class="staff-header-item">
+                        <div class="icon">🆔</div>
+                        <div>
+                            <div class="label">員工編號：</div>
+                            <div class="value">${staff.id}</div>
+                        </div>
+                    </div>
+                    <div class="staff-header-item">
+                        <div class="icon">📅</div>
+                        <div>
+                            <div class="label">入職日期：</div>
+                            <div class="value">${staff.joinDate || '未設定'}</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('staffHeaderContent').innerHTML = staffHeaderHtml;
 
-                // 獲取所有培訓分類
+                // 載入即將到期的培訓（各評估時間表）
+                await loadUpcomingTrainings(staffId, staff.joinDate);
+
+                // 載入培訓項目進度
+                await loadTrainingCategories(staffId);
+            } catch (error) {
+                console.error('載入員工培訓記錄失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        // ==================== 載入即將到期的培訓 ====================
+        async function loadUpcomingTrainings(staffId, joinDate) {
+            try {
+                // 獲取所有培訓項目
+                const itemsSnapshot = await db.collection('trainingItems').get();
+                
+                // 獲取員工的培訓記錄
+                const recordsSnapshot = await db.collection('trainingRecords')
+                    .where('userId', '==', staffId)
+                    .get();
+
+                const records = {};
+                recordsSnapshot.forEach(doc => {
+                    const record = doc.data();
+                    records[record.itemId] = record;
+                });
+
+                const upcomingItems = [];
+
+                itemsSnapshot.forEach(doc => {
+                    const item = doc.data();
+                    const record = records[doc.id];
+
+                    // 只顯示未完成的項目
+                    if (!record || record.status !== 'completed') {
+                        let deadline = null;
+                        let isOverdue = false;
+
+                        if (item.deadline.type === 'date') {
+                            deadline = new Date(item.deadline.value);
+                            isOverdue = deadline < new Date();
+                        } else if (joinDate && (item.deadline.type === 'weeks' || item.deadline.type === 'months')) {
+                            const joinDateObj = new Date(joinDate);
+                            if (item.deadline.type === 'weeks') {
+                                deadline = new Date(joinDateObj.getTime() + (parseInt(item.deadline.value) * 7 * 24 * 60 * 60 * 1000));
+                            } else if (item.deadline.type === 'months') {
+                                deadline = new Date(joinDateObj);
+                                deadline.setMonth(deadline.getMonth() + parseInt(item.deadline.value));
+                            }
+                            isOverdue = deadline < new Date();
+                        }
+
+                        upcomingItems.push({
+                            docId: doc.id,
+                            name: item.name,
+                            deadline: deadline,
+                            isOverdue: isOverdue,
+                            deadlineType: item.deadline.type,
+                            deadlineValue: item.deadline.value
+                        });
+                    }
+                });
+
+                // 排序：過期的在前，然後按日期排序
+                upcomingItems.sort((a, b) => {
+                    if (a.isOverdue && !b.isOverdue) return -1;
+                    if (!a.isOverdue && b.isOverdue) return 1;
+                    if (a.deadline && b.deadline) {
+                        return a.deadline - b.deadline;
+                    }
+                    return 0;
+                });
+
+                // 只顯示前 5 個
+                const topItems = upcomingItems.slice(0, 5);
+
+                const timelineHtml = [];
+
+                if (topItems.length === 0) {
+                    timelineHtml.push(`
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎉</div>
+                            <div class="empty-state-text">所有培訓項目已完成！</div>
+                        </div>
+                    `);
+                } else {
+                    topItems.forEach(item => {
+                        let deadlineText = '';
+                        let statusClass = item.isOverdue ? 'overdue' : 'upcoming';
+
+                        if (item.deadlineType === 'none') {
+                            deadlineText = '⏰ 沒有指定日期';
+                        } else if (item.deadline) {
+                            deadlineText = `📅 截止日期：${item.deadline.toLocaleDateString('zh-TW')}`;
+                            if (item.isOverdue) {
+                                deadlineText += ' ⚠️ 已逾期';
+                            }
+                        } else if (item.deadlineType === 'weeks') {
+                            deadlineText = `⏱️ 入職後 ${item.deadlineValue} 周內完成`;
+                        } else if (item.deadlineType === 'months') {
+                            deadlineText = `📆 入職後 ${item.deadlineValue} 個月內完成`;
+                        }
+
+                        const canEvaluate = currentUser.role === 'admin' || currentUser.role === 'supervisor';
+
+                        timelineHtml.push(`
+                            <div class="timeline-item ${statusClass}">
+                                <div class="timeline-item-info">
+                                    <div class="timeline-item-name">${item.name}</div>
+                                    <div class="timeline-item-deadline">${deadlineText}</div>
+                                </div>
+                                ${canEvaluate ? `
+                                <div class="timeline-item-actions">
+                                    <button class="btn btn-success btn-small" onclick="quickUpdateStatus('${item.docId}', 'completed')">✅ 合格</button>
+                                    <button class="btn btn-danger btn-small" onclick="quickUpdateStatus('${item.docId}', 'failed')">❌ 不合格</button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `);
+                    });
+                }
+
+                document.getElementById('timelineItems').innerHTML = timelineHtml.join('');
+            } catch (error) {
+                console.error('載入即將到期培訓失敗:', error);
+            }
+        }
+
+        // ==================== 快速更新培訓狀態 ====================
+        async function quickUpdateStatus(itemId, status) {
+            try {
+                const recordsSnapshot = await db.collection('trainingRecords')
+                    .where('userId', '==', currentStaffId)
+                    .where('itemId', '==', itemId)
+                    .limit(1)
+                    .get();
+
+                const recordData = {
+                    userId: currentStaffId,
+                    itemId: itemId,
+                    status: status,
+                    evaluatedBy: currentUser.docId,
+                    evaluatedAt: new Date().toISOString()
+                };
+
+                if (recordsSnapshot.empty) {
+                    await db.collection('trainingRecords').add(recordData);
+                } else {
+                    await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
+                }
+
+                showToast('✅ 評核已更新', 'success');
+                
+                // 重新載入頁面
+                const staffDoc = await db.collection('accounts').doc(currentStaffId).get();
+                const staff = staffDoc.data();
+                await loadUpcomingTrainings(currentStaffId, staff.joinDate);
+                await loadTrainingCategories(currentStaffId);
+            } catch (error) {
+                console.error('更新培訓狀態失敗:', error);
+                showToast('❌ 更新失敗', 'error');
+            }
+        }
+
+        // ==================== 載入培訓分類進度 ====================
+        async function loadTrainingCategories(staffId) {
+            try {
                 const categoriesSnapshot = await db.collection('trainingCategories').get();
                 
                 const categories = [];
@@ -1568,104 +2139,93 @@
                 });
                 categories.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                const progressHtml = [];
+                const recordsSnapshot = await db.collection('trainingRecords')
+                    .where('userId', '==', staffId)
+                    .get();
+
+                const records = {};
+                recordsSnapshot.forEach(doc => {
+                    const record = doc.data();
+                    records[record.itemId] = record;
+                });
+
+                const categoryCardsHtml = [];
 
                 for (const category of categories) {
-                    // 獲取該分類下的所有培訓項目
                     const itemsSnapshot = await db.collection('trainingItems')
                         .where('categoryId', '==', category.docId)
                         .get();
 
-                    // 獲取員工的培訓記錄
-                    const recordsSnapshot = await db.collection('trainingRecords')
-                        .where('userId', '==', staffId)
-                        .get();
-
-                    const records = {};
-                    recordsSnapshot.forEach(doc => {
-                        const record = doc.data();
-                        records[record.itemId] = record;
-                    });
-
-                    // 計算完成進度
                     let completedCount = 0;
-                    let totalCount = itemsSnapshot.size;
+                    let failedCount = 0;
+                    const totalCount = itemsSnapshot.size;
 
                     itemsSnapshot.forEach(doc => {
                         const record = records[doc.id];
-                        if (record && record.status === 'completed') {
-                            completedCount++;
+                        if (record) {
+                            if (record.status === 'completed') completedCount++;
+                            else if (record.status === 'failed') failedCount++;
                         }
                     });
 
                     const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-                    // 繪製圓餅圖
-                    const circumference = 2 * Math.PI * 70;
+                    const circumference = 2 * Math.PI * 50;
                     const offset = circumference - (percentage / 100) * circumference;
 
-                    progressHtml.push(`
-                        <div class="training-category" onclick="showCategoryDetail('${category.docId}')">
-                            <div class="category-header">
-                                <div class="category-title">
-                                    <span style="font-size: 2em;">${category.emoji}</span>
+                    categoryCardsHtml.push(`
+                        <div class="category-card" onclick="showCategoryDetail('${category.docId}')">
+                            <div class="category-card-header">
+                                <div class="category-card-title">
+                                    <span class="category-card-emoji">${category.emoji}</span>
                                     <span>${category.name}</span>
                                 </div>
-                                <div class="progress-chart">
-                                    <svg width="200" height="200">
-                                        <circle cx="100" cy="100" r="70" fill="none" stroke="#e0e0e0" stroke-width="20"/>
-                                        <circle cx="100" cy="100" r="70" fill="none" stroke="#667eea" stroke-width="20"
-                                            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
-                                            transform="rotate(-90 100 100)" style="transition: stroke-dashoffset 0.5s ease"/>
-                                    </svg>
-                                    <div class="progress-text">
-                                        <div class="progress-percent">${percentage}%</div>
-                                        <div class="progress-label">${completedCount}/${totalCount}</div>
-                                    </div>
+                            </div>
+                            <div class="category-progress-circle">
+                                <svg width="120" height="120">
+                                    <circle cx="60" cy="60" r="50" fill="none" stroke="#e0e0e0" stroke-width="12"/>
+                                    <circle cx="60" cy="60" r="50" fill="none" stroke="#667eea" stroke-width="12"
+                                        stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+                                        transform="rotate(-90 60 60)" style="transition: stroke-dashoffset 0.5s ease"/>
+                                </svg>
+                                <div class="category-progress-text">
+                                    <div class="category-progress-percent">${percentage}%</div>
+                                    <div class="category-progress-label">${completedCount}/${totalCount}</div>
                                 </div>
+                            </div>
+                            <div class="category-card-footer">
+                                點擊查看詳情
                             </div>
                         </div>
                     `);
                 }
 
-                // 添加圖例
-                progressHtml.push(`
-                    <div class="legend">
-                        <div class="legend-item">
-                            <div class="legend-color color-completed"></div>
-                            <span>✅ 已完成</span>
+                // 加入新增培訓項目卡片（僅管理員可見）
+                if (currentUser.role === 'admin') {
+                    categoryCardsHtml.push(`
+                        <div class="category-card add-category-card" onclick="showAddCategoryModal()">
+                            <div class="add-category-icon">➕</div>
+                            <div class="add-category-text">新增培訓項目</div>
+                            <div class="add-category-hint">點擊新增自訂培訓項目</div>
                         </div>
-                        <div class="legend-item">
-                            <div class="legend-color color-failed"></div>
-                            <span>❌ 不合格</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color color-pending"></div>
-                            <span>⏳ 待完成</span>
-                        </div>
-                    </div>
-                `);
+                    `);
+                }
 
-                document.getElementById('trainingProgress').innerHTML = progressHtml.join('');
+                document.getElementById('categoryGrid').innerHTML = categoryCardsHtml.join('');
             } catch (error) {
-                console.error('載入培訓進度失敗:', error);
-                showToast('❌ 載入培訓進度失敗', 'error');
+                console.error('載入培訓分類失敗:', error);
             }
         }
 
-        // ==================== 顯示分類詳情 ====================
+        // ==================== 顯示培訓分類詳情 ====================
         async function showCategoryDetail(categoryId) {
             currentCategoryId = categoryId;
             showPage('categoryDetailPage');
 
             try {
-                // 獲取分類資料
                 const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
                 const category = categoryDoc.data();
 
-                document.getElementById('categoryDetailTitle').textContent = `${category.emoji} ${category.name}`;
-
-                // 獲取該分類下的所有培訓項目
                 const itemsSnapshot = await db.collection('trainingItems')
                     .where('categoryId', '==', categoryId)
                     .get();
@@ -1676,7 +2236,6 @@
                 });
                 items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                // 獲取員工的培訓記錄
                 const recordsSnapshot = await db.collection('trainingRecords')
                     .where('userId', '==', currentStaffId)
                     .get();
@@ -1687,38 +2246,66 @@
                     records[record.itemId] = { docId: doc.id, ...record };
                 });
 
+                // 計算統計
+                let completedCount = 0;
+                let failedCount = 0;
+                const totalCount = items.length;
+
+                items.forEach(item => {
+                    const record = records[item.docId];
+                    if (record) {
+                        if (record.status === 'completed') completedCount++;
+                        else if (record.status === 'failed') failedCount++;
+                    }
+                });
+
+                // 顯示標題和統計
+                const titleHtml = `
+                    <span style="font-size: 2em;">${category.emoji}</span>
+                    <span>${category.name}</span>
+                `;
+
+                const statsHtml = `
+                    <div class="training-detail-stat stat-completed">
+                        <span>✅ 已完成</span>
+                        <span class="number">${completedCount}</span>
+                    </div>
+                    <div class="training-detail-stat stat-failed">
+                        <span>❌ 不合格</span>
+                        <span class="number">${failedCount}</span>
+                    </div>
+                    <div class="training-detail-stat stat-total">
+                        <span>📊 總項目</span>
+                        <span class="number">${totalCount}</span>
+                    </div>
+                `;
+
+                document.getElementById('detailCategoryTitle').innerHTML = titleHtml;
+                document.getElementById('detailCategoryStats').innerHTML = statsHtml;
+
+                // 顯示培訓項目列表
                 const itemsHtml = [];
 
                 items.forEach(item => {
                     const record = records[item.docId];
 
                     let statusClass = 'status-pending';
-                    let statusText = '⏳ 待完成';
-                    let actionButtons = '';
+                    let statusBadge = '<span class="badge badge-warning">⏳ 待完成</span>';
 
                     if (record) {
                         if (record.status === 'completed') {
-                            statusClass = 'status-completed';
-                            statusText = '✅ 已完成';
+                            statusClass = 'completed';
+                            statusBadge = '<span class="badge badge-success">✅ 已完成</span>';
                         } else if (record.status === 'failed') {
-                            statusClass = 'status-failed';
-                            statusText = '❌ 不合格';
+                            statusClass = 'failed';
+                            statusBadge = '<span class="badge badge-danger">❌ 不合格</span>';
                         }
                     }
 
-                    // 只有管理員和主管可以評核
-                    if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
-                        actionButtons = `
-                            <div class="item-actions">
-                                <button class="btn btn-success btn-small" onclick="updateTrainingStatus('${item.docId}', 'completed')">✅ 合格</button>
-                                <button class="btn btn-danger btn-small" onclick="updateTrainingStatus('${item.docId}', 'failed')">❌ 不合格</button>
-                                <button class="btn btn-warning btn-small" onclick="updateTrainingStatus('${item.docId}', 'pending')">🔄 重設</button>
-                            </div>
-                        `;
-                    }
-
                     let deadlineText = '';
-                    if (item.deadline.type === 'date') {
+                    if (item.deadline.type === 'none') {
+                        deadlineText = '⏰ 沒有指定日期';
+                    } else if (item.deadline.type === 'date') {
                         deadlineText = `📅 截止日期: ${item.deadline.value}`;
                     } else if (item.deadline.type === 'weeks') {
                         deadlineText = `⏱️ 入職後 ${item.deadline.value} 周內完成`;
@@ -1726,29 +2313,47 @@
                         deadlineText = `📆 入職後 ${item.deadline.value} 個月內完成`;
                     }
 
+                    const canEvaluate = currentUser.role === 'admin' || currentUser.role === 'supervisor';
+
                     itemsHtml.push(`
-                        <div class="training-item ${statusClass}">
-                            <div class="item-info">
-                                <div class="item-name">${item.name} ${statusText}</div>
-                                <div class="item-deadline">${deadlineText}</div>
-                                ${record && record.evaluatedAt ? `<div class="item-deadline">⏰ 評核時間: ${new Date(record.evaluatedAt).toLocaleString('zh-TW')}</div>` : ''}
+                        <div class="training-item-card ${statusClass}">
+                            <div class="training-item-header">
+                                <div class="training-item-info-section">
+                                    <div class="training-item-name">${item.name} ${statusBadge}</div>
+                                    <div class="training-item-deadline">${deadlineText}</div>
+                                    ${record && record.evaluatedAt ? `<div class="training-item-evaluated">⏰ 評核時間: ${new Date(record.evaluatedAt).toLocaleString('zh-TW')}</div>` : ''}
+                                </div>
+                                ${canEvaluate ? `
+                                <div class="training-item-actions">
+                                    <button class="btn btn-success btn-small" onclick="updateItemStatus('${item.docId}', 'completed')">✅ 合格</button>
+                                    <button class="btn btn-danger btn-small" onclick="updateItemStatus('${item.docId}', 'failed')">❌ 不合格</button>
+                                    ${record ? `<button class="btn btn-warning btn-small" onclick="updateItemStatus('${item.docId}', 'pending')">🔄 重設</button>` : ''}
+                                </div>
+                                ` : ''}
                             </div>
-                            ${actionButtons}
                         </div>
                     `);
                 });
 
-                document.getElementById('categoryDetailContent').innerHTML = itemsHtml.join('');
+                if (itemsHtml.length === 0) {
+                    itemsHtml.push(`
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">此分類尚無培訓項目</div>
+                        </div>
+                    `);
+                }
+
+                document.getElementById('trainingItemsList').innerHTML = itemsHtml.join('');
             } catch (error) {
                 console.error('載入分類詳情失敗:', error);
-                showToast('❌ 載入分類詳情失敗', 'error');
+                showToast('❌ 載入失敗', 'error');
             }
         }
 
-        // ==================== 更新培訓狀態 ====================
-        async function updateTrainingStatus(itemId, status) {
+        // ==================== 更新培訓項目狀態 ====================
+        async function updateItemStatus(itemId, status) {
             try {
-                // 查詢是否已有記錄
                 const recordsSnapshot = await db.collection('trainingRecords')
                     .where('userId', '==', currentStaffId)
                     .where('itemId', '==', itemId)
@@ -1756,12 +2361,10 @@
                     .get();
 
                 if (status === 'pending') {
-                    // 重設：刪除記錄
                     if (!recordsSnapshot.empty) {
                         await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).delete();
                     }
                 } else {
-                    // 更新或創建記錄
                     const recordData = {
                         userId: currentStaffId,
                         itemId: itemId,
@@ -1785,19 +2388,23 @@
             }
         }
 
-        // ==================== 返回培訓進度 ====================
-        function backToProgress() {
-            showTrainingProgress(currentStaffId);
+        // ==================== 返回員工培訓記錄頁面 ====================
+        function backToStaffTraining() {
+            showStaffTrainingPage(currentStaffId);
         }
 
         // ==================== 返回員工列表 ====================
         function backToStaffList() {
             if (currentUser.role === 'staff') {
-                // 員工返回主選單
                 showMainPage();
             } else {
                 showStaffList(currentStaffLevel);
             }
+        }
+
+        // ==================== 顯示新增評核視窗 ====================
+        function showAddEvaluationModal() {
+            showToast('💡 請從下方培訓項目進度中選擇項目進行評核', 'warning');
         }
 
         // ==================== 匯出 PDF ====================
@@ -1808,11 +2415,9 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
 
-                // 獲取員工資料
                 const staffDoc = await db.collection('accounts').doc(currentStaffId).get();
                 const staff = staffDoc.data();
 
-                // 設定標題
                 doc.setFontSize(20);
                 doc.text('TKOH OT Training System', 105, 20, { align: 'center' });
                 
@@ -1823,7 +2428,6 @@
 
                 let yPos = 70;
 
-                // 獲取所有培訓分類和記錄
                 const categoriesSnapshot = await db.collection('trainingCategories').get();
                 
                 const categories = [];
@@ -1886,7 +2490,6 @@
                     yPos += 5;
                 }
 
-                // 保存 PDF
                 doc.save(`${staff.name}_Training_Report.pdf`);
                 showToast('✅ PDF 已匯出', 'success');
             } catch (error) {
@@ -1924,14 +2527,12 @@
             }, 3000);
         }
 
-        // 點擊 modal 外部關閉
         document.getElementById('modal').addEventListener('click', (e) => {
             if (e.target.id === 'modal') {
                 closeModal();
             }
         });
 
-        // Enter 鍵登入
         document.getElementById('loginPw').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 login();
