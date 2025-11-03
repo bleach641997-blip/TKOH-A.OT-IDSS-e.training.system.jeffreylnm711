@@ -1227,85 +1227,98 @@
         }
 
         // ==================== 載入培訓分類 ====================
-        async function loadCategories() {
-            try {
-                const categoriesSnapshot = await db.collection('trainingCategories').get();
+async function loadCategories() {
+    try {
+        console.log('🔍 開始載入培訓分類...');
+        
+        const categoriesSnapshot = await db.collection('trainingCategories').get();
+        console.log('✅ 找到', categoriesSnapshot.size, '個分類');
+        
+        // 手動排序
+        const categories = [];
+        categoriesSnapshot.forEach(doc => {
+            categories.push({ docId: doc.id, ...doc.data() });
+        });
+        categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        const categoryListHtml = [];
+
+        for (const category of categories) {
+            console.log('📂 處理分類:', category.name);
+            
+            // ✅ 獲取所有培訓項目，手動過濾
+            const allItemsSnapshot = await db.collection('trainingItems').get();
+            console.log('✅ 找到', allItemsSnapshot.size, '個培訓項目');
+            
+            const items = [];
+            allItemsSnapshot.forEach(doc => {
+                const item = doc.data();
+                if (item.categoryId === category.docId) {
+                    items.push({ docId: doc.id, ...item });
+                }
+            });
+            items.sort((a, b) => (a.order || 0) - (b.order || 0));
+            
+            console.log('  └─ 此分類有', items.length, '個項目');
+
+            const itemsHtml = [];
+            items.forEach(item => {
+                let deadlineText = '';
                 
-                // 手動排序
-                const categories = [];
-                categoriesSnapshot.forEach(doc => {
-                    categories.push({ docId: doc.id, ...doc.data() });
-                });
-                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+                if (item.deadline) {
+                    if (item.deadline.type === 'date') {
+                        deadlineText = `📅 截止日期: ${item.deadline.value}`;
+                    } else if (item.deadline.type === 'weeks') {
+                        deadlineText = `⏱️ 入職後 ${item.deadline.value} 周內完成`;
+                    } else if (item.deadline.type === 'months') {
+                        deadlineText = `📆 入職後 ${item.deadline.value} 個月內完成`;
+                    }
+                }
 
-                const categoryListHtml = [];
-
-                for (const category of categories) {
-                    // 獲取該分類下的培訓項目
-                    const itemsSnapshot = await db.collection('trainingItems')
-                        .where('categoryId', '==', category.docId)
-                        .get();
-
-                    const items = [];
-                    itemsSnapshot.forEach(doc => {
-                        items.push({ docId: doc.id, ...doc.data() });
-                    });
-                    items.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-                    const itemsHtml = [];
-                    items.forEach(item => {
-                        let deadlineText = '';
-                        
-                        if (item.deadline.type === 'date') {
-                            deadlineText = `📅 截止日期: ${item.deadline.value}`;
-                        } else if (item.deadline.type === 'weeks') {
-                            deadlineText = `⏱️ 入職後 ${item.deadline.value} 周內完成`;
-                        } else if (item.deadline.type === 'months') {
-                            deadlineText = `📆 入職後 ${item.deadline.value} 個月內完成`;
-                        }
-
-                        itemsHtml.push(`
-                            <div class="training-item">
-                                <div class="item-info">
-                                    <div class="item-name">${item.name}</div>
-                                    <div class="item-deadline">${deadlineText}</div>
-                                </div>
-                                <div class="item-actions">
-                                    <button class="btn btn-danger btn-small" onclick="deleteTrainingItem('${item.docId}', '${item.name}')">🗑️ 刪除</button>
-                                </div>
-                            </div>
-                        `);
-                    });
-
-                    categoryListHtml.push(`
-                        <div class="training-category">
-                            <div class="category-header">
-                                <div class="category-title">
-                                    <span style="font-size: 2em;">${category.emoji}</span>
-                                    <span>${category.name}</span>
-                                </div>
-                                <div class="category-actions">
-                                    <button class="btn btn-success btn-small" onclick="showAddItemModal('${category.docId}')">➕ 新增項目</button>
-                                    <button class="btn btn-danger btn-small" onclick="deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除分類</button>
-                                </div>
-                            </div>
-                            <div class="category-items">
-                                ${itemsHtml.length > 0 ? itemsHtml.join('') : '<p style="color: #999; text-align: center;">📭 此分類尚無培訓項目</p>'}
-                            </div>
+                itemsHtml.push(`
+                    <div class="training-item">
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-deadline">${deadlineText}</div>
                         </div>
-                    `);
-                }
+                        <div class="item-actions">
+                            <button class="btn btn-danger btn-small" onclick="deleteTrainingItem('${items.indexOf(item)}', '${category.docId}', '${item.name}')">🗑️ 刪除</button>
+                        </div>
+                    </div>
+                `);
+            });
 
-                if (categoryListHtml.length === 0) {
-                    categoryListHtml.push('<p style="text-align: center; color: #999;">📭 尚無培訓分類</p>');
-                }
-
-                document.getElementById('categoryList').innerHTML = categoryListHtml.join('');
-            } catch (error) {
-                console.error('載入培訓分類失敗:', error);
-                showToast('❌ 載入培訓分類失敗', 'error');
-            }
+            categoryListHtml.push(`
+                <div class="training-category">
+                    <div class="category-header">
+                        <div class="category-title">
+                            <span style="font-size: 2em;">${category.emoji || '📚'}</span>
+                            <span>${category.name}</span>
+                        </div>
+                        <div class="category-actions">
+                            <button class="btn btn-success btn-small" onclick="showAddItemModal('${category.docId}')">➕ 新增項目</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除分類</button>
+                        </div>
+                    </div>
+                    <div class="category-items">
+                        ${itemsHtml.length > 0 ? itemsHtml.join('') : '<p style="color: #999; text-align: center;">📭 此分類尚無培訓項目</p>'}
+                    </div>
+                </div>
+            `);
         }
+
+        if (categoryListHtml.length === 0) {
+            categoryListHtml.push('<p style="text-align: center; color: #999;">📭 尚無培訓分類</p>');
+        }
+
+        document.getElementById('categoryList').innerHTML = categoryListHtml.join('');
+        console.log('✅ 培訓分類載入完成');
+    } catch (error) {
+        console.error('❌ 載入培訓分類失敗:', error);
+        console.error('錯誤詳情:', error.message);
+        showToast('❌ 載入失敗：' + error.message, 'error');
+    }
+}
 
         // ==================== 顯示新增分類視窗 ====================
         function showAddCategoryModal() {
@@ -1453,63 +1466,86 @@
         }
 
         // ==================== 創建培訓項目 ====================
-        async function createTrainingItem(categoryId) {
-            const name = document.getElementById('newItemName').value.trim();
-            const deadlineType = document.getElementById('deadlineType').value;
-            const deadlineValue = document.getElementById('deadlineValue').value;
+async function createTrainingItem(categoryId) {
+    const name = document.getElementById('newItemName').value.trim();
+    const deadlineType = document.getElementById('deadlineType').value;
+    const deadlineValue = document.getElementById('deadlineValue').value;
 
-            if (!name || !deadlineValue) {
-                showToast('❌ 請填寫所有欄位', 'error');
-                return;
+    console.log('📝 新增培訓項目:', { name, deadlineType, deadlineValue, categoryId });
+
+    if (!name || !deadlineValue) {
+        showToast('❌ 請填寫所有欄位', 'error');
+        return;
+    }
+
+    try {
+        // ✅ 獲取所有項目，手動計算最大 order
+        const allItemsSnapshot = await db.collection('trainingItems').get();
+        
+        let maxOrder = 0;
+        allItemsSnapshot.forEach(doc => {
+            const item = doc.data();
+            if (item.categoryId === categoryId) {
+                const order = item.order || 0;
+                if (order > maxOrder) maxOrder = order;
             }
+        });
 
-            try {
-                // 獲取當前分類下最大的 order
-                const itemsSnapshot = await db.collection('trainingItems')
-                    .where('categoryId', '==', categoryId)
-                    .get();
+        const newItem = {
+            categoryId: categoryId,
+            name: name,
+            deadline: {
+                type: deadlineType,
+                value: deadlineValue
+            },
+            order: maxOrder + 1,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-                let maxOrder = 0;
-                itemsSnapshot.forEach(doc => {
-                    const order = doc.data().order || 0;
-                    if (order > maxOrder) maxOrder = order;
-                });
+        console.log('💾 準備儲存:', newItem);
 
-                await db.collection('trainingItems').add({
-                    categoryId: categoryId,
-                    name: name,
-                    deadline: {
-                        type: deadlineType,
-                        value: deadlineValue
-                    },
-                    order: maxOrder + 1,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+        await db.collection('trainingItems').add(newItem);
 
-                showToast('✅ 培訓項目新增成功', 'success');
-                closeModal();
-                loadCategories();
-            } catch (error) {
-                console.error('新增培訓項目失敗:', error);
-                showToast('❌ 新增培訓項目失敗', 'error');
-            }
-        }
+        console.log('✅ 培訓項目新增成功');
+        showToast('✅ 培訓項目新增成功', 'success');
+        closeModal();
+        loadCategories();
+    } catch (error) {
+        console.error('❌ 新增培訓項目失敗:', error);
+        console.error('錯誤詳情:', error.message);
+        showToast('❌ 新增失敗：' + error.message, 'error');
+    }
+}
 
         // ==================== 刪除培訓項目 ====================
-        async function deleteTrainingItem(docId, name) {
-            if (!confirm(`❓ 確定要刪除培訓項目「${name}」嗎？`)) {
-                return;
-            }
+async function deleteTrainingItem(index, categoryId, name) {
+    if (!confirm(`❓ 確定要刪除培訓項目「${name}」嗎？`)) {
+        return;
+    }
 
-            try {
-                await db.collection('trainingItems').doc(docId).delete();
-                showToast('✅ 培訓項目已刪除', 'success');
-                loadCategories();
-            } catch (error) {
-                console.error('刪除培訓項目失敗:', error);
-                showToast('❌ 刪除培訓項目失敗', 'error');
+    try {
+        // 重新查詢該分類的所有項目
+        const allItemsSnapshot = await db.collection('trainingItems').get();
+        
+        const items = [];
+        allItemsSnapshot.forEach(doc => {
+            const item = doc.data();
+            if (item.categoryId === categoryId) {
+                items.push({ docId: doc.id, ...item });
             }
+        });
+        items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        if (items[index]) {
+            await db.collection('trainingItems').doc(items[index].docId).delete();
+            showToast('✅ 培訓項目已刪除', 'success');
+            loadCategories();
         }
+    } catch (error) {
+        console.error('❌ 刪除培訓項目失敗:', error);
+        showToast('❌ 刪除失敗', 'error');
+    }
+}
 
         // ==================== 顯示員工列表 ====================
         async function showStaffList(level) {
