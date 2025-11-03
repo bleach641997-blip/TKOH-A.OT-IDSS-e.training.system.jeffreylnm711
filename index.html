@@ -1158,10 +1158,20 @@
   </script>
 
   <!-- Firebase CRUD 模式 -->
-  <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<script type="module">
+  // ========== Import Firebase SDKs ==========
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { 
+    getFirestore, 
+    collection, 
+    doc, 
+    getDoc, 
+    getDocs, 
+    setDoc, 
+    deleteDoc 
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+  // ========== Firebase Configuration ==========
   const firebaseConfig = {
     apiKey: "AIzaSyBlLQdM2xL9U0uczsi4eJjyBU56_U9qGUE",
     authDomain: "tkoh-otidss-training.firebaseapp.com",
@@ -1177,14 +1187,43 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   async function initFirebase() {
     try {
       console.log('🔧 正在初始化 Firebase...');
+      
+      // Initialize Firebase App
       app = initializeApp(firebaseConfig);
+      
+      // Initialize Firestore
       db = getFirestore(app);
+      
+      // Make globally accessible
       window.db = db;
+      window.firebaseApp = app;
+      
       console.log('✅ Firebase 初始化成功');
-      return true;
+      console.log('📦 Firestore instance:', db);
+      
+      return true; // ✅ 正確：return 喺 function 入面
+      
     } catch (error) {
       console.error('❌ Firebase 初始化失敗:', error);
-      alert('⚠️ 資料庫連線失敗，請重新整理頁面！\n\n錯誤：' + error.message);
+      alert('⚠️ 資料庫連線失敗！\n\n錯誤：' + error.message);
+      return false; // ✅ 正確：return 喺 function 入面
+    }
+  }
+
+  // ========== Test Firestore Connection ==========
+  async function testFirestoreConnection() {
+    try {
+      console.log('🔍 測試 Firestore 連線...');
+      
+      const testRef = collection(db, 'staff');
+      const snapshot = await getDocs(testRef);
+      
+      console.log('✅ Firestore 連線正常');
+      console.log(`📊 找到 ${snapshot.size} 筆員工資料`);
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Firestore 連線測試失敗:', error);
       return false;
     }
   }
@@ -1193,7 +1232,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   window.saveTrainingProgressToFirebase = async function(staffId, categoryKey = null, recordIndex = null, completed = null, failed = null){
     if (!db) {
       console.error('❌ Firebase 未初始化');
-      return;
+      return; // ✅ 正確：return 喺 function 入面
     }
     
     try {
@@ -1225,28 +1264,28 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   };
 
   window.saveAssessmentConfigToFirebase = async function(assessment){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     const ref = doc(db, 'assessment-config', assessment.id);
     await setDoc(ref, assessment, { merge: true });
   };
   
   window.deleteAssessmentConfigFromFirebase = async function(assessmentId){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     await deleteDoc(doc(db, 'assessment-config', assessmentId));
   };
 
   window.saveTrainingTemplateToFirebase = async function(key, template){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     await setDoc(doc(db, 'training-templates', key), { key, ...template }, { merge: true });
   };
   
   window.deleteTrainingTemplateFromFirebase = async function(key){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     await deleteDoc(doc(db, 'training-templates', key));
   };
   
   window.saveTemplateRecordToFirebase = async function(templateKey, record){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     const ref = doc(db, 'training-templates', templateKey);
     const snap = await getDoc(ref);
     const data = snap.exists() ? snap.data() : { key: templateKey, recordsTemplate: [] };
@@ -1258,17 +1297,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   };
 
   window.saveUserToFirebase = async function(user){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     await setDoc(doc(db, 'users', user.username), user, { merge: true });
   };
   
   window.deleteUserFromFirebase = async function(username){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     await deleteDoc(doc(db, 'users', username));
   };
 
   window.saveStaffToFirebase = async function(staffId, data){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     await setDoc(doc(db, 'staff', staffId), { 
       staffId, 
       staffData: data,
@@ -1277,7 +1316,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   };
   
   window.deleteStaffFromFirebase = async function(staffId){
-    if (!db) return;
+    if (!db) return; // ✅ 正確
     await deleteDoc(doc(db, 'staff', staffId));
   };
 
@@ -1292,64 +1331,75 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
       console.log('⏳ 開始載入資料...');
       
       // 評估項目
-      const assSnap = await getDocs(collection(db,'assessment-config'));
+      const assSnap = await getDocs(collection(db, 'assessment-config'));
       window.assessmentConfig = [];
-      assSnap.forEach(d => {
-        const a = d.data();
-        if (a?.id) window.assessmentConfig.push(a);
+      assSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data?.id) window.assessmentConfig.push(data);
       });
       console.log('✅ 評估項目:', window.assessmentConfig.length);
 
       // 培訓模板
-      const tplSnap = await getDocs(collection(db,'training-templates'));
+      const tplSnap = await getDocs(collection(db, 'training-templates'));
       window.trainingTemplates = {};
-      tplSnap.forEach(s => {
-        const t = s.data();
-        if (t?.key) {
-          window.trainingTemplates[t.key] = {
-            name: t.name || '未命名', 
-            icon: t.icon || '📚',
-            target: t.target || { pca: true, ota: false },
-            recordsTemplate: Array.isArray(t.recordsTemplate) ? t.recordsTemplate : []
+      tplSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data?.key) {
+          window.trainingTemplates[data.key] = {
+            name: data.name || '未命名',
+            icon: data.icon || '📚',
+            target: data.target || { pca: true, ota: false },
+            recordsTemplate: Array.isArray(data.recordsTemplate) ? data.recordsTemplate : []
           };
         }
       });
       console.log('✅ 培訓模板:', Object.keys(window.trainingTemplates).length);
 
       // 用戶
-      const usersSnap = await getDocs(collection(db,'users'));
-      usersSnap.forEach(s => {
-        const u = s.data();
-        if (u?.username) window.userAccounts[u.username] = u;
+      const usersSnap = await getDocs(collection(db, 'users'));
+      window.userAccounts = window.userAccounts || {};
+      usersSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data?.username) window.userAccounts[data.username] = data;
       });
       console.log('✅ 用戶數量:', Object.keys(window.userAccounts).length);
 
       // 員工
-      const staffSnap = await getDocs(collection(db,'staff'));
+      const staffSnap = await getDocs(collection(db, 'staff'));
       window.staffDatabase = { PCA1: [], PCA2: [], PCA3: [], OTA: [] };
-      Object.keys(window.staffData).forEach(k => delete window.staffData[k]);
+      window.staffData = window.staffData || {};
       
-      staffSnap.forEach(s => {
-        const d = s.data(); 
-        const sid = d?.staffId; 
-        const sd = d?.staffData;
-        if (sid && sd) {
-          window.staffData[sid] = sd;
-          const g = sd.grade;
-          window.staffDatabase[g] = window.staffDatabase[g] || [];
-          if (!window.staffDatabase[g].some(x => x.id === sid)) { 
-            window.staffDatabase[g].push({ id: sid, name: sd.name }); 
+      staffSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        const staffId = data?.staffId;
+        const staffData = data?.staffData;
+        
+        if (staffId && staffData) {
+          window.staffData[staffId] = staffData;
+          const grade = staffData.grade;
+          
+          if (window.staffDatabase[grade]) {
+            if (!window.staffDatabase[grade].some(s => s.id === staffId)) {
+              window.staffDatabase[grade].push({ 
+                id: staffId, 
+                name: staffData.name 
+              });
+            }
           }
         }
       });
       console.log('✅ 員工數量:', Object.keys(window.staffData).length);
 
-      window.syncTemplatesToAllStaff();
-      console.log('✅ 資料載入完成！');
+      // Sync templates
+      if (typeof window.syncTemplatesToAllStaff === 'function') {
+        window.syncTemplatesToAllStaff();
+      }
+
+      console.log('🎉 資料載入完成！');
       return true;
       
     } catch (error) {
-      console.error('❌ 載入失敗:', error);
+      console.error('❌ 資料載入失敗:', error);
       alert('⚠️ 資料載入失敗！\n\n' + error.message);
       return false;
     }
@@ -1357,22 +1407,38 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 
   // ========== 啟動系統 ==========
   window.addEventListener('load', async () => {
-    const firebaseOK = await initFirebase();
+    console.log('🚀 系統啟動中...');
     
-    if (firebaseOK) {
-      const dataOK = await loadAllFromFirebase();
-      
-      if (dataOK) {
-        window.firebaseReady = true;
-        console.log('🎉 系統啟動成功！');
-        
-        const el = document.getElementById('loginId'); 
-        if (el) el.focus();
-      } else {
-        window.firebaseReady = false;
-      }
-    } else {
+    // Step 1: Initialize Firebase
+    const firebaseOK = await initFirebase();
+    if (!firebaseOK) {
+      console.error('❌ 系統啟動失敗：Firebase 初始化失敗');
       window.firebaseReady = false;
+      return; // ✅ 正確：return 喺 event handler 入面
     }
+    
+    // Step 2: Test connection
+    const connectionOK = await testFirestoreConnection();
+    if (!connectionOK) {
+      console.error('❌ 系統啟動失敗：Firestore 連線失敗');
+      window.firebaseReady = false;
+      return; // ✅ 正確
+    }
+    
+    // Step 3: Load data
+    const dataOK = await loadAllFromFirebase();
+    if (!dataOK) {
+      console.error('❌ 系統啟動失敗：資料載入失敗');
+      window.firebaseReady = false;
+      return; // ✅ 正確
+    }
+    
+    // Step 4: System ready
+    window.firebaseReady = true;
+    console.log('✅ 系統完全就緒！');
+    
+    // Auto-focus login field
+    const loginEl = document.getElementById('loginId');
+    if (loginEl) loginEl.focus();
   });
 </script>
