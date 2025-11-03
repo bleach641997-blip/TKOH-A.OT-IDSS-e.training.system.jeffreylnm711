@@ -1230,38 +1230,52 @@
 
   // ========== CRUD 函數 ==========
   window.saveTrainingProgressToFirebase = async function(staffId, categoryKey = null, recordIndex = null, completed = null, failed = null){
-    if (!db) {
-      console.error('❌ Firebase 未初始化');
-      return; // ✅ 正確：return 喺 function 入面
+  console.log('💾 開始儲存:', { staffId, categoryKey, recordIndex, completed, failed }); // ✅ 加呢行
+  
+  if (!db) {
+    console.error('❌ Firebase 未初始化');
+    alert('❌ 資料庫未連線！'); // ✅ 加呢行
+    return;
+  }
+  
+  try {
+    const staff = window.staffData[staffId];
+    if (!staff) {
+      throw new Error('找不到員工資料: ' + staffId);
     }
     
-    try {
-      const staff = window.staffData[staffId];
-      if (!staff) {
-        throw new Error('找不到員工資料: ' + staffId);
+    console.log('📝 更新前資料:', JSON.parse(JSON.stringify(staff))); // ✅ 加呢行
+    
+    if (categoryKey && recordIndex !== null && categoryKey in staff.trainingCategories) {
+      const cat = staff.trainingCategories[categoryKey];
+      if (cat.records[recordIndex]) {
+        if (completed !== null) cat.records[recordIndex].completed = completed;
+        if (failed !== null) cat.records[recordIndex].failed = failed;
+        cat.completed = cat.records.filter(r => r.completed && !r.failed).length;
       }
-      
-      if (categoryKey && recordIndex !== null && categoryKey in staff.trainingCategories) {
-        const cat = staff.trainingCategories[categoryKey];
-        if (cat.records[recordIndex]) {
-          if (completed !== null) cat.records[recordIndex].completed = completed;
-          if (failed !== null) cat.records[recordIndex].failed = failed;
-          cat.completed = cat.records.filter(r => r.completed && !r.failed).length;
-        }
-      }
-      
-      await setDoc(doc(db, 'staff', staffId), { 
-        staffId, 
-        staffData: staff,
-        lastUpdated: new Date().toISOString()
-      }, { merge: true });
-      
-      console.log('✅ 儲存成功:', staffId);
-    } catch (error) {
-      console.error('❌ 儲存失敗:', error);
-      throw error;
     }
-  };
+    
+    console.log('📝 更新後資料:', JSON.parse(JSON.stringify(staff))); // ✅ 加呢行
+    
+    // 開始寫入 Firestore
+    console.log('⬆️ 正在寫入 Firestore...'); // ✅ 加呢行
+    
+    await setDoc(doc(db, 'staff', staffId), { 
+      staffId, 
+      staffData: staff,
+      lastUpdated: new Date().toISOString()
+    }, { merge: true });
+    
+    console.log('✅ Firestore 儲存成功:', staffId); // ✅ 加呢行
+    alert('✅ 儲存成功！'); // ✅ 加呢行（測試用）
+    
+  } catch (error) {
+    console.error('❌ 儲存失敗:', error);
+    console.error('錯誤詳情:', error.code, error.message); // ✅ 加呢行
+    alert('❌ 儲存失敗！\n\n' + error.message); // ✅ 加呢行
+    throw error;
+  }
+};
 
   window.saveAssessmentConfigToFirebase = async function(assessment){
     if (!db) return; // ✅ 正確
