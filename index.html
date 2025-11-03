@@ -1160,7 +1160,7 @@
   <!-- Firebase CRUD 模式 -->
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBlLQdM2xL9U0uczsi4eJjyBU56_U9qGUE",
@@ -1171,28 +1171,32 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
     appId: "1:362761345155:web:729b2534075b29db01a3b6"
   };
 
-  console.log('🔧 正在初始化 Firebase...');
-  
   let app, db;
-  
-  try {
-    app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    window.db = db;
-    console.log('✅ Firebase 初始化成功');
-  } catch (error) {
-    console.error('❌ Firebase 初始化失敗:', error);
-    alert('⚠️ 資料庫連線失敗，請重新整理頁面！');
-    return;
+
+  // ========== 初始化 Firebase ==========
+  async function initFirebase() {
+    try {
+      console.log('🔧 正在初始化 Firebase...');
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      window.db = db;
+      console.log('✅ Firebase 初始化成功');
+      return true;
+    } catch (error) {
+      console.error('❌ Firebase 初始化失敗:', error);
+      alert('⚠️ 資料庫連線失敗，請重新整理頁面！\n\n錯誤：' + error.message);
+      return false;
+    }
   }
 
   // ========== CRUD 函數 ==========
   window.saveTrainingProgressToFirebase = async function(staffId, categoryKey = null, recordIndex = null, completed = null, failed = null){
+    if (!db) {
+      console.error('❌ Firebase 未初始化');
+      return;
+    }
+    
     try {
-      if (!window.firebaseReady) {
-        throw new Error('Firebase 未準備好');
-      }
-      
       const staff = window.staffData[staffId];
       if (!staff) {
         throw new Error('找不到員工資料: ' + staffId);
@@ -1221,23 +1225,28 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   };
 
   window.saveAssessmentConfigToFirebase = async function(assessment){
+    if (!db) return;
     const ref = doc(db, 'assessment-config', assessment.id);
     await setDoc(ref, assessment, { merge: true });
   };
   
   window.deleteAssessmentConfigFromFirebase = async function(assessmentId){
+    if (!db) return;
     await deleteDoc(doc(db, 'assessment-config', assessmentId));
   };
 
   window.saveTrainingTemplateToFirebase = async function(key, template){
+    if (!db) return;
     await setDoc(doc(db, 'training-templates', key), { key, ...template }, { merge: true });
   };
   
   window.deleteTrainingTemplateFromFirebase = async function(key){
+    if (!db) return;
     await deleteDoc(doc(db, 'training-templates', key));
   };
   
   window.saveTemplateRecordToFirebase = async function(templateKey, record){
+    if (!db) return;
     const ref = doc(db, 'training-templates', templateKey);
     const snap = await getDoc(ref);
     const data = snap.exists() ? snap.data() : { key: templateKey, recordsTemplate: [] };
@@ -1249,14 +1258,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   };
 
   window.saveUserToFirebase = async function(user){
+    if (!db) return;
     await setDoc(doc(db, 'users', user.username), user, { merge: true });
   };
   
   window.deleteUserFromFirebase = async function(username){
+    if (!db) return;
     await deleteDoc(doc(db, 'users', username));
   };
 
   window.saveStaffToFirebase = async function(staffId, data){
+    if (!db) return;
     await setDoc(doc(db, 'staff', staffId), { 
       staffId, 
       staffData: data,
@@ -1265,11 +1277,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
   };
   
   window.deleteStaffFromFirebase = async function(staffId){
+    if (!db) return;
     await deleteDoc(doc(db, 'staff', staffId));
   };
 
   // ========== 載入資料 ==========
   async function loadAllFromFirebase(){
+    if (!db) {
+      console.error('❌ 無法載入：Firebase 未初始化');
+      return false;
+    }
+    
     try {
       console.log('⏳ 開始載入資料...');
       
@@ -1328,29 +1346,33 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 
       window.syncTemplatesToAllStaff();
       console.log('✅ 資料載入完成！');
+      return true;
       
     } catch (error) {
       console.error('❌ 載入失敗:', error);
-      throw error;
+      alert('⚠️ 資料載入失敗！\n\n' + error.message);
+      return false;
     }
   }
 
-  // ========== 初始化 ==========
+  // ========== 啟動系統 ==========
   window.addEventListener('load', async () => {
-    try {
-      await loadAllFromFirebase();
-      window.firebaseReady = true;
-      console.log('🎉 系統啟動成功！');
+    const firebaseOK = await initFirebase();
+    
+    if (firebaseOK) {
+      const dataOK = await loadAllFromFirebase();
       
-      const el = document.getElementById('loginId'); 
-      if (el) el.focus();
-      
-    } catch (error) {
-      console.error('❌ 初始化失敗:', error);
+      if (dataOK) {
+        window.firebaseReady = true;
+        console.log('🎉 系統啟動成功！');
+        
+        const el = document.getElementById('loginId'); 
+        if (el) el.focus();
+      } else {
+        window.firebaseReady = false;
+      }
+    } else {
       window.firebaseReady = false;
-      alert('⚠️ 系統載入失敗，請重新整理頁面！\n\n錯誤：' + error.message);
     }
   });
 </script>
-</body>
-</html>
