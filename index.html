@@ -193,6 +193,21 @@
             font-weight: bold;
         }
 
+        /* 職級顏色 */
+        .level-WM { background: linear-gradient(135deg, #c23616 0%, #e84118 100%) !important; }
+        .level-APN { background: linear-gradient(135deg, #ff6b81 0%, #ee5a6f 100%) !important; }
+        .level-RN { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important; }
+        .level-PCA1, .level-PCA2, .level-PCA3, .level-OTA { 
+            background: linear-gradient(135deg, #2ed573 0%, #26d07c 100%) !important; 
+        }
+
+        .level-WM:hover { box-shadow: 0 15px 30px rgba(194, 54, 22, 0.4) !important; }
+        .level-APN:hover { box-shadow: 0 15px 30px rgba(255, 107, 129, 0.4) !important; }
+        .level-RN:hover { box-shadow: 0 15px 30px rgba(0, 210, 255, 0.4) !important; }
+        .level-PCA1:hover, .level-PCA2:hover, .level-PCA3:hover, .level-OTA:hover { 
+            box-shadow: 0 15px 30px rgba(46, 213, 115, 0.4) !important; 
+        }
+
         /* 帳戶管理 */
         .account-list {
             margin-top: 20px;
@@ -256,6 +271,13 @@
         .badge-info {
             background: #1e90ff;
             color: white;
+        }
+
+        .badge-WM { background: #c23616; color: white; }
+        .badge-APN { background: #ff6b81; color: white; }
+        .badge-RN { background: #00d2ff; color: white; }
+        .badge-PCA1, .badge-PCA2, .badge-PCA3, .badge-OTA { 
+            background: #2ed573; color: white; 
         }
 
         /* 培訓進度圓餅圖 */
@@ -481,6 +503,8 @@
             grid-template-columns: repeat(8, 1fr);
             gap: 10px;
             margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .emoji-option {
@@ -522,7 +546,6 @@
         }
 
         .staff-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
@@ -532,7 +555,6 @@
 
         .staff-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
         }
 
         .staff-card-name {
@@ -658,21 +680,33 @@
                 <button class="btn btn-secondary" onclick="showPage('mainPage')">🔙 返回</button>
             </div>
             <div class="menu-grid">
-                <div class="menu-card" onclick="showStaffList('PCA1')">
+                <div class="menu-card level-WM" onclick="showStaffList('WM')">
                     <div class="emoji">👨‍⚕️</div>
+                    <div class="title">WM (病房經理)</div>
+                </div>
+                <div class="menu-card level-APN" onclick="showStaffList('APN')">
+                    <div class="emoji">👩‍⚕️</div>
+                    <div class="title">APN (進階護士)</div>
+                </div>
+                <div class="menu-card level-RN" onclick="showStaffList('RN')">
+                    <div class="emoji">🧑‍⚕️</div>
+                    <div class="title">RN (註冊護士)</div>
+                </div>
+                <div class="menu-card level-PCA1" onclick="showStaffList('PCA1')">
+                    <div class="emoji">👨‍💼</div>
                     <div class="title">PCA1</div>
                 </div>
-                <div class="menu-card" onclick="showStaffList('PCA2')">
-                    <div class="emoji">👩‍⚕️</div>
+                <div class="menu-card level-PCA2" onclick="showStaffList('PCA2')">
+                    <div class="emoji">👩‍💼</div>
                     <div class="title">PCA2</div>
                 </div>
-                <div class="menu-card" onclick="showStaffList('PCA3')">
-                    <div class="emoji">🧑‍⚕️</div>
+                <div class="menu-card level-PCA3" onclick="showStaffList('PCA3')">
+                    <div class="emoji">🧑‍💼</div>
                     <div class="title">PCA3</div>
                 </div>
-                <div class="menu-card" onclick="showStaffList('OTA')">
-                    <div class="emoji">👨‍💼</div>
-                    <div class="title">OTA</div>
+                <div class="menu-card level-OTA" onclick="showStaffList('OTA')">
+                    <div class="emoji">🩺</div>
+                    <div class="title">OTA (職業治療助理)</div>
                 </div>
             </div>
         </div>
@@ -753,6 +787,22 @@
         let selectedEmoji = '📚';
         let systemInitialized = false;
 
+        // ==================== 更多 Emoji 選項 ====================
+        const EMOJI_LIST = [
+            '📚', '📖', '📝', '📋', '📊', '📈', '📉', '📄', '📃', '📑',
+            '🛡️', '⚔️', '🔰', '🎯', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️',
+            '💼', '💻', '⌨️', '🖥️', '🖨️', '📱', '📲', '☎️', '📞', '📟',
+            '⚕️', '🩺', '💊', '💉', '🩹', '🩼', '🦷', '🧬', '🔬', '🔭',
+            '🔧', '🔨', '⚒️', '🛠️', '⚙️', '🔩', '⚡', '🔌', '💡', '🔦',
+            '🎓', '🎒', '📐', '📏', '✏️', '✒️', '🖊️', '🖍️', '🖌️', '🖋️',
+            '🌟', '⭐', '✨', '💫', '🌠', '🎆', '🎇', '🎉', '🎊', '🎈',
+            '🔑', '🗝️', '🔐', '🔒', '🔓', '🔏', '🗄️', '🗂️', '📁', '📂',
+            '🎨', '🖼️', '🎭', '🎪', '🎬', '🎤', '🎧', '🎼', '🎹', '🎸',
+            '💪', '👊', '✊', '🤝', '👏', '🙌', '👐', '🤲', '🙏', '✋',
+            '🏥', '🏨', '🏢', '🏛️', '🏗️', '🏭', '🏬', '🏪', '🏩', '🏦',
+            '🔍', '🔎', '🔬', '🔭', '📡', '📻', '📺', '📹', '📷', '📸'
+        ];
+
         // ==================== 初始化系統 ====================
         async function initializeSystem() {
             if (systemInitialized) return;
@@ -763,6 +813,7 @@
                 // 檢查是否有系統管理員帳戶
                 const adminSnapshot = await db.collection('accounts')
                     .where('id', '==', 'tkohot')
+                    .limit(1)
                     .get();
                 
                 if (adminSnapshot.empty) {
@@ -784,78 +835,61 @@
                 if (categoriesSnapshot.empty) {
                     console.log('📝 創建預設培訓分類...');
                     
-                    const batch = db.batch();
-                    
                     // 創建預設培訓分類
-                    const cat1Ref = db.collection('trainingCategories').doc();
-                    batch.set(cat1Ref, {
-                        id: cat1Ref.id,
-                        name: '基礎培訓',
-                        emoji: '📚',
+                    const cat1Ref = await db.collection('trainingCategories').add({
+                        name: '🎓 基礎培訓',
+                        emoji: '🎓',
                         order: 1,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    const cat2Ref = db.collection('trainingCategories').doc();
-                    batch.set(cat2Ref, {
-                        id: cat2Ref.id,
-                        name: '安全培訓',
+                    const cat2Ref = await db.collection('trainingCategories').add({
+                        name: '🛡️ 安全培訓',
                         emoji: '🛡️',
                         order: 2,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    const cat3Ref = db.collection('trainingCategories').doc();
-                    batch.set(cat3Ref, {
-                        id: cat3Ref.id,
-                        name: '專業技能',
+                    const cat3Ref = await db.collection('trainingCategories').add({
+                        name: '💼 專業技能',
                         emoji: '💼',
                         order: 3,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
                     // 創建預設培訓項目
-                    const item1Ref = db.collection('trainingItems').doc();
-                    batch.set(item1Ref, {
-                        id: item1Ref.id,
+                    await db.collection('trainingItems').add({
                         categoryId: cat1Ref.id,
-                        name: '設備清潔',
+                        name: '🧹 設備清潔',
                         deadline: { type: 'weeks', value: '2' },
                         order: 1,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    const item2Ref = db.collection('trainingItems').doc();
-                    batch.set(item2Ref, {
-                        id: item2Ref.id,
+                    await db.collection('trainingItems').add({
                         categoryId: cat1Ref.id,
-                        name: '消防安全',
+                        name: '🔥 消防安全',
                         deadline: { type: 'weeks', value: '2' },
                         order: 2,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    const item3Ref = db.collection('trainingItems').doc();
-                    batch.set(item3Ref, {
-                        id: item3Ref.id,
+                    await db.collection('trainingItems').add({
                         categoryId: cat2Ref.id,
-                        name: '急救訓練',
+                        name: '🩹 急救訓練',
                         deadline: { type: 'months', value: '1' },
                         order: 1,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    const item4Ref = db.collection('trainingItems').doc();
-                    batch.set(item4Ref, {
-                        id: item4Ref.id,
+                    await db.collection('trainingItems').add({
                         categoryId: cat3Ref.id,
-                        name: '專業證照',
+                        name: '📜 專業證照',
                         deadline: { type: 'months', value: '3' },
                         order: 1,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    await batch.commit();
                     console.log('✅ 預設培訓資料已創建');
                 }
 
@@ -863,6 +897,7 @@
                 console.log('✅ 系統初始化完成');
             } catch (error) {
                 console.error('❌ 系統初始化失敗:', error);
+                showToast('⚠️ 系統初始化中，請稍後再試', 'warning');
             }
         }
 
@@ -891,20 +926,29 @@
 
                 console.log('🔍 搜尋帳號:', id);
 
-                // 查詢帳號
+                // 查詢帳號（不使用複合索引）
                 const accountsSnapshot = await db.collection('accounts')
                     .where('id', '==', id)
-                    .where('password', '==', pw)
+                    .limit(1)
                     .get();
 
                 if (!accountsSnapshot.empty) {
                     const doc = accountsSnapshot.docs[0];
-                    currentUser = { docId: doc.id, ...doc.data() };
+                    const account = doc.data();
                     
-                    console.log('✅ 登入成功:', currentUser);
-                    statusDiv.style.display = 'none';
-                    showToast(`✅ 歡迎，${currentUser.name}！`, 'success');
-                    showMainPage();
+                    // 驗證密碼
+                    if (account.password === pw) {
+                        currentUser = { docId: doc.id, ...account };
+                        
+                        console.log('✅ 登入成功:', currentUser);
+                        statusDiv.style.display = 'none';
+                        showToast(`✅ 歡迎，${currentUser.name}！`, 'success');
+                        showMainPage();
+                    } else {
+                        console.log('❌ 密碼錯誤');
+                        statusDiv.style.display = 'none';
+                        showToast('❌ 帳號或密碼錯誤', 'error');
+                    }
                 } else {
                     console.log('❌ 找不到符合的帳號');
                     statusDiv.style.display = 'none';
@@ -919,7 +963,7 @@
 
         // ==================== 登出系統 ====================
         function logout() {
-            if (confirm('確定要登出嗎？')) {
+            if (confirm('❓ 確定要登出嗎？')) {
                 currentUser = null;
                 document.getElementById('loginId').value = '';
                 document.getElementById('loginPw').value = '';
@@ -992,9 +1036,7 @@
         // ==================== 載入帳戶列表 ====================
         async function loadAccounts() {
             try {
-                const accountsSnapshot = await db.collection('accounts')
-                    .orderBy('createdAt', 'desc')
-                    .get();
+                const accountsSnapshot = await db.collection('accounts').get();
                 
                 const accountListHtml = [];
 
@@ -1005,15 +1047,17 @@
                     if (account.role === 'admin') return;
 
                     const roleBadge = account.role === 'supervisor' 
-                        ? '<span class="badge badge-supervisor">主管</span>'
-                        : '<span class="badge badge-staff">員工</span>';
+                        ? '<span class="badge badge-supervisor">👔 主管</span>'
+                        : '<span class="badge badge-staff">👤 員工</span>';
+
+                    const levelBadge = `<span class="badge badge-${account.level}">${account.level}</span>`;
 
                     accountListHtml.push(`
                         <div class="account-item">
                             <div class="account-info">
-                                <div class="name">👤 ${account.name} ${roleBadge} <span class="badge badge-info">${account.level}</span></div>
+                                <div class="name">👤 ${account.name} ${roleBadge} ${levelBadge}</div>
                                 <div class="details">
-                                    帳號: ${account.id} | 入職日期: ${account.joinDate || '未設定'}
+                                    📋 帳號: ${account.id} | 📅 入職日期: ${account.joinDate || '未設定'}
                                 </div>
                             </div>
                             <div class="account-actions">
@@ -1024,7 +1068,7 @@
                 });
 
                 if (accountListHtml.length === 0) {
-                    accountListHtml.push('<p style="text-align: center; color: #999;">尚無其他帳戶</p>');
+                    accountListHtml.push('<p style="text-align: center; color: #999;">📭 尚無其他帳戶</p>');
                 }
 
                 document.getElementById('accountList').innerHTML = accountListHtml.join('');
@@ -1045,13 +1089,13 @@
                     <label>📊 用戶職級</label>
                     <select id="newAccountLevel" onchange="updateRoleOptions()">
                         <option value="">請選擇職級</option>
-                        <option value="WM">WM</option>
-                        <option value="APN">APN</option>
-                        <option value="RN">RN</option>
+                        <option value="WM">WM (病房經理)</option>
+                        <option value="APN">APN (進階護士)</option>
+                        <option value="RN">RN (註冊護士)</option>
                         <option value="PCA1">PCA1</option>
                         <option value="PCA2">PCA2</option>
                         <option value="PCA3">PCA3</option>
-                        <option value="OTA">OTA</option>
+                        <option value="OTA">OTA (職業治療助理)</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -1095,9 +1139,9 @@
             roleSelect.disabled = false;
 
             if (['WM', 'APN', 'RN'].includes(level)) {
-                roleSelect.innerHTML = '<option value="supervisor">主管</option>';
+                roleSelect.innerHTML = '<option value="supervisor">👔 主管</option>';
             } else if (['PCA1', 'PCA2', 'PCA3', 'OTA'].includes(level)) {
-                roleSelect.innerHTML = '<option value="staff">員工</option>';
+                roleSelect.innerHTML = '<option value="staff">👤 員工</option>';
             }
         }
 
@@ -1119,6 +1163,7 @@
                 // 檢查帳號是否已存在
                 const existingSnapshot = await db.collection('accounts')
                     .where('id', '==', id)
+                    .limit(1)
                     .get();
 
                 if (!existingSnapshot.empty) {
@@ -1148,7 +1193,7 @@
 
         // ==================== 刪除帳戶 ====================
         async function deleteAccount(docId, name) {
-            if (!confirm(`確定要刪除帳戶「${name}」嗎？\n此操作無法復原！`)) {
+            if (!confirm(`❓ 確定要刪除帳戶「${name}」嗎？\n⚠️ 此操作無法復原！`)) {
                 return;
             }
 
@@ -1184,42 +1229,49 @@
         // ==================== 載入培訓分類 ====================
         async function loadCategories() {
             try {
-                const categoriesSnapshot = await db.collection('trainingCategories')
-                    .orderBy('order')
-                    .get();
+                const categoriesSnapshot = await db.collection('trainingCategories').get();
+                
+                // 手動排序
+                const categories = [];
+                categoriesSnapshot.forEach(doc => {
+                    categories.push({ docId: doc.id, ...doc.data() });
+                });
+                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
 
                 const categoryListHtml = [];
 
-                for (const doc of categoriesSnapshot.docs) {
-                    const category = doc.data();
-
+                for (const category of categories) {
                     // 獲取該分類下的培訓項目
                     const itemsSnapshot = await db.collection('trainingItems')
-                        .where('categoryId', '==', doc.id)
-                        .orderBy('order')
+                        .where('categoryId', '==', category.docId)
                         .get();
 
+                    const items = [];
+                    itemsSnapshot.forEach(doc => {
+                        items.push({ docId: doc.id, ...doc.data() });
+                    });
+                    items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
                     const itemsHtml = [];
-                    itemsSnapshot.forEach(itemDoc => {
-                        const item = itemDoc.data();
+                    items.forEach(item => {
                         let deadlineText = '';
                         
                         if (item.deadline.type === 'date') {
-                            deadlineText = `截止日期: ${item.deadline.value}`;
+                            deadlineText = `📅 截止日期: ${item.deadline.value}`;
                         } else if (item.deadline.type === 'weeks') {
-                            deadlineText = `入職後 ${item.deadline.value} 周內完成`;
+                            deadlineText = `⏱️ 入職後 ${item.deadline.value} 周內完成`;
                         } else if (item.deadline.type === 'months') {
-                            deadlineText = `入職後 ${item.deadline.value} 個月內完成`;
+                            deadlineText = `📆 入職後 ${item.deadline.value} 個月內完成`;
                         }
 
                         itemsHtml.push(`
                             <div class="training-item">
                                 <div class="item-info">
                                     <div class="item-name">${item.name}</div>
-                                    <div class="item-deadline">⏰ ${deadlineText}</div>
+                                    <div class="item-deadline">${deadlineText}</div>
                                 </div>
                                 <div class="item-actions">
-                                    <button class="btn btn-danger btn-small" onclick="deleteTrainingItem('${itemDoc.id}', '${item.name}')">🗑️ 刪除</button>
+                                    <button class="btn btn-danger btn-small" onclick="deleteTrainingItem('${item.docId}', '${item.name}')">🗑️ 刪除</button>
                                 </div>
                             </div>
                         `);
@@ -1233,19 +1285,19 @@
                                     <span>${category.name}</span>
                                 </div>
                                 <div class="category-actions">
-                                    <button class="btn btn-success btn-small" onclick="showAddItemModal('${doc.id}')">➕ 新增項目</button>
-                                    <button class="btn btn-danger btn-small" onclick="deleteCategory('${doc.id}', '${category.name}')">🗑️ 刪除分類</button>
+                                    <button class="btn btn-success btn-small" onclick="showAddItemModal('${category.docId}')">➕ 新增項目</button>
+                                    <button class="btn btn-danger btn-small" onclick="deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除分類</button>
                                 </div>
                             </div>
                             <div class="category-items">
-                                ${itemsHtml.length > 0 ? itemsHtml.join('') : '<p style="color: #999; text-align: center;">此分類尚無培訓項目</p>'}
+                                ${itemsHtml.length > 0 ? itemsHtml.join('') : '<p style="color: #999; text-align: center;">📭 此分類尚無培訓項目</p>'}
                             </div>
                         </div>
                     `);
                 }
 
                 if (categoryListHtml.length === 0) {
-                    categoryListHtml.push('<p style="text-align: center; color: #999;">尚無培訓分類</p>');
+                    categoryListHtml.push('<p style="text-align: center; color: #999;">📭 尚無培訓分類</p>');
                 }
 
                 document.getElementById('categoryList').innerHTML = categoryListHtml.join('');
@@ -1259,10 +1311,7 @@
         function showAddCategoryModal() {
             selectedEmoji = '📚';
             
-            const emojis = ['📚', '🛡️', '💼', '🎯', '⚕️', '🔧', '💡', '🌟', 
-                           '📊', '🎓', '🏆', '💪', '🔬', '🎨', '🔑', '⚡'];
-
-            const emojiOptions = emojis.map(emoji => 
+            const emojiOptions = EMOJI_LIST.map(emoji => 
                 `<div class="emoji-option ${emoji === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${emoji}')">${emoji}</div>`
             ).join('');
 
@@ -1306,19 +1355,15 @@
 
             try {
                 // 獲取當前最大的 order
-                const categoriesSnapshot = await db.collection('trainingCategories')
-                    .orderBy('order', 'desc')
-                    .limit(1)
-                    .get();
-
+                const categoriesSnapshot = await db.collection('trainingCategories').get();
+                
                 let maxOrder = 0;
-                if (!categoriesSnapshot.empty) {
-                    maxOrder = categoriesSnapshot.docs[0].data().order;
-                }
+                categoriesSnapshot.forEach(doc => {
+                    const order = doc.data().order || 0;
+                    if (order > maxOrder) maxOrder = order;
+                });
 
-                const newCatRef = db.collection('trainingCategories').doc();
-                await newCatRef.set({
-                    id: newCatRef.id,
+                await db.collection('trainingCategories').add({
                     name: name,
                     emoji: selectedEmoji,
                     order: maxOrder + 1,
@@ -1336,7 +1381,7 @@
 
         // ==================== 刪除培訓分類 ====================
         async function deleteCategory(docId, name) {
-            if (!confirm(`確定要刪除分類「${name}」嗎？\n分類下的所有培訓項目也會被刪除！`)) {
+            if (!confirm(`❓ 確定要刪除分類「${name}」嗎？\n⚠️ 分類下的所有培訓項目也會被刪除！`)) {
                 return;
             }
 
@@ -1375,9 +1420,9 @@
                     <label>⏰ 完成期限</label>
                     <div class="deadline-selector">
                         <select id="deadlineType" onchange="updateDeadlineInput()">
-                            <option value="weeks">周</option>
-                            <option value="months">月</option>
-                            <option value="date">指定日期</option>
+                            <option value="weeks">📅 周</option>
+                            <option value="months">📆 月</option>
+                            <option value="date">📌 指定日期</option>
                         </select>
                         <input type="number" id="deadlineValue" placeholder="輸入數字" min="1">
                     </div>
@@ -1422,18 +1467,15 @@
                 // 獲取當前分類下最大的 order
                 const itemsSnapshot = await db.collection('trainingItems')
                     .where('categoryId', '==', categoryId)
-                    .orderBy('order', 'desc')
-                    .limit(1)
                     .get();
 
                 let maxOrder = 0;
-                if (!itemsSnapshot.empty) {
-                    maxOrder = itemsSnapshot.docs[0].data().order;
-                }
+                itemsSnapshot.forEach(doc => {
+                    const order = doc.data().order || 0;
+                    if (order > maxOrder) maxOrder = order;
+                });
 
-                const newItemRef = db.collection('trainingItems').doc();
-                await newItemRef.set({
-                    id: newItemRef.id,
+                await db.collection('trainingItems').add({
                     categoryId: categoryId,
                     name: name,
                     deadline: {
@@ -1455,7 +1497,7 @@
 
         // ==================== 刪除培訓項目 ====================
         async function deleteTrainingItem(docId, name) {
-            if (!confirm(`確定要刪除培訓項目「${name}」嗎？`)) {
+            if (!confirm(`❓ 確定要刪除培訓項目「${name}」嗎？`)) {
                 return;
             }
 
@@ -1472,7 +1514,18 @@
         // ==================== 顯示員工列表 ====================
         async function showStaffList(level) {
             currentStaffLevel = level;
-            document.getElementById('staffListTitle').textContent = `📊 ${level} 員工列表`;
+            
+            const levelNames = {
+                'WM': 'WM (病房經理)',
+                'APN': 'APN (進階護士)',
+                'RN': 'RN (註冊護士)',
+                'PCA1': 'PCA1',
+                'PCA2': 'PCA2',
+                'PCA3': 'PCA3',
+                'OTA': 'OTA (職業治療助理)'
+            };
+            
+            document.getElementById('staffListTitle').textContent = `📊 ${levelNames[level]} - 員工列表`;
             showPage('staffListPage');
 
             try {
@@ -1486,17 +1539,17 @@
                 accountsSnapshot.forEach(doc => {
                     const account = doc.data();
                     staffListHtml.push(`
-                        <div class="staff-card" onclick="showTrainingProgress('${doc.id}')">
+                        <div class="staff-card level-${level}" onclick="showTrainingProgress('${doc.id}')">
                             <div class="staff-card-name">👤 ${account.name}</div>
                             <div class="staff-card-info">
-                                入職日期: ${account.joinDate || '未設定'}
+                                📅 入職日期: ${account.joinDate || '未設定'}
                             </div>
                         </div>
                     `);
                 });
 
                 if (staffListHtml.length === 0) {
-                    staffListHtml.push('<p style="text-align: center; color: #999; grid-column: 1/-1;">此職級尚無員工</p>');
+                    staffListHtml.push('<p style="text-align: center; color: #999; grid-column: 1/-1;">📭 此職級尚無員工</p>');
                 }
 
                 document.getElementById('staffList').innerHTML = staffListHtml.join('');
@@ -1519,19 +1572,20 @@
                 document.getElementById('progressStaffName').textContent = `📈 ${staff.name} - 培訓進度`;
 
                 // 獲取所有培訓分類
-                const categoriesSnapshot = await db.collection('trainingCategories')
-                    .orderBy('order')
-                    .get();
+                const categoriesSnapshot = await db.collection('trainingCategories').get();
+                
+                const categories = [];
+                categoriesSnapshot.forEach(doc => {
+                    categories.push({ docId: doc.id, ...doc.data() });
+                });
+                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
 
                 const progressHtml = [];
 
-                for (const categoryDoc of categoriesSnapshot.docs) {
-                    const category = categoryDoc.data();
-
+                for (const category of categories) {
                     // 獲取該分類下的所有培訓項目
                     const itemsSnapshot = await db.collection('trainingItems')
-                        .where('categoryId', '==', categoryDoc.id)
-                        .orderBy('order')
+                        .where('categoryId', '==', category.docId)
                         .get();
 
                     // 獲取員工的培訓記錄
@@ -1549,8 +1603,8 @@
                     let completedCount = 0;
                     let totalCount = itemsSnapshot.size;
 
-                    itemsSnapshot.forEach(itemDoc => {
-                        const record = records[itemDoc.id];
+                    itemsSnapshot.forEach(doc => {
+                        const record = records[doc.id];
                         if (record && record.status === 'completed') {
                             completedCount++;
                         }
@@ -1563,7 +1617,7 @@
                     const offset = circumference - (percentage / 100) * circumference;
 
                     progressHtml.push(`
-                        <div class="training-category" onclick="showCategoryDetail('${categoryDoc.id}')">
+                        <div class="training-category" onclick="showCategoryDetail('${category.docId}')">
                             <div class="category-header">
                                 <div class="category-title">
                                     <span style="font-size: 2em;">${category.emoji}</span>
@@ -1591,15 +1645,15 @@
                     <div class="legend">
                         <div class="legend-item">
                             <div class="legend-color color-completed"></div>
-                            <span>已完成</span>
+                            <span>✅ 已完成</span>
                         </div>
                         <div class="legend-item">
                             <div class="legend-color color-failed"></div>
-                            <span>不合格</span>
+                            <span>❌ 不合格</span>
                         </div>
                         <div class="legend-item">
                             <div class="legend-color color-pending"></div>
-                            <span>待完成</span>
+                            <span>⏳ 待完成</span>
                         </div>
                     </div>
                 `);
@@ -1626,8 +1680,13 @@
                 // 獲取該分類下的所有培訓項目
                 const itemsSnapshot = await db.collection('trainingItems')
                     .where('categoryId', '==', categoryId)
-                    .orderBy('order')
                     .get();
+
+                const items = [];
+                itemsSnapshot.forEach(doc => {
+                    items.push({ docId: doc.id, ...doc.data() });
+                });
+                items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
                 // 獲取員工的培訓記錄
                 const recordsSnapshot = await db.collection('trainingRecords')
@@ -1642,9 +1701,8 @@
 
                 const itemsHtml = [];
 
-                itemsSnapshot.forEach(itemDoc => {
-                    const item = itemDoc.data();
-                    const record = records[itemDoc.id];
+                items.forEach(item => {
+                    const record = records[item.docId];
 
                     let statusClass = 'status-pending';
                     let statusText = '⏳ 待完成';
@@ -1664,28 +1722,28 @@
                     if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
                         actionButtons = `
                             <div class="item-actions">
-                                <button class="btn btn-success btn-small" onclick="updateTrainingStatus('${itemDoc.id}', 'completed')">✅ 合格</button>
-                                <button class="btn btn-danger btn-small" onclick="updateTrainingStatus('${itemDoc.id}', 'failed')">❌ 不合格</button>
-                                <button class="btn btn-warning btn-small" onclick="updateTrainingStatus('${itemDoc.id}', 'pending')">🔄 重設</button>
+                                <button class="btn btn-success btn-small" onclick="updateTrainingStatus('${item.docId}', 'completed')">✅ 合格</button>
+                                <button class="btn btn-danger btn-small" onclick="updateTrainingStatus('${item.docId}', 'failed')">❌ 不合格</button>
+                                <button class="btn btn-warning btn-small" onclick="updateTrainingStatus('${item.docId}', 'pending')">🔄 重設</button>
                             </div>
                         `;
                     }
 
                     let deadlineText = '';
                     if (item.deadline.type === 'date') {
-                        deadlineText = `截止日期: ${item.deadline.value}`;
+                        deadlineText = `📅 截止日期: ${item.deadline.value}`;
                     } else if (item.deadline.type === 'weeks') {
-                        deadlineText = `入職後 ${item.deadline.value} 周內完成`;
+                        deadlineText = `⏱️ 入職後 ${item.deadline.value} 周內完成`;
                     } else if (item.deadline.type === 'months') {
-                        deadlineText = `入職後 ${item.deadline.value} 個月內完成`;
+                        deadlineText = `📆 入職後 ${item.deadline.value} 個月內完成`;
                     }
 
                     itemsHtml.push(`
                         <div class="training-item ${statusClass}">
                             <div class="item-info">
                                 <div class="item-name">${item.name} ${statusText}</div>
-                                <div class="item-deadline">⏰ ${deadlineText}</div>
-                                ${record && record.evaluatedAt ? `<div class="item-deadline">評核時間: ${new Date(record.evaluatedAt).toLocaleString('zh-TW')}</div>` : ''}
+                                <div class="item-deadline">${deadlineText}</div>
+                                ${record && record.evaluatedAt ? `<div class="item-deadline">⏰ 評核時間: ${new Date(record.evaluatedAt).toLocaleString('zh-TW')}</div>` : ''}
                             </div>
                             ${actionButtons}
                         </div>
@@ -1706,6 +1764,7 @@
                 const recordsSnapshot = await db.collection('trainingRecords')
                     .where('userId', '==', currentStaffId)
                     .where('itemId', '==', itemId)
+                    .limit(1)
                     .get();
 
                 if (status === 'pending') {
@@ -1777,7 +1836,14 @@
                 let yPos = 70;
 
                 // 獲取所有培訓分類和記錄
-                const categoriesSnapshot = await db.collection('trainingCategories').orderBy('order').get();
+                const categoriesSnapshot = await db.collection('trainingCategories').get();
+                
+                const categories = [];
+                categoriesSnapshot.forEach(doc => {
+                    categories.push({ docId: doc.id, ...doc.data() });
+                });
+                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+                
                 const recordsSnapshot = await db.collection('trainingRecords')
                     .where('userId', '==', currentStaffId)
                     .get();
@@ -1788,9 +1854,7 @@
                     records[record.itemId] = record;
                 });
 
-                for (const categoryDoc of categoriesSnapshot.docs) {
-                    const category = categoryDoc.data();
-
+                for (const category of categories) {
                     if (yPos > 250) {
                         doc.addPage();
                         yPos = 20;
@@ -1802,16 +1866,20 @@
                     yPos += 10;
 
                     const itemsSnapshot = await db.collection('trainingItems')
-                        .where('categoryId', '==', categoryDoc.id)
-                        .orderBy('order')
+                        .where('categoryId', '==', category.docId)
                         .get();
+
+                    const items = [];
+                    itemsSnapshot.forEach(doc => {
+                        items.push({ docId: doc.id, ...doc.data() });
+                    });
+                    items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
                     doc.setFontSize(10);
                     doc.setFont(undefined, 'normal');
 
-                    itemsSnapshot.forEach(itemDoc => {
-                        const item = itemDoc.data();
-                        const record = records[itemDoc.id];
+                    items.forEach(item => {
+                        const record = records[item.docId];
 
                         let status = 'Pending';
                         if (record) {
