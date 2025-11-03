@@ -499,7 +499,7 @@
       }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此分類尚無記錄</div>`;
     }
 
-    function openRecord(index){
+    async function openRecord(index){
       const staff=staffData[currentStaffId];
       const cat=staff.trainingCategories[currentCategory];
       const rec=cat.records[index];
@@ -512,7 +512,24 @@
           rec.completed = !rec.completed;
           rec.date = rec.completed ? getCurrentDate() : null;
           cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-          if (window.saveTrainingProgressToFirebase) window.saveTrainingProgressToFirebase(currentStaffId,currentCategory,index,rec.completed,false);
+          
+          try {
+            if (!window.firebaseReady) {
+              showToast('⚠️', 'Firebase 未準備好，請稍後重試', '#f39c12');
+              return;
+            }
+            if (window.saveTrainingProgressToFirebase) {
+              await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, index, rec.completed, false);
+            }
+          } catch (e) {
+            console.error('❌ 儲存失敗:', e);
+            showToast('❌', '儲存失敗，請重試', '#e74c3c');
+            rec.completed = !rec.completed; // 回滾狀態
+            rec.date = rec.completed ? getCurrentDate() : null;
+            cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
+            return;
+          }
+          
           showTrainingDetails(currentCategory);
           showToast(rec.completed?'✅':'⏳', `「${rec.name}」已${rec.completed?'完成':'取消完成'}！`, rec.completed?'#00b894':'#f39c12');
         }
@@ -584,17 +601,32 @@
       const cat=staff.trainingCategories[currentCategory];
       const rec=cat.records[currentRecordIndex];
       const item=rec.assessmentItems[idx];
+      
       if (!(currentUserRole==='admin'||currentUserRole==='supervisor')) return;
+      
       item.passed=false; item.failed=false;
       if (result==='pass') item.passed=true;
       if (result==='fail') item.failed=true;
+      
       const row=document.getElementById(`assRow${idx}`);
       if (row){
         row.style.background = item.passed? 'linear-gradient(135deg,#d4edda,#c3e6cb)' :
                              item.failed? 'linear-gradient(135deg,#f8d7da,#f5c6cb)' : '#f9fbfd';
       }
-      // 即時保存整個 staff 狀態
-      try{ if (window.saveTrainingProgressToFirebase) await window.saveTrainingProgressToFirebase(currentStaffId,currentCategory,currentRecordIndex,false,false); }catch(e){ console.error(e); }
+      
+      // 改進嘅儲存邏輯
+      try {
+        if (!window.firebaseReady) {
+          throw new Error('Firebase 未準備好');
+        }
+        if (window.saveTrainingProgressToFirebase) {
+          await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex);
+          console.log('✅ Item result saved');
+        }
+      } catch (e) {
+        console.error('❌ Failed to save:', e);
+        showToast('❌', '儲存失敗，請重試', '#e74c3c');
+      }
     }
 
     async function finishAssessment(){
@@ -608,7 +640,20 @@
       if (!rec.assessmentItems || total===0 || (passed===0 && failed===0)){
         rec.completed=false; rec.failed=false; rec.date=null; rec.status='pending';
         cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-        if (window.saveTrainingProgressToFirebase) window.saveTrainingProgressToFirebase(currentStaffId,currentCategory,currentRecordIndex,false,false);
+        
+        try {
+          if (!window.firebaseReady) {
+            throw new Error('Firebase 未準備好');
+          }
+          if (window.saveTrainingProgressToFirebase) {
+            await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, false, false);
+          }
+        } catch (e) {
+          console.error('❌ 儲存失敗:', e);
+          showToast('❌', '儲存失敗: ' + e.message, '#e74c3c');
+          return; // 唔關閉 dialog，等用戶可以重試
+        }
+        
         showToast('⏳','已重設為待完成','#f39c12');
         closeAnyDialog(); showTrainingDetails(currentCategory); return;
       }
@@ -628,9 +673,24 @@
         rec.completed=true; rec.failed=false; rec.date=getCurrentDate(); rec.status='completed';
         showToast('🎉', `評核完成！分數 ${score}/100`, '#00b894');
       }
+      
       cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-      if (window.saveTrainingProgressToFirebase) window.saveTrainingProgressToFirebase(currentStaffId,currentCategory,currentRecordIndex,rec.completed,rec.failed);
-      closeAnyDialog(); showTrainingDetails(currentCategory);
+      
+      try {
+        if (!window.firebaseReady) {
+          throw new Error('Firebase 未準備好');
+        }
+        if (window.saveTrainingProgressToFirebase) {
+          await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, rec.completed, rec.failed);
+        }
+      } catch (e) {
+        console.error('❌ 儲存失敗:', e);
+        showToast('❌', '儲存失敗: ' + e.message, '#e74c3c');
+        return; // 唔關閉 dialog，等用戶可以重試
+      }
+      
+      closeAnyDialog(); 
+      showTrainingDetails(currentCategory);
     }
 
     function showManagePage(){
@@ -1078,15 +1138,17 @@
       URL.revokeObjectURL(url);
     }
 
-    // 佔位，會在 module 內覆蓋
-    window.saveAssessmentConfigToFirebase = async function(){};
-    window.saveTrainingTemplateToFirebase = async function(){};
-    window.saveTemplateRecordToFirebase = async function(){};
-    window.saveStaffToFirebase = async function(){};
-    window.deleteStaffFromFirebase = async function(){};
-    window.saveUserToFirebase = async function(){};
-    window.deleteUserFromFirebase = async function(){};
-    window.saveTrainingProgressToFirebase = async function(){};
+    // 佔位函數，會在 Firebase module 載入後覆蓋
+    window.saveAssessmentConfigToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.deleteAssessmentConfigFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.saveTrainingTemplateToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.deleteTrainingTemplateFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.saveTemplateRecordToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.saveStaffToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.deleteStaffFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.saveUserToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.deleteUserFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
+    window.saveTrainingProgressToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
 
     document.addEventListener('keypress', e=>{
       if (e.key==='Enter' && document.getElementById('loginPage').classList.contains('active')) handleLogin();
@@ -1112,14 +1174,49 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 暴露
+    // 暴露給全域
     window.db = db;
+
+    // ========== 改進版 saveTrainingProgressToFirebase ==========
+    window.saveTrainingProgressToFirebase = async function(staffId, categoryKey = null, recordIndex = null, completed = null, failed = null){
+      try {
+        const staff = window.staffData[staffId];
+        if (!staff) {
+          console.error('❌ Staff not found:', staffId);
+          return;
+        }
+        
+        // 如果有提供具體參數，更新對應記錄
+        if (categoryKey && recordIndex !== null && categoryKey in staff.trainingCategories) {
+          const cat = staff.trainingCategories[categoryKey];
+          if (cat.records[recordIndex]) {
+            if (completed !== null) cat.records[recordIndex].completed = completed;
+            if (failed !== null) cat.records[recordIndex].failed = failed;
+            // 重新計算完成數量
+            cat.completed = cat.records.filter(r => r.completed && !r.failed).length;
+          }
+        }
+        
+        // 儲存整個 staff 資料到 Firebase
+        await setDoc(doc(db, 'staff', staffId), { 
+          staffId, 
+          staffData: staff,
+          lastUpdated: new Date().toISOString() // 加入時間戳，方便追蹤
+        }, { merge: true });
+        
+        console.log('✅ Staff data saved:', staffId);
+      } catch (error) {
+        console.error('❌ Error saving staff data:', error);
+        throw error; // 拋出錯誤，讓呼叫者可以處理
+      }
+    };
 
     // 固定 ID 的 CRUD
     window.saveAssessmentConfigToFirebase = async function(assessment){
       const ref = doc(db, 'assessment-config', assessment.id);
       await setDoc(ref, assessment, { merge: true });
     };
+    
     window.deleteAssessmentConfigFromFirebase = async function(assessmentId){
       const ref = doc(db, 'assessment-config', assessmentId);
       await deleteDoc(ref);
@@ -1129,10 +1226,12 @@
       const ref = doc(db, 'training-templates', key);
       await setDoc(ref, { key, ...template }, { merge: true });
     };
+    
     window.deleteTrainingTemplateFromFirebase = async function(key){
       const ref = doc(db, 'training-templates', key);
       await deleteDoc(ref);
     };
+    
     window.saveTemplateRecordToFirebase = async function(templateKey, record){
       const ref = doc(db, 'training-templates', templateKey);
       const snap = await getDoc(ref);
@@ -1147,28 +1246,33 @@
     window.saveUserToFirebase = async function(user){
       await setDoc(doc(db, 'users', user.username), user, { merge: true });
     };
+    
     window.deleteUserFromFirebase = async function(username){
       await deleteDoc(doc(db, 'users', username));
     };
 
     window.saveStaffToFirebase = async function(staffId, data){
-      await setDoc(doc(db, 'staff', staffId), { staffId, staffData: data }, { merge: true });
+      await setDoc(doc(db, 'staff', staffId), { 
+        staffId, 
+        staffData: data,
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
     };
+    
     window.deleteStaffFromFirebase = async function(staffId){
       await deleteDoc(doc(db, 'staff', staffId));
     };
-    window.saveTrainingProgressToFirebase = async function(staffId){
-      const staff = window.staffData[staffId];
-      await setDoc(doc(db, 'staff', staffId), { staffId, staffData: staff }, { merge: true });
-    };
 
-    // 啟動時讀「最新快照」
+    // 啟動時讀取所有資料
     async function loadAllFromFirebase(){
       try{
+        console.log('⏳ 開始載入 Firebase 資料...');
+        
         // assessments
         const assSnap = await getDocs(collection(db,'assessment-config'));
         window.assessmentConfig = [];
         assSnap.forEach(d=>{ const a=d.data(); if (a?.id) window.assessmentConfig.push(a); });
+        console.log('✅ 載入評估項目:', window.assessmentConfig.length);
 
         // templates
         const tplSnap = await getDocs(collection(db,'training-templates'));
@@ -1177,41 +1281,64 @@
           const t=s.data();
           if (t?.key){
             window.trainingTemplates[t.key] = {
-              name: t.name || '未命名', icon: t.icon || '📚',
+              name: t.name || '未命名', 
+              icon: t.icon || '📚',
               target: t.target || { pca:true, ota:false },
               recordsTemplate: Array.isArray(t.recordsTemplate) ? t.recordsTemplate : []
             };
           }
         });
+        console.log('✅ 載入培訓模板:', Object.keys(window.trainingTemplates).length);
 
         // users
         const usersSnap = await getDocs(collection(db,'users'));
         usersSnap.forEach(s=>{ const u=s.data(); if (u?.username) window.userAccounts[u.username]=u; });
+        console.log('✅ 載入用戶:', Object.keys(window.userAccounts).length);
 
         // staff
         const staffSnap = await getDocs(collection(db,'staff'));
         window.staffDatabase = { PCA1:[], PCA2:[], PCA3:[], OTA:[] };
         Object.keys(window.staffData).forEach(k=>delete window.staffData[k]);
         staffSnap.forEach(s=>{
-          const d=s.data(); const sid=d?.staffId; const sd=d?.staffData;
+          const d=s.data(); 
+          const sid=d?.staffId; 
+          const sd=d?.staffData;
           if (sid && sd){
             window.staffData[sid]=sd;
             const g=sd.grade;
             window.staffDatabase[g]=window.staffDatabase[g]||[];
-            if (!window.staffDatabase[g].some(x=>x.id===sid)){ window.staffDatabase[g].push({id:sid,name:sd.name}); }
+            if (!window.staffDatabase[g].some(x=>x.id===sid)){ 
+              window.staffDatabase[g].push({id:sid,name:sd.name}); 
+            }
           }
         });
+        console.log('✅ 載入員工:', Object.keys(window.staffData).length);
 
-        // 套模板
+        // 套用模板
         window.syncTemplatesToAllStaff();
 
-        console.log('✅ Firebase CRUD 載入完成');
-      }catch(e){ console.error('❌ 載入失敗：', e); }
+        console.log('✅ Firebase 資料載入完成');
+      }catch(e){ 
+        console.error('❌ Firebase 載入失敗：', e); 
+        throw e;
+      }
     }
 
+    // 頁面載入時執行
     window.addEventListener('load', async ()=>{
-      await loadAllFromFirebase();
-      const el=document.getElementById('loginId'); if (el) el.focus();
+      try {
+        await loadAllFromFirebase();
+        
+        // 標記 Firebase 已準備好
+        window.firebaseReady = true;
+        console.log('✅ 系統初始化完成');
+        
+        const el=document.getElementById('loginId'); 
+        if (el) el.focus();
+      } catch (error) {
+        console.error('❌ 初始化失敗:', error);
+        window.showToast('❌', '系統載入失敗，請重新整理頁面', '#e74c3c');
+      }
     });
   </script>
 </body>
