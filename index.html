@@ -158,11 +158,12 @@
     </div>
 
     <!-- 主選單 -->
-    <div id="mainMenu" class="page">
-      <div class="title">👥 選擇員工</div>
-      <div class="staff-grid" id="staffGrid"></div>
-      <button class="btn" onclick="logout()">登出</button>
-    </div>
+<div id="mainMenu" class="page">
+  <div class="title">👥 選擇員工</div>
+  <div class="staff-grid" id="staffGrid"></div>
+  <button class="btn" onclick="testSave()">🧪 測試儲存</button>
+  <button class="btn" onclick="logout()">登出</button>
+</div>
 
     <!-- 培訓記錄頁面 -->
     <div id="trainingPage" class="page">
@@ -173,6 +174,26 @@
   </div>
 
   <script>
+    async function testSave() {
+  console.log('🧪 開始測試儲存...');
+  
+  const testStaff = {
+    id: 'test001',
+    name: '測試員工',
+    records: [
+      { name: '測試項目1', completed: true, date: '2025-03-11' },
+      { name: '測試項目2', completed: false, date: null }
+    ]
+  };
+  
+  if (window.saveToFirebase) {
+    await window.saveToFirebase(testStaff);
+    showToast('✅ 測試儲存完成！請檢查 Firebase Console');
+  } else {
+    alert('❌ Firebase 尚未初始化');
+  }
+}
+    
     // ========== 全域變數 ==========
     let currentUser = null;
     let currentStaffId = null;
