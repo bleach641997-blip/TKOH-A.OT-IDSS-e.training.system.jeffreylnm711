@@ -3,45 +3,308 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TKOH 培訓管理系統</title>
-  
-  <!-- 修正：加入 favicon -->
+  <title>TKOH OT & IDSS Supporting Staff 培訓管理系統</title>
   <link rel="icon" href="data:,">
-  
   <style>
-    /* 你的 CSS 保持不變 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      max-width: 1200px;
+      width: 100%;
+    }
+    
+    .title {
+      color: #2c3e50;
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .page {
+      display: none;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    
+    .btn:hover {
+      background: #2980b9;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ecf0f1;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    .staff-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .staff-btn {
+      padding: 20px;
+      background: linear-gradient(135deg, #fd79a8, #e84393);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .staff-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    
+    .record-item {
+      background: white;
+      border: 2px solid #ecf0f1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .record-item.completed {
+      background: linear-gradient(135deg, #00b894, #00a085);
+      color: white;
+      border-color: #00b894;
+    }
+    
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+    
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #00b894;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 9999;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- 你的 HTML 保持不變 -->
+    <!-- 登入頁面 -->
+    <div id="loginPage" class="page active">
+      <div class="title">🏥 TKOH 培訓管理系統</div>
+      <div class="form-group">
+        <label>Login ID</label>
+        <input id="loginId" type="text" placeholder="請輸入登入ID">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="password" type="password" placeholder="請輸入密碼">
+      </div>
+      <button class="btn" onclick="login()">登入</button>
+      <div id="loginError" style="color: red; margin-top: 10px;"></div>
+    </div>
+
+    <!-- 主選單 -->
+    <div id="mainMenu" class="page">
+      <div class="title">👥 選擇員工</div>
+      <div class="staff-grid" id="staffGrid"></div>
+      <button class="btn" onclick="testSave()">🧪 測試儲存</button>
+      <button class="btn" onclick="logout()">登出</button>
+    </div>
+
+    <!-- 培訓記錄頁面 -->
+    <div id="trainingPage" class="page">
+      <div class="title" id="staffName"></div>
+      <div id="recordsList"></div>
+      <button class="btn" onclick="backToMenu()">返回</button>
+    </div>
   </div>
 
   <script>
-    // ========== 測試儲存功能 ==========
-    async function testSave() {
-      console.log('🧪 開始測試儲存...');
-      
-      const testStaff = {
-        id: 'test001',
-        name: '測試員工',
+    // ========== 全域變數 ==========
+    let currentUser = null;
+    let currentStaffId = null;
+    let db = null;
+    
+    // ========== 假資料 ==========
+    const users = {
+      'admin': { password: '123456', role: 'admin' }
+    };
+    
+    const staffList = [
+      { 
+        id: 'staff001', 
+        name: '張三', 
         records: [
-          { name: '測試項目1', completed: true, date: '2025-03-11' },
-          { name: '測試項目2', completed: false, date: null }
+          { name: '設備清潔', completed: false, date: null },
+          { name: '安全培訓', completed: true, date: '2025-03-10' }
         ]
-      };
-      
-      if (window.saveToFirebase) {
-        await window.saveToFirebase(testStaff);
-        showToast('✅ 測試儲存完成！請檢查 Firebase Console');
-      } else {
-        alert('❌ Firebase 尚未初始化');
+      },
+      { 
+        id: 'staff002', 
+        name: '李四', 
+        records: [
+          { name: '基礎操作', completed: false, date: null }
+        ]
       }
+    ];
+    
+    // ========== 頁面切換 ==========
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
     }
     
-    // 你的其他函數保持不變...
+    // ========== 顯示提示訊息 ==========
+    function showToast(message, color = '#00b894') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      toast.style.background = color;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
     
-    // ========== 修正：切換培訓記錄狀態 ==========
+    // ========== 登入功能 ==========
+    function login() {
+      const loginId = document.getElementById('loginId').value.trim();
+      const password = document.getElementById('password').value.trim();
+      
+      if (!loginId || !password) {
+        document.getElementById('loginError').textContent = '請輸入完整資料';
+        return;
+      }
+      
+      const user = users[loginId];
+      if (!user || user.password !== password) {
+        document.getElementById('loginError').textContent = '登入ID或密碼錯誤';
+        return;
+      }
+      
+      currentUser = { loginId, ...user };
+      showToast('✅ 登入成功！');
+      loadStaffList();
+      showPage('mainMenu');
+    }
+    
+    // ========== 登出 ==========
+    function logout() {
+      currentUser = null;
+      currentStaffId = null;
+      document.getElementById('loginId').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('loginError').textContent = '';
+      showToast('👋 已登出');
+      showPage('loginPage');
+    }
+    
+    // ========== 載入員工列表 ==========
+    function loadStaffList() {
+      const grid = document.getElementById('staffGrid');
+      grid.innerHTML = staffList.map(staff => `
+        <button class="staff-btn" onclick="showStaff('${staff.id}')">
+          👤 ${staff.name}
+        </button>
+      `).join('');
+    }
+    
+    // ========== 顯示員工培訓記錄 ==========
+    function showStaff(staffId) {
+      currentStaffId = staffId;
+      const staff = staffList.find(s => s.id === staffId);
+      
+      document.getElementById('staffName').textContent = `📋 ${staff.name} 的培訓記錄`;
+      
+      const list = document.getElementById('recordsList');
+      list.innerHTML = staff.records.length === 0 
+        ? '<p style="text-align: center; color: #7f8c8d;">目前沒有培訓記錄</p>'
+        : staff.records.map((record, index) => `
+            <div class="record-item ${record.completed ? 'completed' : ''}">
+              <input type="checkbox" class="checkbox" 
+                     ${record.completed ? 'checked' : ''}
+                     onchange="toggleRecord(${index})">
+              <div style="flex: 1;">
+                <div style="font-weight: bold; font-size: 18px;">${record.name}</div>
+                <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">
+                  ${record.completed ? '✅ 完成於 ' + record.date : '⏳ 待完成'}
+                </div>
+              </div>
+            </div>
+          `).join('');
+      
+      showPage('trainingPage');
+    }
+    
+    // ========== 切換培訓記錄狀態（已修正）==========
     async function toggleRecord(index) {
       const staff = staffList.find(s => s.id === currentStaffId);
       const record = staff.records[index];
@@ -66,42 +329,126 @@
       showStaff(currentStaffId);
     }
     
-    // 其他函數保持不變...
+    // ========== 返回主選單 ==========
+    function backToMenu() {
+      showPage('mainMenu');
+    }
+    
+    // ========== 測試儲存功能 ==========
+    async function testSave() {
+      console.log('🧪 開始測試儲存...');
+      
+      const testStaff = {
+        id: 'test001',
+        name: '測試員工',
+        records: [
+          { name: '測試項目1', completed: true, date: '2025-03-11' },
+          { name: '測試項目2', completed: false, date: null }
+        ]
+      };
+      
+      if (window.saveToFirebase) {
+        try {
+          await window.saveToFirebase(testStaff);
+          showToast('✅ 測試儲存完成！請檢查 Firebase Console');
+        } catch (error) {
+          console.error('❌ 測試儲存失敗:', error);
+          showToast('❌ 測試儲存失敗：' + error.message, '#e74c3c');
+        }
+      } else {
+        console.error('❌ Firebase 尚未初始化');
+        showToast('❌ Firebase 尚未初始化', '#e74c3c');
+      }
+    }
   </script>
 
   <!-- Firebase SDK -->
   <script type="module">
+    // ========== 匯入 Firebase ==========
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { 
       getFirestore, 
       collection, 
       doc, 
-      setDoc,
-      getDocs
+      getDoc, 
+      getDocs, 
+      setDoc 
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // 你的 firebaseConfig 保持不變...
-    const firebaseConfig = {
-      apiKey: "AIzaSyDDkALOTGl6fZunGU_Xd5FOy45WnXZWT8E",
-      authDomain: "tkoh-ot-training-system.firebaseapp.com",
-      projectId: "tkoh-ot-training-system",
-      storageBucket: "tkoh-ot-training-system.firebasestorage.app",
-      messagingSenderId: "1027139549127",
-      appId: "1:1027139549127:web:b987293382058a54d08be2"
-    };
+    // ========== Firebase 設定 ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyDDkALOTGl6fZunGU_Xd5FOy45WnXZWT8E",
+  authDomain: "tkoh-ot-training-system.firebaseapp.com",
+  projectId: "tkoh-ot-training-system",
+  storageBucket: "tkoh-ot-training-system.firebasestorage.app",
+  messagingSenderId: "1027139549127",
+  appId: "1:1027139549127:web:b987293382058a54d08be2"
+};
 
+
+    // ========== 初始化 Firebase ==========
     console.log('🔧 正在初始化 Firebase...');
     const app = initializeApp(firebaseConfig);
     window.db = getFirestore(app);
     console.log('✅ Firebase 初始化成功！');
     
-    // 你的 saveToFirebase 和 loadFromFirebase 保持不變...
+    // ========== 儲存到 Firebase 的函數 ==========
+    window.saveToFirebase = async function(staff) {
+      try {
+        console.log('💾 正在儲存:', staff.id, '-', staff.name);
+        
+        await setDoc(doc(window.db, 'staff', staff.id), {
+          id: staff.id,
+          name: staff.name,
+          records: staff.records,
+          lastUpdated: new Date().toISOString()
+        });
+        
+        console.log('✅ 儲存成功！');
+        return true;
+      } catch (error) {
+        console.error('❌ 儲存失敗:', error);
+        throw error;
+      }
+    };
     
+    // ========== 從 Firebase 載入資料 ==========
+    window.loadFromFirebase = async function() {
+      try {
+        console.log('📥 正在載入資料...');
+        
+        const snapshot = await getDocs(collection(window.db, 'staff'));
+        const loadedStaff = [];
+        
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          loadedStaff.push({
+            id: data.id,
+            name: data.name,
+            records: data.records || []
+          });
+        });
+        
+        if (loadedStaff.length > 0) {
+          staffList.length = 0;
+          staffList.push(...loadedStaff);
+          console.log('✅ 載入成功！共', loadedStaff.length, '位員工');
+        } else {
+          console.log('ℹ️ Firebase 中沒有資料，使用預設資料');
+        }
+        
+      } catch (error) {
+        console.error('❌ 載入失敗:', error);
+        console.log('ℹ️ 使用預設資料');
+      }
+    };
+    
+    // ========== 頁面載入時自動載入資料 ==========
     window.addEventListener('load', async () => {
       console.log('🚀 系統啟動中...');
       await window.loadFromFirebase();
       console.log('✅ 系統就緒！');
     });
   </script>
-</body>  <!-- 修正：只保留一個 </body> -->
+</body>
 </html>
