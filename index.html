@@ -486,159 +486,179 @@
       }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此員工暫無培訓項目</div>`;
     }
 
-    function showTrainingDetails(categoryKey){
-      currentCategory=categoryKey;
-      const staff=staffData[currentStaffId];
-      const cat=staff.trainingCategories[categoryKey];
-      if (!cat){ alert('找不到培訓資料'); return; }
-      hideAll(); document.getElementById('trainingDetailsPage').classList.add('active');
+function showTrainingDetails(categoryKey){
+  currentCategory=categoryKey;
+  const staff=staffData[currentStaffId];
+  const cat=staff.trainingCategories[categoryKey];
+  if (!cat){ alert('找不到培訓資料'); return; }
+  hideAll(); document.getElementById('trainingDetailsPage').classList.add('active');
 
-      const pct = cat.total>0? Math.round((cat.completed/cat.total)*100) : 0;
-      const done = pct===100;
-      const color = done?'#00b894':'#74b9ff';
+  const pct = cat.total>0? Math.round((cat.completed/cat.total)*100) : 0;
+  const done = pct===100;
+  const color = done?'#00b894':'#74b9ff';
 
-      const content=document.getElementById('trainingDetailContent');
-      content.innerHTML = `
-        <div class="staff-info" style="margin-bottom:16px">👤 ${staff.name} (${staff.employeeId})</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px">
-          <div class="training-icon" style="font-size:48px">${cat.icon||'📚'}</div>
-          <div class="training-name" style="margin:0">${cat.name}</div>
-        </div>
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-title" style="text-align:center">進度</div>
-          <div style="display:flex;justify-content:center">
-            <svg width="170" height="170" viewBox="0 0 170 170">
-              <circle cx="85" cy="85" r="75" fill="none" stroke="#ecf0f1" stroke-width="14"></circle>
-              <circle cx="85" cy="85" r="75" fill="none" stroke="${color}" stroke-width="14"
-                stroke-dasharray="${2*Math.PI*75}" stroke-dashoffset="${2*Math.PI*75*(1-pct/100)}"
-                transform="rotate(-90 85 85)" stroke-linecap="round"></circle>
-            </svg>
+  const content=document.getElementById('trainingDetailContent');
+  content.innerHTML = `
+    <div class="staff-info" style="margin-bottom:16px">👤 ${staff.name} (${staff.employeeId})</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px">
+      <div class="training-icon" style="font-size:48px">${cat.icon||'📚'}</div>
+      <div class="training-name" style="margin:0">${cat.name}</div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title" style="text-align:center">進度</div>
+      <div style="display:flex;justify-content:center">
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle cx="85" cy="85" r="75" fill="none" stroke="#ecf0f1" stroke-width="14"></circle>
+          <circle cx="85" cy="85" r="75" fill="none" stroke="${color}" stroke-width="14"
+            stroke-dasharray="${2*Math.PI*75}" stroke-dashoffset="${2*Math.PI*75*(1-pct/100)}"
+            transform="rotate(-90 85 85)" stroke-linecap="round"></circle>
+        </svg>
+      </div>
+      <div style="display:flex;justify-content:center;gap:24px;margin-top:12px;flex-wrap:wrap">
+        <div><div style="color:#00b894;font-weight:800;font-size:22px;text-align:center">${cat.completed}</div><div style="font-size:13px;color:#7f8c8d">已完成</div></div>
+        <div><div style="color:#fd79a8;font-weight:800;font-size:22px;text-align:center">${cat.total - cat.completed}</div><div style="font-size:13px;color:#7f8c8d">待完成</div></div>
+        <div><div style="color:#2c3e50;font-weight:800;font-size:22px;text-align:center">${cat.total}</div><div style="font-size:13px;color:#7f8c8d">總項目</div></div>
+      </div>
+      ${done?'<div style="margin-top:14px;font-size:18px;color:#00b894;font-weight:800;text-align:center">🎉 恭喜！所有培訓項目已完成</div>':''}
+    </div>
+    <div class="section-title">📋 培訓記錄明細</div>
+    <div id="recordsGrid" class="records-grid"></div>
+  `;
+  
+  const grid=document.getElementById('recordsGrid');
+  grid.innerHTML = cat.records.map((r,idx)=>{
+    const statusClass = r.failed ? 'failed' : (r.completed ? 'completed' : 'pending');
+    const statusText = r.failed ? '❌ 不合格需重做' : (r.completed ? '✅ 已完成' : '⏳ 待完成');
+    const dateText = r.failed ? `評核日期：${r.date||'-'} | 狀態：需要重新評核` : (r.completed ? `完成日期：${r.date||'-'}` : '尚未完成');
+    
+    const isSimple = r.type === 'simple' || !r.type;
+    const canEdit = currentUserRole === 'admin' || currentUserRole === 'supervisor';
+    
+    return `
+      <div class="record-item ${statusClass} ${isSimple && canEdit ? 'has-checkbox' : ''}" 
+           data-record-index="${idx}"
+           data-is-simple="${isSimple}"
+           data-can-edit="${canEdit}">
+        ${isSimple && canEdit ? `
+          <div class="checkbox-wrapper">
+            <input 
+              type="checkbox" 
+              class="record-checkbox"
+              data-index="${idx}"
+              ${r.completed && !r.failed ? 'checked' : ''}
+              ${r.failed ? 'disabled' : ''}
+            />
           </div>
-          <div style="display:flex;justify-content:center;gap:24px;margin-top:12px;flex-wrap:wrap">
-            <div><div style="color:#00b894;font-weight:800;font-size:22px;text-align:center">${cat.completed}</div><div style="font-size:13px;color:#7f8c8d">已完成</div></div>
-            <div><div style="color:#fd79a8;font-weight:800;font-size:22px;text-align:center">${cat.total - cat.completed}</div><div style="font-size:13px;color:#7f8c8d">待完成</div></div>
-            <div><div style="color:#2c3e50;font-weight:800;font-size:22px;text-align:center">${cat.total}</div><div style="font-size:13px;color:#7f8c8d">總項目</div></div>
-          </div>
-          ${done?'<div style="margin-top:14px;font-size:18px;color:#00b894;font-weight:800;text-align:center">🎉 恭喜！所有培訓項目已完成</div>':''}
-        </div>
-        <div class="section-title">📋 培訓記錄明細</div>
-        <div id="recordsGrid" class="records-grid"></div>
-      `;
-      
-      // ========== ✅ 改良版：加 Checkbox ========== 
-      const grid=document.getElementById('recordsGrid');
-      grid.innerHTML = cat.records.map((r,idx)=>{
-        const statusClass = r.failed ? 'failed' : (r.completed ? 'completed' : 'pending');
-        const statusText = r.failed ? '❌ 不合格需重做' : (r.completed ? '✅ 已完成' : '⏳ 待完成');
-        const dateText = r.failed ? `評核日期：${r.date||'-'} | 狀態：需要重新評核` : (r.completed ? `完成日期：${r.date||'-'}` : '尚未完成');
+          <div class="record-item-content">
+        ` : '<div>'}
         
-        const isSimple = r.type === 'simple' || !r.type;
-        const canEdit = currentUserRole === 'admin' || currentUserRole === 'supervisor';
-        
-        return `
-          <div class="record-item ${statusClass} ${isSimple && canEdit ? 'has-checkbox' : ''}" ${!isSimple ? `onclick="openRecord(${idx})"` : ''}>
-            ${isSimple && canEdit ? `
-              <div class="checkbox-wrapper">
-                <input 
-                  type="checkbox" 
-                  class="record-checkbox"
-                  data-index="${idx}"
-                  ${r.completed && !r.failed ? 'checked' : ''}
-                  ${r.failed ? 'disabled' : ''}
-                />
-              </div>
-              <div class="record-item-content">
-            ` : '<div>'}
-            
-              <div class="record-status ${statusClass}">${statusText}</div>
-              <div class="record-name">${r.name}</div>
-              <div class="record-date">${dateText}</div>
-              
-              ${(r.type==='assessment'||r.type==='checklist') && r.assessmentItems ? `
-                <div style="margin-top:8px;font-size:13px;opacity:.85">
-                  📋 ${r.type==='assessment'?'評核項目':'檢查清單'} 
-                  (${r.completedItems||0}/${r.totalItems} 通過${r.failedItems?`, ${r.failedItems} 不合格`:''})
-                </div>
-              `:''}
-              
-              ${!isSimple ? `
-                <div style="margin-top:8px;font-size:13px;color:#7f8c8d">
-                  👆 點擊以開始評核
-                </div>
-              `:''}
+          <div class="record-status ${statusClass}">${statusText}</div>
+          <div class="record-name">${r.name}</div>
+          <div class="record-date">${dateText}</div>
+          
+          ${(r.type==='assessment'||r.type==='checklist') && r.assessmentItems ? `
+            <div style="margin-top:8px;font-size:13px;opacity:.85">
+              📋 ${r.type==='assessment'?'評核項目':'檢查清單'} 
+              (${r.completedItems||0}/${r.totalItems} 通過${r.failedItems?`, ${r.failedItems} 不合格`:''})
             </div>
-          </div>
-        `;
-      }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此分類尚無記錄</div>`;
+          `:''}
+          
+          ${!isSimple ? `
+            <div style="margin-top:8px;font-size:13px;color:#7f8c8d">
+              👆 點擊以開始評核
+            </div>
+          `:''}
+        </div>
+      </div>
+    `;
+  }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此分類尚無記錄</div>`;
 
-      // ========== ✅ 加 Event Listener ==========
-      document.querySelectorAll('.record-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', async function(e) {
-          e.stopPropagation();
-          
-          const index = parseInt(this.dataset.index, 10);
-          const isChecked = this.checked;
-          
-          console.log('📋 Checkbox 變更:', { 
-            staffId: currentStaffId, 
-            category: currentCategory, 
-            index, 
-            checked: isChecked 
-          });
-          
-          const staff = staffData[currentStaffId];
-          const cat = staff.trainingCategories[currentCategory];
-          const rec = cat.records[index];
-          
-          // 儲存舊狀態用於回滾
-          const oldCompleted = rec.completed;
-          const oldDate = rec.date;
-          const oldCatCompleted = cat.completed;
-          
-          // 更新本地資料
-          rec.completed = isChecked;
-          rec.date = isChecked ? getCurrentDate() : null;
-          cat.completed = cat.records.filter(r => r.completed && !r.failed).length;
-          
-          try {
-            if (!window.firebaseReady) {
-              throw new Error('Firebase 未準備好');
-            }
-            
-            console.log('💾 開始儲存到 Firebase...');
-            
-            await window.saveTrainingProgressToFirebase(
-              currentStaffId, 
-              currentCategory, 
-              index, 
-              isChecked, 
-              false
-            );
-            
-            console.log('✅ 儲存成功');
-            
-            showToast(
-              isChecked ? '✅' : '⏳', 
-              `「${rec.name}」已${isChecked ? '完成' : '取消完成'}！`, 
-              isChecked ? '#00b894' : '#f39c12'
-            );
-            
-            // 刷新顯示
-            showTrainingDetails(currentCategory);
-            
-          } catch (error) {
-            console.error('❌ 儲存失敗:', error);
-            showToast('❌', '儲存失敗: ' + error.message, '#e74c3c');
-            
-            // 回滾資料
-            this.checked = oldCompleted;
-            rec.completed = oldCompleted;
-            rec.date = oldDate;
-            cat.completed = oldCatCompleted;
-          }
-        });
+  // ========== ✅ 使用 Event Delegation ==========
+  console.log('🎯 正在綁定 Checkbox Event Listener...');
+  
+  grid.addEventListener('click', async function(e) {
+    // 檢查是否點擊 Checkbox
+    if (e.target.classList.contains('record-checkbox')) {
+      console.log('🎯 Checkbox 被點擊！');
+      
+      const checkbox = e.target;
+      const index = parseInt(checkbox.dataset.index, 10);
+      const isChecked = checkbox.checked;
+      
+      console.log('📋 Checkbox 變更:', { 
+        staffId: currentStaffId, 
+        category: currentCategory, 
+        index, 
+        checked: isChecked 
       });
+      
+      const staff = staffData[currentStaffId];
+      const cat = staff.trainingCategories[currentCategory];
+      const rec = cat.records[index];
+      
+      // 儲存舊狀態用於回滾
+      const oldCompleted = rec.completed;
+      const oldDate = rec.date;
+      const oldCatCompleted = cat.completed;
+      
+      // 更新本地資料
+      rec.completed = isChecked;
+      rec.date = isChecked ? getCurrentDate() : null;
+      cat.completed = cat.records.filter(r => r.completed && !r.failed).length;
+      
+      try {
+        if (!window.firebaseReady) {
+          throw new Error('Firebase 未準備好');
+        }
+        
+        console.log('💾 開始儲存到 Firebase...');
+        
+        await window.saveTrainingProgressToFirebase(
+          currentStaffId, 
+          currentCategory, 
+          index, 
+          isChecked, 
+          false
+        );
+        
+        console.log('✅ 儲存成功');
+        
+        showToast(
+          isChecked ? '✅' : '⏳', 
+          `「${rec.name}」已${isChecked ? '完成' : '取消完成'}！`, 
+          isChecked ? '#00b894' : '#f39c12'
+        );
+        
+        // 刷新顯示
+        showTrainingDetails(currentCategory);
+        
+      } catch (error) {
+        console.error('❌ 儲存失敗:', error);
+        showToast('❌', '儲存失敗: ' + error.message, '#e74c3c');
+        
+        // 回滾資料
+        checkbox.checked = oldCompleted;
+        rec.completed = oldCompleted;
+        rec.date = oldDate;
+        cat.completed = oldCatCompleted;
+      }
     }
+    
+    // 檢查是否點擊非簡單記錄（評核項目）
+    else if (e.target.closest('.record-item')) {
+      const item = e.target.closest('.record-item');
+      const isSimple = item.dataset.isSimple === 'true';
+      const index = parseInt(item.dataset.recordIndex, 10);
+      
+      if (!isSimple && !isNaN(index)) {
+        console.log('🎯 點擊評核項目:', index);
+        openRecord(index);
+      }
+    }
+  });
+  
+  console.log('✅ Event Listener 綁定完成');
+}
 
     async function openRecord(index){
       const staff=staffData[currentStaffId];
