@@ -1,1297 +1,315 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TKOH A&OT/IDSS E-training System</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TKOH 培訓管理系統</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Segoe UI',Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;font-size:18px}
-    .container{background:#fff;padding:60px;border-radius:20px;box-shadow:0 15px 35px rgba(0,0,0,.2);max-width:1300px;width:100%;min-height:700px}
-    .title{color:#2c3e50;font-size:42px;font-weight:bold;margin-bottom:25px;text-align:center}
-    .subtitle{color:#7f8c8d;font-size:24px;margin-bottom:30px;text-align:center}
-    .page{display:none}
-    .page.active{display:block}
-    .form-group{margin-bottom:18px;text-align:left;max-width:450px;margin-left:auto;margin-right:auto}
-    .form-group label{display:block;margin-bottom:8px;font-weight:bold;color:#2c3e50;font-size:18px}
-    .form-group input,.form-group select{width:100%;padding:14px;border:2px solid #ecf0f1;border-radius:10px;font-size:18px;transition:border-color .3s;background:#fff}
-    .form-group input:focus,.form-group select:focus{outline:none;border-color:#3498db}
-    .login-actions{display:flex;justify-content:center}
-    .login-btn,.btn{padding:16px 28px;background:linear-gradient(135deg,#3498db,#2980b9);color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:600;cursor:pointer;transition:transform .15s;margin:10px}
-    .login-btn:hover,.btn:hover{transform:translateY(-2px)}
-    .back-btn{padding:16px 28px;background:#636e72;color:#fff;border:none;border-radius:12px;font-size:18px;cursor:pointer;transition:background .3s;margin-top:15px}
-    .back-btn:hover{background:#2d3436}
-    .logout-btn{background:#e17055}
-    .logout-btn:hover{background:#d63031}
-    .error-msg{color:#e74c3c;font-size:16px;margin-top:10px;text-align:center}
-    .toolbar{display:flex;gap:12px;justify-content:center;margin:10px 0 20px}
-    .hidden{display:none!important}
-    .grade-buttons{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:20px 0 30px}
-    .grade-btn{padding:28px 32px;background:linear-gradient(135deg,#00b894,#00a085);color:#fff;border:none;border-radius:16px;font-size:22px;font-weight:700;cursor:pointer;transition:all .25s;min-width:180px;box-shadow:0 6px 20px rgba(0,0,0,.1)}
-    .grade-btn:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.2)}
-    .section-title{color:#2c3e50;font-size:28px;font-weight:800;margin:20px 0 18px;border-bottom:4px solid #ecf0f1;padding-bottom:12px;text-align:center}
-    .staff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin:10px 0 25px}
-    .staff-btn{padding:28px;background:linear-gradient(135deg,#fd79a8,#e84393);color:#fff;border:none;border-radius:16px;font-size:22px;font-weight:700;cursor:pointer;transition:all .25s;box-shadow:0 6px 20px rgba(0,0,0,.1)}
-    .staff-btn:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.2)}
-    .staff-info{background:linear-gradient(135deg,#f8f9fa,#e9ecef);padding:26px;border-radius:16px;margin-bottom:20px;border-left:8px solid #00b894}
-    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;text-align:left}
-    .info-item{display:flex;align-items:center}
-    .info-label{font-weight:700;color:#2c3e50;width:140px;font-size:18px}
-    .info-value{color:#34495e;font-size:18px;flex:1}
-    .training-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;margin-bottom:20px}
-    .training-card{background:#fff;border-radius:18px;padding:26px;text-align:center;box-shadow:0 8px 25px rgba(0,0,0,.1);transition:all .25s;cursor:pointer;border:3px solid transparent;position:relative}
-    .training-card:hover{transform:translateY(-6px);box-shadow:0 15px 40px rgba(0,0,0,.15);border-color:#00b894}
-    .training-card.completed{background:linear-gradient(135deg,#00b894,#00a085);color:#fff}
-    .training-icon{font-size:42px;margin-bottom:14px;display:block}
-    .training-name{font-size:20px;font-weight:800;color:#2c3e50;margin-bottom:16px}
-    .training-card.completed .training-name{color:#fff}
-    .progress-circle{position:relative;width:120px;height:120px;margin:0 auto 12px}
-    .progress-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;font-weight:800;color:#2c3e50}
-    .training-card.completed .progress-text{color:#fff}
-    .progress-info{font-size:16px;color:#7f8c8d;margin-top:8px}
-    .training-card.completed .progress-info{color:rgba(255,255,255,.9)}
-    .completed-badge{position:absolute;top:14px;right:14px;background:#00b894;color:#fff;padding:8px 12px;border-radius:18px;font-size:12px;font-weight:800}
-    .records-grid{display:grid;gap:18px;text-align:left}
-    .record-item{background:#fff;border:2px solid #ecf0f1;border-radius:14px;padding:22px;transition:all .25s;position:relative;cursor:pointer}
-    .record-item:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.1)}
-    .record-item.completed{border-color:#00b894;background:linear-gradient(135deg,#00b894,#00a085);color:#fff}
-    .record-item.pending{border-color:#ffeaa7;background:linear-gradient(135deg,#ffeaa7,#fdcb6e)}
-    .record-item.failed{border-color:#e74c3c;background:linear-gradient(135deg,#ffebee,#ffcdd2);color:#c62828}
-    .record-status{position:absolute;top:14px;right:42px;padding:8px 14px;border-radius:18px;font-size:12px;font-weight:800}
-    .record-status.completed{background:rgba(255,255,255,.2);color:#fff}
-    .record-status.pending{background:rgba(0,0,0,.1);color:#2c3e50}
-    .record-status.failed{background:#e74c3c;color:#fff}
-    .record-name{font-size:20px;font-weight:800;margin-bottom:8px;padding-right:100px}
-    .record-date{font-size:16px;opacity:.85}
-    .assessment-section{background:linear-gradient(135deg,#fff3cd,#ffeaa7);padding:24px;border-radius:16px;margin-bottom:20px;border-left:8px solid #f39c12}
-    .assessment-title{color:#e67e22;font-size:22px;font-weight:800;margin-bottom:15px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px}
-    .assessment-grid{display:grid;gap:14px}
-    .assessment-item{background:#fff;padding:18px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;transition:all .25s}
-    .assessment-info{flex:1}
-    .assessment-name{font-size:18px;font-weight:800;color:#2c3e50;margin-bottom:4px}
-    .assessment-deadline{font-size:14px;color:#7f8c8d}
-    .status-badge{padding:6px 12px;border-radius:16px;font-size:12px;font-weight:800;white-space:nowrap}
-    .status-overdue{background:#e74c3c;color:#fff}
-    .status-due-soon{background:#f39c12;color:#fff}
-    .status-completed{background:#00b894;color:#fff}
-    .status-pending{background:#95a5a6;color:#fff}
-    .assessment-failed{border-left:6px solid #e74c3c;background:linear-gradient(135deg,#ffebee,#ffcdd2)!important;border:2px solid #e74c3c!important}
-    .user-list{display:grid;gap:16px;margin-bottom:24px}
-    .user-item{background:#fff;border:2px solid #ecf0f1;border-radius:14px;padding:20px;display:flex;align-items:center;justify-content:space-between;transition:all .25s}
-    .user-item:hover{box-shadow:0 8px 25px rgba(0,0,0,.1)}
-    .user-info{text-align:left;flex:1}
-    .user-name{font-size:18px;font-weight:800;color:#2c3e50;margin-bottom:4px}
-    .user-role{font-size:14px;color:#7f8c8d}
-    .admin-controls{background:linear-gradient(135deg,#74b9ff,#0984e3);color:#fff;padding:22px;border-radius:14px;margin-bottom:24px}
-    .admin-title{font-size:20px;font-weight:800;margin-bottom:12px}
-    .admin-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .admin-btn{padding:12px 20px;background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.3);border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;transition:all .25s}
-    .admin-btn:hover{background:rgba(255,255,255,.3);border-color:#fff}
-    .delete-btn{padding:10px 18px;background:#e74c3c;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;transition:all .25s;margin-left:10px}
-    .delete-btn:hover{background:#c0392b;transform:translateY(-2px)}
-    .edit-btn{padding:8px 14px;background:#f39c12;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;transition:all .25s}
-    .edit-btn:hover{background:#e67e22}
-    .item-actions{display:flex;gap:8px;align-items:center}
-    .confirm-dialog{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center}
-    .confirm-content{background:#fff;border-radius:18px;padding:26px;max-width:560px;width:90%;text-align:center}
-    .confirm-title{font-size:20px;font-weight:800;color:#e74c3c;margin-bottom:10px}
-    .confirm-message{font-size:16px;color:#2c3e50;margin:8px 0 18px;line-height:1.5}
-    .confirm-buttons{display:flex;gap:10px;justify-content:center}
-    .confirm-btn{padding:12px 20px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;transition:all .25s}
-    .confirm-yes{background:#e74c3c;color:#fff}
-    .confirm-no{background:#95a5a6;color:#fff}
-    .manage-layout{display:grid;grid-template-columns:1fr;gap:16px}
-    .card{background:#fff;border:2px solid #ecf0f1;border-radius:14px;padding:18px}
-    .card-title{font-size:18px;font-weight:800;margin-bottom:10px;color:#2c3e50}
-    .list{display:grid;gap:10px}
-    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f9fbfd;border:1px solid #ecf0f1;border-radius:10px;padding:10px}
-    .pill{display:inline-flex;align-items:center;gap:6px;background:#eaf5ff;border:1px solid #cfe5ff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;color:#2c3e50}
-    .tag{display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;border:1px solid #c8e6c9;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800;color:#2c3e50}
-    .danger{background:#ffebee;border-color:#ffcdd2}
-    .mini-btn{padding:8px 12px;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer}
-    .mini-btn.add{background:#00b894;color:#fff}
-    .mini-btn.del{background:#e74c3c;color:#fff}
-    .mini-btn.neutral{background:#95a5a6;color:#fff}
-
-    /* ========== ✅ 新增：Checkbox 樣式 ========== */
-    .record-checkbox {
-      width: 22px !important;
-      height: 22px !important;
-      cursor: pointer !important;
-      accent-color: #00b894;
-      margin: 0 !important;
-      flex-shrink: 0;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-
-    .record-item.completed .record-checkbox {
-      accent-color: #fff;
+    
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-
-    .record-item.failed .record-checkbox {
-      opacity: 0.5;
-      cursor: not-allowed !important;
+    
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      max-width: 1200px;
+      width: 100%;
     }
-
-    .checkbox-wrapper {
-      position: absolute;
-      left: 22px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 1;
+    
+    .title {
+      color: #2c3e50;
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
     }
-
-    .record-item-content {
-      padding-left: 58px;
-      position: relative;
+    
+    .page {
+      display: none;
     }
-
-    .record-item.has-checkbox {
-      cursor: default;
+    
+    .page.active {
+      display: block;
     }
-
-    .record-item.has-checkbox:hover {
+    
+    .btn {
+      padding: 12px 24px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    
+    .btn:hover {
+      background: #2980b9;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ecf0f1;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    .staff-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .staff-btn {
+      padding: 20px;
+      background: linear-gradient(135deg, #fd79a8, #e84393);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .staff-btn:hover {
       transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
-
-    @media (max-width:768px){
-      .container{padding:40px 24px}
-      .title{font-size:32px}
-      .grade-buttons{flex-direction:column}
-      .training-grid,.staff-grid{grid-template-columns:1fr}
-      .record-item-content{padding-left:54px}
-      .checkbox-wrapper{left:18px}
+    
+    .record-item {
+      background: white;
+      border: 2px solid #ecf0f1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .record-item.completed {
+      background: linear-gradient(135deg, #00b894, #00a085);
+      color: white;
+    }
+    
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+    
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #00b894;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 9999;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- 登入 -->
+    <!-- 登入頁面 -->
     <div id="loginPage" class="page active">
-      <div class="title">🏥 TKOH A&OT/IDSS<br/>E-training System</div>
-      <div class="subtitle">培訓管理系統</div>
+      <div class="title">🏥 TKOH 培訓管理系統</div>
       <div class="form-group">
         <label>Login ID</label>
-        <input id="loginId" type="text" placeholder="請輸入登入ID"/>
+        <input id="loginId" type="text" placeholder="請輸入登入ID">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input id="password" type="password" placeholder="請輸入密碼"/>
+        <input id="password" type="password" placeholder="請輸入密碼">
       </div>
-      <div class="login-actions">
-        <button class="login-btn" onclick="handleLogin()">登入系統</button>
-      </div>
-      <div id="errorMsg" class="error-msg" style="display:none"></div>
-      <div style="text-align:center;margin-top:16px;font-size:14px;color:#95a5a6">Created by Leung Nok Man Jeffrey (10/2025)</div>
+      <button class="btn" onclick="login()">登入</button>
+      <div id="loginError" style="color: red; margin-top: 10px;"></div>
     </div>
 
     <!-- 主選單 -->
     <div id="mainMenu" class="page">
-      <div class="title">🏥 TKOH A&OT/IDSS E-training System</div>
-      <div class="toolbar">
-        <button id="btnGoManage" class="btn" onclick="showManagePage()">🛠️ 更改培訓項目</button>
-        <button id="btnUserMgmt" class="btn" onclick="showUserManagement()">👥 帳戶管理</button>
-        <button class="btn logout-btn" onclick="logout()">🚪 登出</button>
-      </div>
-      <div class="section-title">👥 選擇員工職級</div>
-      <div class="grade-buttons">
-        <button class="grade-btn" onclick="showStaffList('PCA1')">🩺<br/>PCA1</button>
-        <button class="grade-btn" onclick="showStaffList('PCA2')">🏥<br/>PCA2</button>
-        <button class="grade-btn" onclick="showStaffList('PCA3')">⚕️<br/>PCA3</button>
-        <button class="grade-btn" onclick="showStaffList('OTA')" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7)">🔧<br/>OTA</button>
-      </div>
+      <div class="title">👥 選擇員工</div>
+      <div class="staff-grid" id="staffGrid"></div>
+      <button class="btn" onclick="logout()">登出</button>
     </div>
 
-    <!-- 員工列表 -->
-    <div id="staffListPage" class="page">
-      <div class="title">👥 員工列表</div>
-      <div class="subtitle" id="gradeInfo"></div>
-      <div id="staffCount" class="subtitle" style="font-size:18px;color:#95a5a6;margin-top:-10px"></div>
-      <div id="staffGrid" class="staff-grid"></div>
-      <div style="text-align:center">
-        <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
-      </div>
-    </div>
-
-    <!-- 員工詳情 -->
-    <div id="staffDetailsPage" class="page">
-      <div class="title">📋 員工培訓記錄</div>
-      <div id="staffInfoSection" class="staff-info"></div>
-      <div class="assessment-section">
-        <div class="assessment-title">📅 各評估時間表</div>
-        <div id="assessmentGrid" class="assessment-grid"></div>
-      </div>
-      <div class="section-title">🎓 培訓項目進度</div>
-      <div class="training-grid" id="trainingGrid"></div>
-      <div style="text-align:center">
-        <button class="back-btn" onclick="goBackToStaffList()">← 返回員工列表</button>
-      </div>
-    </div>
-
-    <!-- 培訓詳情 -->
-    <div id="trainingDetailsPage" class="page">
-      <div class="title">📚 培訓詳情</div>
-      <div id="trainingDetailContent"></div>
-      <div style="text-align:center">
-        <button class="back-btn" onclick="goBackToStaffDetails()">← 返回員工記錄</button>
-      </div>
-    </div>
-
-    <!-- 帳戶管理 -->
-    <div id="userManagementPage" class="page">
-      <div class="title">👥 帳戶管理系統</div>
-      <div class="subtitle">管理用戶帳戶和權限</div>
-      <div class="admin-controls">
-        <div class="admin-title">📊 管理員控制台</div>
-        <div class="admin-buttons">
-          <button class="admin-btn" onclick="showAddUserModal()">➕ 新增用戶</button>
-          <button class="admin-btn" onclick="exportUserData()">📤 導出用戶資料</button>
-        </div>
-      </div>
-      <div class="section-title">👤 現有用戶列表</div>
-      <div id="userList" class="user-list"></div>
-      <div style="text-align:center">
-        <button class="back-btn" onclick="showMainMenu()">← 返回主選單</button>
-      </div>
-    </div>
-
-    <!-- 更改培訓項目介面 -->
-    <div id="managePage" class="page">
-      <div class="title">🛠️ 更改培訓項目</div>
-      <div class="toolbar" style="margin-top:-6px">
-        <button class="btn" onclick="openAddAssessmentConfig()">➕ 新增評估項目</button>
-        <button class="btn" onclick="openAddTrainingCategory()">➕ 新增培訓項目</button>
-        <button class="btn logout-btn" onclick="showMainMenu()">⬅️ 返回主選單</button>
-      </div>
-      <div class="manage-layout">
-        <div class="card">
-          <div class="card-title">📅 評估項目（全域套用）</div>
-          <div id="manageAssessList" class="list"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📚 培訓項目（對象：PCA / OTA）</div>
-          <div style="font-size:14px;color:#7f8c8d;margin-bottom:10px">說明：每個培訓項目需指定適用對象（PCA 或 OTA；可多選）。建立/刪除將同步所有員工。</div>
-          <div id="manageCategoryList" class="list"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📋 培訓記錄模板（選擇上方某培訓項目以管理）</div>
-          <div id="selectedCategoryInfo" style="margin-bottom:8px;color:#2c3e50;font-weight:800">未選擇</div>
-          <div class="toolbar" style="justify-content:flex-start">
-            <button id="btnAddTemplateRecord" class="btn" onclick="openAddTemplateRecord()" disabled>➕ 新增培訓記錄</button>
-          </div>
-          <div id="manageRecordTemplateList" class="list"></div>
-        </div>
-      </div>
+    <!-- 培訓記錄頁面 -->
+    <div id="trainingPage" class="page">
+      <div class="title" id="staffName"></div>
+      <div id="recordsList"></div>
+      <button class="btn" onclick="backToMenu()">返回</button>
     </div>
   </div>
 
   <script>
-    const userAccounts = {
-      'tkohot': { username:'tkohot', password:'A123456*#', role:'admin', name:'系統管理員', email:'admin@tkoh.hk', createdDate:'01/01/2024' }
-    };
-    const staffDatabase = { 'PCA1': [], 'PCA2': [], 'PCA3': [], 'OTA': [] };
-    const staffData = {};
-    let assessmentConfig = [
-      { id:'safety_001', name:'職安健簡介及測試', weeksDeadline:1, type:'safety' },
-      { id:'written_001', name:'筆試', weeksDeadline:20, type:'written' },
-      { id:'training_001', name:'完成培訓項目', weeksDeadline:24, type:'training' }
-    ];
-    let trainingTemplates = {};
+    // ========== 全域變數 ==========
     let currentUser = null;
-    let currentUserRole = null;
-    let currentGrade = '';
-    let currentStaffId = '';
-    let currentCategory = '';
-    let currentRecordIndex = -1;
-    let selectedTemplateKey = null;
-
-    function getCurrentDate(){
-      const d=new Date(); const dd=String(d.getDate()).padStart(2,'0'); const mm=String(d.getMonth()+1).padStart(2,'0'); const yy=d.getFullYear();
-      return `${dd}/${mm}/${yy}`;
-    }
-    function addWeeksToDate(dateStr, weeks){
-      const [dd,mm,yy]=dateStr.split('/').map(x=>parseInt(x,10));
-      const d=new Date(yy, mm-1, dd); d.setDate(d.getDate()+weeks*7);
-      const nd=String(d.getDate()).padStart(2,'0'), nm=String(d.getMonth()+1).padStart(2,'0'), ny=d.getFullYear();
-      return `${nd}/${nm}/${ny}`;
-    }
-    function daysBetweenDates(a,b){
-      const [d1,m1,y1]=a.split('/').map(n=>parseInt(n,10));
-      const [d2,m2,y2]=b.split('/').map(n=>parseInt(n,10));
-      const A=new Date(y1,m1-1,d1), B=new Date(y2,m2-1,d2);
-      return Math.ceil((B-A)/(1000*60*60*24));
-    }
-    function showToast(icon,msg,color){
-      const el=document.createElement('div');
-      el.style.cssText=`position:fixed;top:20px;right:20px;z-index:9999;background:${color};color:#fff;padding:12px 18px;border-radius:10px;font-weight:800;box-shadow:0 4px 15px rgba(0,0,0,.2);font-size:14px`;
-      el.textContent=`${icon} ${msg}`; document.body.appendChild(el); setTimeout(()=>el.remove(),2200);
-    }
-    function showError(msg){ const e=document.getElementById('errorMsg'); e.textContent=msg; e.style.display='block'; }
-    function clearLoginForm(){ document.getElementById('loginId').value=''; document.getElementById('password').value=''; document.getElementById('errorMsg').style.display='none'; }
-    function hideAll(){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); }
-    function showMainMenu(){ hideAll(); document.getElementById('mainMenu').classList.add('active'); applyRoleVisibility(); }
-    function goBackToStaffList(){ hideAll(); document.getElementById('staffListPage').classList.add('active'); }
-    function goBackToStaffDetails(){ hideAll(); document.getElementById('staffDetailsPage').classList.add('active'); }
-    function applyRoleVisibility(){
-      const isAdmin = currentUserRole==='admin';
-      const isSupervisor = currentUserRole==='supervisor';
-      document.getElementById('btnUserMgmt')?.classList.toggle('hidden', !isAdmin);
-      document.getElementById('btnGoManage')?.classList.toggle('hidden', !(isAdmin||isSupervisor));
-    }
-
-    function syncTemplatesToAllStaff(){
-      Object.keys(staffData).forEach(staffId=>{
-        const staff = staffData[staffId];
-        if (!staff.assessments) staff.assessments = {};
-        assessmentConfig.forEach(a=>{ if (!staff.assessments[a.type]) staff.assessments[a.type] = {passed:false, failed:false}; });
-        if (!staff.trainingCategories) staff.trainingCategories = {};
-        Object.entries(trainingTemplates).forEach(([key, tpl])=>{
-          const targetMatch = (staff.grade==='OTA') ? tpl.target?.ota : tpl.target?.pca;
-          if (targetMatch){
-            if (!staff.trainingCategories[key]){
-              staff.trainingCategories[key] = {
-                name: tpl.name, icon: tpl.icon, total: (tpl.recordsTemplate?.length||0),
-                completed: 0, records: (tpl.recordsTemplate||[]).map(r=>({
-                  name: r.name, type: r.type || 'simple', completed:false, failed:false, date:null,
-                  assessmentItems: r.assessmentItems ? r.assessmentItems.map((t)=>({name:t.name, isCritical:!!t.isCritical, passed:false, failed:false})) : null,
-                  totalItems: r.assessmentItems ? r.assessmentItems.length : undefined,
-                  completedItems: 0, failedItems: 0, passMark: r.passMark || (r.type==='assessment'||r.type==='checklist'?50:undefined)
-                }))
-              };
-            } else {
-              const cat = staff.trainingCategories[key];
-              const existingNames = new Set(cat.records.map(r=>r.name));
-              (tpl.recordsTemplate||[]).forEach(r=>{
-                if (!existingNames.has(r.name)){
-                  cat.records.push({
-                    name:r.name, type:r.type||'simple', completed:false, failed:false, date:null,
-                    assessmentItems: r.assessmentItems ? r.assessmentItems.map((t)=>({name:t.name, isCritical:!!t.isCritical, passed:false, failed:false})) : null,
-                    totalItems: r.assessmentItems ? r.assessmentItems.length : undefined,
-                    completedItems: 0, failedItems: 0, passMark: r.passMark || (r.type==='assessment'||r.type==='checklist'?50:undefined)
-                  });
-                }
-              });
-              cat.total = cat.records.length;
-              cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-              cat.name = tpl.name;
-              cat.icon = tpl.icon;
-            }
-          } else {
-            if (staff.trainingCategories[key]) delete staff.trainingCategories[key];
-          }
-        });
-      });
-    }
-
-    async function handleLogin(){
-      const loginId=document.getElementById('loginId').value.trim();
-      const password=document.getElementById('password').value.trim();
-      if (!loginId || !password){ showError('請輸入Login ID和Password'); return; }
-      const user=userAccounts[loginId];
-      if (!user || user.password!==password){ showError('Login ID或Password錯誤'); return; }
-      currentUser=user; currentUserRole=user.role;
-      hideAll();
-      if (currentUserRole==='admin' || currentUserRole==='supervisor'){ document.getElementById('mainMenu').classList.add('active'); }
-      else { showError('本系統目前只開放系統管理員/主管登入'); document.getElementById('loginPage').classList.add('active'); return; }
-      showToast('✅', `歡迎，${user.name}！`, '#00b894');
-      clearLoginForm(); applyRoleVisibility();
-    }
-
-    function logout(){
-      if (confirm('確定要登出系統嗎？')){
-        currentUser=null; currentUserRole=null;
-        hideAll(); document.getElementById('loginPage').classList.add('active');
-        clearLoginForm();
-      }
-    }
-
-    function showStaffList(grade){
-      if (!(currentUserRole==='admin' || currentUserRole==='supervisor')){ alert('❌ 權限不足！'); return; }
-      currentGrade=grade;
-      hideAll(); document.getElementById('staffListPage').classList.add('active');
-      document.getElementById('gradeInfo').textContent = `職級：${grade}`;
-      const list = staffDatabase[grade] || [];
-      document.getElementById('staffCount').textContent = `共 ${list.length} 位員工`;
-      const grid=document.getElementById('staffGrid');
-      grid.innerHTML = list.length===0 ? `<div class="subtitle" style="font-size:18px;color:#95a5a6">此職級目前沒有員工</div>` :
-        list.map(s=>`<button class="staff-btn" onclick="showStaffDetails('${s.id}')">👤 ${s.name}</button>`).join('');
-    }
-
-    function calcAssessmentStatus(joinDate, weeksDeadline, assessments, type){
-      const deadline = addWeeksToDate(joinDate, weeksDeadline);
-      const now = getCurrentDate();
-      const d = daysBetweenDates(now, deadline);
-      const a = assessments[type] || {passed:false,failed:false};
-      if (a.passed) return {status:'completed',deadline,d,badge:'✅ 合格'};
-      if (a.failed) return {status:'completed',deadline,d,badge:'❌ 不合格'};
-      if (d<0) return {status:'overdue',deadline,d,badge:`⚠️ 逾期 ${Math.abs(d)} 天`};
-      if (d<=7) return {status:'due-soon',deadline,d,badge:`🔔 ${d} 天後到期`};
-      return {status:'pending',deadline,d,badge:`📅 ${d} 天後到期`};
-    }
-
-    function showStaffDetails(staffId){
-      currentStaffId = staffId;
-      const staff = staffData[staffId];
-      if (!staff){ alert('找不到員工資料'); return; }
-      if (!staff.assessments) staff.assessments = {};
-      assessmentConfig.forEach(a=>{ if (!staff.assessments[a.type]) staff.assessments[a.type] = {passed:false,failed:false}; });
-      syncTemplatesToAllStaff();
-      hideAll(); document.getElementById('staffDetailsPage').classList.add('active');
-
-      document.getElementById('staffInfoSection').innerHTML = `
-        <div class="info-grid">
-          <div class="info-item"><div class="info-label">👤 姓名：</div><div class="info-value">${staff.name}</div></div>
-          <div class="info-item"><div class="info-label">🆔 員工編號：</div><div class="info-value">${staff.employeeId}</div></div>
-          <div class="info-item"><div class="info-label">🏥 職級：</div><div class="info-value">${staff.grade}</div></div>
-          <div class="info-item"><div class="info-label">📅 入職日期：</div><div class="info-value">${staff.joinDate}</div></div>
-        </div>
-      `;
-
-      const aGrid=document.getElementById('assessmentGrid');
-      aGrid.innerHTML = assessmentConfig.map(a=>{
-        const s=calcAssessmentStatus(staff.joinDate,a.weeksDeadline,staff.assessments,a.type);
-        const failed = staff.assessments[a.type]?.failed;
-        return `
-          <div class="assessment-item ${failed?'assessment-failed':s.status}">
-            <div class="assessment-info">
-              <div class="assessment-name">${a.name}</div>
-              <div class="assessment-deadline">截止日期：${s.deadline} ${s.d>=0?`(入職後 ${a.weeksDeadline} 週)`: `(已逾期 ${Math.abs(s.d)} 天)`}</div>
-            </div>
-            <div><span class="status-badge status-${s.status}">${s.badge}</span></div>
-          </div>
-        `;
-      }).join('');
-
-      const tGrid=document.getElementById('trainingGrid');
-      const cats = staff.trainingCategories || {};
-      tGrid.innerHTML = Object.entries(cats).map(([key,cat])=>{
-        const pct = cat.total>0 ? Math.round((cat.completed/cat.total)*100) : 0;
-        const done = pct===100;
-        return `
-          <div class="training-card ${done?'completed':''}" onclick="showTrainingDetails('${key}')">
-            ${done?'<div class="completed-badge">✅ 完成</div>':''}
-            <div class="training-icon">${cat.icon||'📚'}</div>
-            <div class="training-name">${cat.name}</div>
-            <div class="progress-circle">
-              <svg width="120" height="120" viewBox="0 0 140 140">
-                <circle cx="70" cy="70" r="60" fill="none" stroke="${done?'rgba(255,255,255,.3)':'#ecf0f1'}" stroke-width="12"></circle>
-                <circle cx="70" cy="70" r="60" fill="none" stroke="${done?'#fff': (pct>0?'#74b9ff':'#ecf0f1')}" stroke-width="12"
-                  stroke-dasharray="${2*Math.PI*60}" stroke-dashoffset="${2*Math.PI*60*(1-pct/100)}"
-                  transform="rotate(-90 70 70)" stroke-linecap="round"></circle>
-              </svg>
-              <div class="progress-text">${pct}%</div>
-            </div>
-            <div class="progress-info">${cat.completed}/${cat.total} 項目完成 ${done?'<br/>🎉 全部完成！':''}</div>
-          </div>
-        `;
-      }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此員工暫無培訓項目</div>`;
-    }
-
-function showTrainingDetails(categoryKey){
-  currentCategory=categoryKey;
-  const staff=staffData[currentStaffId];
-  const cat=staff.trainingCategories[categoryKey];
-  if (!cat){ alert('找不到培訓資料'); return; }
-  hideAll(); document.getElementById('trainingDetailsPage').classList.add('active');
-
-  const pct = cat.total>0? Math.round((cat.completed/cat.total)*100) : 0;
-  const done = pct===100;
-  const color = done?'#00b894':'#74b9ff';
-
-  const content=document.getElementById('trainingDetailContent');
-  content.innerHTML = `
-    <div class="staff-info" style="margin-bottom:16px">👤 ${staff.name} (${staff.employeeId})</div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px">
-      <div class="training-icon" style="font-size:48px">${cat.icon||'📚'}</div>
-      <div class="training-name" style="margin:0">${cat.name}</div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-title" style="text-align:center">進度</div>
-      <div style="display:flex;justify-content:center">
-        <svg width="170" height="170" viewBox="0 0 170 170">
-          <circle cx="85" cy="85" r="75" fill="none" stroke="#ecf0f1" stroke-width="14"></circle>
-          <circle cx="85" cy="85" r="75" fill="none" stroke="${color}" stroke-width="14"
-            stroke-dasharray="${2*Math.PI*75}" stroke-dashoffset="${2*Math.PI*75*(1-pct/100)}"
-            transform="rotate(-90 85 85)" stroke-linecap="round"></circle>
-        </svg>
-      </div>
-      <div style="display:flex;justify-content:center;gap:24px;margin-top:12px;flex-wrap:wrap">
-        <div><div style="color:#00b894;font-weight:800;font-size:22px;text-align:center">${cat.completed}</div><div style="font-size:13px;color:#7f8c8d">已完成</div></div>
-        <div><div style="color:#fd79a8;font-weight:800;font-size:22px;text-align:center">${cat.total - cat.completed}</div><div style="font-size:13px;color:#7f8c8d">待完成</div></div>
-        <div><div style="color:#2c3e50;font-weight:800;font-size:22px;text-align:center">${cat.total}</div><div style="font-size:13px;color:#7f8c8d">總項目</div></div>
-      </div>
-      ${done?'<div style="margin-top:14px;font-size:18px;color:#00b894;font-weight:800;text-align:center">🎉 恭喜！所有培訓項目已完成</div>':''}
-    </div>
-    <div class="section-title">📋 培訓記錄明細</div>
-    <div id="recordsGrid" class="records-grid"></div>
-  `;
-  
-  const grid=document.getElementById('recordsGrid');
-  grid.innerHTML = cat.records.map((r,idx)=>{
-    const statusClass = r.failed ? 'failed' : (r.completed ? 'completed' : 'pending');
-    const statusText = r.failed ? '❌ 不合格需重做' : (r.completed ? '✅ 已完成' : '⏳ 待完成');
-    const dateText = r.failed ? `評核日期：${r.date||'-'} | 狀態：需要重新評核` : (r.completed ? `完成日期：${r.date||'-'}` : '尚未完成');
+    let currentStaffId = null;
+    let db = null;
     
-    const isSimple = r.type === 'simple' || !r.type;
-    const canEdit = currentUserRole === 'admin' || currentUserRole === 'supervisor';
+    // ========== 假資料（稍後會從 Firebase 載入）==========
+    const users = {
+      'admin': { password: '123456', role: 'admin' }
+    };
     
-    return `
-      <div class="record-item ${statusClass} ${isSimple && canEdit ? 'has-checkbox' : ''}" 
-           data-record-index="${idx}"
-           data-is-simple="${isSimple}"
-           data-can-edit="${canEdit}">
-        ${isSimple && canEdit ? `
-          <div class="checkbox-wrapper">
-            <input 
-              type="checkbox" 
-              class="record-checkbox"
-              data-index="${idx}"
-              ${r.completed && !r.failed ? 'checked' : ''}
-              ${r.failed ? 'disabled' : ''}
-            />
-          </div>
-          <div class="record-item-content">
-        ` : '<div>'}
-        
-          <div class="record-status ${statusClass}">${statusText}</div>
-          <div class="record-name">${r.name}</div>
-          <div class="record-date">${dateText}</div>
-          
-          ${(r.type==='assessment'||r.type==='checklist') && r.assessmentItems ? `
-            <div style="margin-top:8px;font-size:13px;opacity:.85">
-              📋 ${r.type==='assessment'?'評核項目':'檢查清單'} 
-              (${r.completedItems||0}/${r.totalItems} 通過${r.failedItems?`, ${r.failedItems} 不合格`:''})
-            </div>
-          `:''}
-          
-          ${!isSimple ? `
-            <div style="margin-top:8px;font-size:13px;color:#7f8c8d">
-              👆 點擊以開始評核
-            </div>
-          `:''}
-        </div>
-      </div>
-    `;
-  }).join('') || `<div class="subtitle" style="font-size:18px;color:#95a5a6">此分類尚無記錄</div>`;
-
-  // ========== ✅ 使用 Event Delegation ==========
-  console.log('🎯 正在綁定 Checkbox Event Listener...');
-  
-  grid.addEventListener('click', async function(e) {
-    // 檢查是否點擊 Checkbox
-    if (e.target.classList.contains('record-checkbox')) {
-      console.log('🎯 Checkbox 被點擊！');
-      
-      const checkbox = e.target;
-      const index = parseInt(checkbox.dataset.index, 10);
-      const isChecked = checkbox.checked;
-      
-      console.log('📋 Checkbox 變更:', { 
-        staffId: currentStaffId, 
-        category: currentCategory, 
-        index, 
-        checked: isChecked 
-      });
-      
-      const staff = staffData[currentStaffId];
-      const cat = staff.trainingCategories[currentCategory];
-      const rec = cat.records[index];
-      
-      // 儲存舊狀態用於回滾
-      const oldCompleted = rec.completed;
-      const oldDate = rec.date;
-      const oldCatCompleted = cat.completed;
-      
-      // 更新本地資料
-      rec.completed = isChecked;
-      rec.date = isChecked ? getCurrentDate() : null;
-      cat.completed = cat.records.filter(r => r.completed && !r.failed).length;
-      
-      try {
-        if (!window.firebaseReady) {
-          throw new Error('Firebase 未準備好');
-        }
-        
-        console.log('💾 開始儲存到 Firebase...');
-        
-        await window.saveTrainingProgressToFirebase(
-          currentStaffId, 
-          currentCategory, 
-          index, 
-          isChecked, 
-          false
-        );
-        
-        console.log('✅ 儲存成功');
-        
-        showToast(
-          isChecked ? '✅' : '⏳', 
-          `「${rec.name}」已${isChecked ? '完成' : '取消完成'}！`, 
-          isChecked ? '#00b894' : '#f39c12'
-        );
-        
-        // 刷新顯示
-        showTrainingDetails(currentCategory);
-        
-      } catch (error) {
-        console.error('❌ 儲存失敗:', error);
-        showToast('❌', '儲存失敗: ' + error.message, '#e74c3c');
-        
-        // 回滾資料
-        checkbox.checked = oldCompleted;
-        rec.completed = oldCompleted;
-        rec.date = oldDate;
-        cat.completed = oldCatCompleted;
-      }
+    const staffList = [
+      { id: 'staff001', name: '張三', records: [] },
+      { id: 'staff002', name: '李四', records: [] }
+    ];
+    
+    // ========== 頁面切換 ==========
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
     }
     
-    // 檢查是否點擊非簡單記錄（評核項目）
-    else if (e.target.closest('.record-item')) {
-      const item = e.target.closest('.record-item');
-      const isSimple = item.dataset.isSimple === 'true';
-      const index = parseInt(item.dataset.recordIndex, 10);
-      
-      if (!isSimple && !isNaN(index)) {
-        console.log('🎯 點擊評核項目:', index);
-        openRecord(index);
-      }
+    // ========== 顯示提示訊息 ==========
+    function showToast(message, color = '#00b894') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      toast.style.background = color;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
     }
-  });
-  
-  console.log('✅ Event Listener 綁定完成');
-}
-
-    async function openRecord(index){
-      const staff=staffData[currentStaffId];
-      const cat=staff.trainingCategories[currentCategory];
-      const rec=cat.records[index];
-      currentRecordIndex=index;
-
-      if (rec.type==='assessment' || rec.type==='checklist'){
-        openAssessmentModal(rec);
-      }
-    }
-
-    function openAssessmentModal(record){
-      validateAssessmentItems(record);
-      const roleCan = (currentUserRole==='admin'||currentUserRole==='supervisor');
-      const modal=document.createElement('div');
-      modal.className='confirm-dialog';
-      const completedItems = record.assessmentItems? record.assessmentItems.filter(i=>i.passed).length : 0;
-      const totalItems = record.assessmentItems? record.assessmentItems.length : 0;
-      const pct = totalItems>0? Math.round((completedItems/totalItems)*100):0;
-
-      modal.innerHTML = `
-        <div class="confirm-content" style="max-width:720px;text-align:left">
-          <div class="card-title">📋 ${record.name}</div>
-          <div style="font-size:14px;color:#2c3e50;font-weight:800;margin-bottom:8px">進度：${completedItems}/${totalItems} (${pct}%) ${record.passMark?`| 合格分數: ${record.passMark}`:''}</div>
-          <div class="list" style="max-height:50vh;overflow:auto">
-            ${record.assessmentItems? record.assessmentItems.map((it,idx)=>`
-              <div class="row" id="assRow${idx}">
-                <div style="flex:1">
-                  ${it.isCritical?'<span class="pill danger" style="margin-right:6px;color:#c62828;border-color:#ffcdd2;background:#ffebee">CRITICAL</span>':''}
-                  <span>${it.name}</span>
-                </div>
-                <div>
-                  <button class="mini-btn" style="background:#00b894;color:#fff" ${roleCan?`onclick="setItemResult(${idx},'pass')"`:'disabled'}>${roleCan?'✅ 通過':'🔒 無權限'}</button>
-                  <button class="mini-btn" style="background:#e74c3c;color:#fff" ${roleCan?`onclick="setItemResult(${idx},'fail')"`:'disabled'}>${roleCan?'❌ 不合格':'🔒 無權限'}</button>
-                  <button class="mini-btn neutral" ${roleCan?`onclick="setItemResult(${idx},'reset')"`:'disabled'}>${roleCan?'🔄 重設':'🔒 無權限'}</button>
-                </div>
-              </div>
-            `).join('') : '<div>沒有評核項目</div>'}
-          </div>
-          <div class="confirm-buttons" style="margin-top:12px">
-            <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">關閉</button>
-            ${roleCan?'<button class="confirm-btn confirm-yes" onclick="finishAssessment()">完成評核</button>':''}
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      window.currentConfirmDialog = modal;
-      if (record.assessmentItems){
-        record.assessmentItems.forEach((it,idx)=>{
-          const row=document.getElementById(`assRow${idx}`);
-          if (row){
-            if (it.passed) row.style.background='linear-gradient(135deg,#d4edda,#c3e6cb)';
-            else if (it.failed) row.style.background='linear-gradient(135deg,#f8d7da,#f5c6cb)';
-          }
-        });
-      }
-    }
-
-    function closeAnyDialog(){ if (window.currentConfirmDialog){ document.body.removeChild(window.currentConfirmDialog); window.currentConfirmDialog=null; } }
-
-    function validateAssessmentItems(record){
-      if (!record.assessmentItems) return;
-      record.assessmentItems.forEach((i,k)=>{
-        if (i.isCritical===undefined) i.isCritical=false;
-        if (i.passed===undefined) i.passed=false;
-        if (i.failed===undefined) i.failed=false;
-        if (!i.name) i.name=`項目${k+1}`;
-        i.isCritical=!!i.isCritical; i.passed=!!i.passed; i.failed=!!i.failed; i.name=String(i.name);
-      });
-    }
-
-    async function setItemResult(idx, result){
-      const staff=staffData[currentStaffId];
-      const cat=staff.trainingCategories[currentCategory];
-      const rec=cat.records[currentRecordIndex];
-      const item=rec.assessmentItems[idx];
+    
+    // ========== 登入功能 ==========
+    function login() {
+      const loginId = document.getElementById('loginId').value.trim();
+      const password = document.getElementById('password').value.trim();
       
-      if (!(currentUserRole==='admin'||currentUserRole==='supervisor')) return;
-      
-      item.passed=false; item.failed=false;
-      if (result==='pass') item.passed=true;
-      if (result==='fail') item.failed=true;
-      
-      const row=document.getElementById(`assRow${idx}`);
-      if (row){
-        row.style.background = item.passed? 'linear-gradient(135deg,#d4edda,#c3e6cb)' :
-                             item.failed? 'linear-gradient(135deg,#f8d7da,#f5c6cb)' : '#f9fbfd';
-      }
-      
-      try {
-        if (!window.firebaseReady) {
-          throw new Error('Firebase 未準備好');
-        }
-        if (window.saveTrainingProgressToFirebase) {
-          await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex);
-          console.log('✅ Item result saved');
-        }
-      } catch (e) {
-        console.error('❌ Failed to save:', e);
-        showToast('❌', '儲存失敗，請重試', '#e74c3c');
-      }
-    }
-
-    async function finishAssessment(){
-      const staff=staffData[currentStaffId];
-      const cat=staff.trainingCategories[currentCategory];
-      const rec=cat.records[currentRecordIndex];
-      const passed = rec.assessmentItems? rec.assessmentItems.filter(i=>i.passed).length : 0;
-      const failed = rec.assessmentItems? rec.assessmentItems.filter(i=>i.failed).length : 0;
-      const total  = rec.assessmentItems? rec.assessmentItems.length : 0;
-
-      if (!rec.assessmentItems || total===0 || (passed===0 && failed===0)){
-        rec.completed=false; rec.failed=false; rec.date=null; rec.status='pending';
-        cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-        
-        try {
-          if (!window.firebaseReady) {
-            throw new Error('Firebase 未準備好');
-          }
-          if (window.saveTrainingProgressToFirebase) {
-            await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, false, false);
-          }
-        } catch (e) {
-          console.error('❌ 儲存失敗:', e);
-          showToast('❌', '儲存失敗: ' + e.message, '#e74c3c');
-          return;
-        }
-        
-        showToast('⏳','已重設為待完成','#f39c12');
-        closeAnyDialog(); showTrainingDetails(currentCategory); return;
-      }
-
-      const critical = rec.assessmentItems.filter(i=>i.isCritical);
-      const criticalPassed = critical.filter(i=>i.passed).length;
-      const totalCritical = critical.length;
-      const score = Math.round((passed/total)*100);
-      const passMark = rec.passMark || 50;
-      const okCritical = totalCritical===0 || (criticalPassed===totalCritical);
-      const okScore = score>=passMark;
-
-      if (!okCritical || !okScore){
-        rec.completed=false; rec.failed=true; rec.date=getCurrentDate(); rec.status='failed';
-        showToast('❌', `不合格！${!okCritical?`Critical ${criticalPassed}/${totalCritical} 未全通過`:''} ${!okScore?` 分數 ${score}/${passMark}`:''}`, '#e74c3c');
-      } else {
-        rec.completed=true; rec.failed=false; rec.date=getCurrentDate(); rec.status='completed';
-        showToast('🎉', `評核完成！分數 ${score}/100`, '#00b894');
-      }
-      
-      cat.completed = cat.records.filter(r=>r.completed && !r.failed).length;
-      
-      try {
-        if (!window.firebaseReady) {
-          throw new Error('Firebase 未準備好');
-        }
-        if (window.saveTrainingProgressToFirebase) {
-          await window.saveTrainingProgressToFirebase(currentStaffId, currentCategory, currentRecordIndex, rec.completed, rec.failed);
-        }
-      } catch (e) {
-        console.error('❌ 儲存失敗:', e);
-        showToast('❌', '儲存失敗: ' + e.message, '#e74c3c');
+      if (!loginId || !password) {
+        document.getElementById('loginError').textContent = '請輸入完整資料';
         return;
       }
       
-      closeAnyDialog(); 
-      showTrainingDetails(currentCategory);
-    }
-
-    function showManagePage(){
-      if (!(currentUserRole==='admin' || currentUserRole==='supervisor')){ alert('❌ 權限不足！'); return; }
-      hideAll(); document.getElementById('managePage').classList.add('active');
-      renderManageAssessments(); renderManageCategories(); renderTemplateRecords();
-    }
-
-    function renderManageAssessments(){
-      const box=document.getElementById('manageAssessList');
-      box.innerHTML = assessmentConfig.map(a=>`
-        <div class="row">
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <div style="font-weight:800">${a.name}</div>
-            <div style="font-size:12px;color:#7f8c8d">入職後 ${a.weeksDeadline} 週 | key: ${a.type}</div>
-          </div>
-          ${currentUserRole==='admin'? `<button class="mini-btn del" onclick="deleteAssessmentConfig('${a.id}','${a.type}','${a.name}')">刪除</button>`:''}
-        </div>
-      `).join('') || `<div class="row"><div>尚未新增任何評估項目</div></div>`;
-    }
-
-    function openAddAssessmentConfig(){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可新增'); return; }
-      const dlg=document.createElement('div'); dlg.className='confirm-dialog';
-      dlg.innerHTML = `
-        <div class="confirm-content" style="max-width:520px">
-          <div class="card-title">➕ 新增評估項目</div>
-          <div class="form-group" style="margin:auto">
-            <label>名稱</label>
-            <input id="assName" type="text" placeholder="例如：實習期評估">
-          </div>
-          <div class="form-group" style="margin:auto">
-            <label>時間限制（週）</label>
-            <input id="assWeeks" type="number" min="1" max="52" value="4">
-          </div>
-          <div class="confirm-buttons" style="margin-top:8px">
-            <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">取消</button>
-            <button class="confirm-btn confirm-yes" onclick="addAssessmentConfig()">新增</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(dlg); window.currentConfirmDialog=dlg;
-    }
-
-    async function addAssessmentConfig(){
-      const name=document.getElementById('assName').value.trim();
-      const weeks=parseInt(document.getElementById('assWeeks').value,10);
-      if (!name || !weeks || weeks<1){ alert('請輸入有效名稱與週數'); return; }
-      const item={ id:`assessment_${Date.now()}`, name, weeksDeadline:weeks, type:`custom_${Date.now()}` };
-      assessmentConfig.push(item);
-      Object.keys(staffData).forEach(sid=>{
-        const s=staffData[sid];
-        if (!s.assessments) s.assessments = {};
-        if (!s.assessments[item.type]) s.assessments[item.type] = {passed:false, failed:false};
-      });
-      try{ if (window.saveAssessmentConfigToFirebase) await window.saveAssessmentConfigToFirebase(item); showToast('✅','已新增評估項目','#f39c12'); }catch(e){ console.error(e); showToast('❌','儲存失敗','#e74c3c'); }
-      closeAnyDialog(); renderManageAssessments();
-    }
-
-    async function deleteAssessmentConfig(id,type,name){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可刪除'); return; }
-      if (!confirm(`刪除評估項目「${name}」？此操作會影響所有員工。`)) return;
-      const idx=assessmentConfig.findIndex(x=>x.id===id);
-      if (idx>-1) assessmentConfig.splice(idx,1);
-      Object.keys(staffData).forEach(sid=>{
-        if (staffData[sid].assessments && staffData[sid].assessments[type]) delete staffData[sid].assessments[type];
-      });
-      try{
-        if (window.deleteAssessmentConfigFromFirebase) await window.deleteAssessmentConfigFromFirebase(id);
-        showToast('🗑️','已刪除評估項目','#e74c3c');
-      }catch(e){ console.error(e); showToast('❌','刪除失敗','#e74c3c'); }
-      renderManageAssessments();
-    }
-
-    function renderManageCategories(){
-      const box=document.getElementById('manageCategoryList');
-      const entries = Object.entries(trainingTemplates);
-      if (entries.length===0){ box.innerHTML = `<div class="row"><div>尚未新增任何培訓項目</div></div>`; return; }
-      box.innerHTML = entries.map(([key, tpl])=>`
-        <div class="row">
-          <div style="display:flex;flex-direction:column;gap:4px;cursor:pointer" onclick="selectTemplate('${key}')">
-            <div style="font-weight:800">${tpl.icon||'📚'} ${tpl.name}</div>
-            <div style="font-size:12px;color:#7f8c8d">key: ${key} | 對象：${tpl.target?.pca?'PCA':''}${tpl.target?.pca && tpl.target?.ota ? ' / ':''}${tpl.target?.ota?'OTA':''} | 記錄數：${(tpl.recordsTemplate||[]).length}</div>
-          </div>
-          ${currentUserRole==='admin'? `
-            <div>
-              <button class="mini-btn neutral" onclick="editTemplateTarget('${key}')">對象</button>
-              <button class="mini-btn del" onclick="deleteTrainingTemplate('${key}')">刪除</button>
-            </div>
-          `:''}
-        </div>
-      `).join('');
-    }
-
-    function selectTemplate(key){
-      selectedTemplateKey=key;
-      document.getElementById('selectedCategoryInfo').textContent = `已選擇：${trainingTemplates[key].name}（key: ${key}）`;
-      document.getElementById('btnAddTemplateRecord').disabled = !(currentUserRole==='admin');
-      renderTemplateRecords();
-    }
-
-    function editTemplateTarget(key){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可修改'); return; }
-      const tpl=trainingTemplates[key];
-      const dlg=document.createElement('div'); dlg.className='confirm-dialog';
-      dlg.innerHTML = `
-        <div class="confirm-content">
-          <div class="card-title">適用對象</div>
-          <div style="margin:10px 0">
-            <label style="margin-right:10px"><input id="chkPCA" type="checkbox" ${tpl.target?.pca?'checked':''}> PCA</label>
-            <label><input id="chkOTA" type="checkbox" ${tpl.target?.ota?'checked':''}> OTA</label>
-          </div>
-          <div class="confirm-buttons">
-            <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">取消</button>
-            <button class="confirm-btn confirm-yes" onclick="saveTemplateTarget('${key}')">儲存</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(dlg); window.currentConfirmDialog=dlg;
-    }
-
-    async function saveTemplateTarget(key){
-      const pca = document.getElementById('chkPCA').checked;
-      const ota = document.getElementById('chkOTA').checked;
-      if (!pca && !ota){ alert('至少選擇一個對象'); return; }
-      trainingTemplates[key].target = {pca, ota};
-      try{ if (window.saveTrainingTemplateToFirebase) await window.saveTrainingTemplateToFirebase(key, trainingTemplates[key]); showToast('✅','已更新對象','#00b894'); }catch(e){ console.error(e); showToast('❌','儲存失敗','#e74c3c'); }
-      closeAnyDialog(); syncTemplatesToAllStaff(); renderManageCategories();
-    }
-
-    function openAddTrainingCategory(){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可新增'); return; }
-      const dlg=document.createElement('div'); dlg.className='confirm-dialog';
-      dlg.innerHTML = `
-        <div class="confirm-content" style="max-width:560px">
-          <div class="card-title">➕ 新增培訓項目</div>
-          <div class="form-group" style="margin:auto">
-            <label>名稱</label>
-            <input id="tplName" type="text" placeholder="例如：Endoscope 基礎">
-          </div>
-          <div class="form-group" style="margin:auto">
-            <label>圖標（Emoji）</label>
-            <input id="tplIcon" type="text" value="📚">
-            <div style="font-size:12px;color:#7f8c8d;margin:8px 0 6px">常用圖標</div>
-            <div id="emojiQuick" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start">
-              ${['📚','📘','🧪','🧬','🩺','🏥','⚕️','🧼','🧯','🧤','🩹','💉','🔬','🔧','🛡️','✅','❌','⏳','🔔','📅','📝','🗂️','🧭','🧰','🎓','📈','📉'].map(e=>`<button type="button" class="mini-btn" style="background:#eaf5ff;color:#2c3e50" data-emoji="${e}">${e}</button>`).join('')}
-            </div>
-            <div style="font-size:12px;color:#7f8c8d;margin:10px 0 6px">醫護/設備/進度</div>
-            <div id="emojiSets" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start">
-              ${['🩺','🏥','⚕️','💊','🧫','🧪','🧬','🧴','🧼','🧯','🧤','🩹','💉','🧠','🫁','🫀','🦴','🔬','🔧','🧰','🛡️','✅','❌','⏳','🔔','📅','📈','📉','📝','📚','📘','🎓'].map(e=>`<button type="button" class="mini-btn" style="background:#eefaf3;color:#2c3e50" data-emoji="${e}">${e}</button>`).join('')}
-            </div>
-          </div>
-          <div class="form-group" style="margin:auto">
-            <label>適用對象（可多選）</label>
-            <div>
-              <label style="margin-right:10px"><input id="tplPCA" type="checkbox" checked> PCA</label>
-              <label><input id="tplOTA" type="checkbox"> OTA</label>
-            </div>
-          </div>
-          <div class="confirm-buttons">
-            <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">取消</button>
-            <button class="confirm-btn confirm-yes" onclick="addTrainingTemplate()">新增</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(dlg); window.currentConfirmDialog=dlg;
-      Array.from(dlg.querySelectorAll('#emojiQuick button, #emojiSets button')).forEach(btn=>{
-        btn.addEventListener('click', ()=>{ dlg.querySelector('#tplIcon').value = btn.getAttribute('data-emoji'); });
-      });
-    }
-
-    async function addTrainingTemplate(){
-      const name=document.getElementById('tplName').value.trim();
-      const icon=document.getElementById('tplIcon').value.trim()||'📚';
-      const pca=document.getElementById('tplPCA').checked;
-      const ota=document.getElementById('tplOTA').checked;
-      if (!name || (!pca && !ota)){ alert('請輸入名稱與至少一個對象'); return; }
-      const key = `${name.replace(/\s+/g,'_').toLowerCase()}_${Date.now()}`;
-      trainingTemplates[key] = { name, icon, target:{pca,ota}, recordsTemplate:[] };
-      try{ if (window.saveTrainingTemplateToFirebase) await window.saveTrainingTemplateToFirebase(key, trainingTemplates[key]); showToast('✅','已新增培訓項目','#00b894'); }catch(e){ console.error(e); showToast('❌','儲存失敗','#e74c3c'); }
-      closeAnyDialog(); syncTemplatesToAllStaff(); renderManageCategories(); selectTemplate(key); renderManageAssessments();
-    }
-
-    async function deleteTrainingTemplate(key){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可刪除'); return; }
-      if (!confirm(`刪除培訓項目「${trainingTemplates[key].name}」？此操作會同步移除所有員工該分類。`)) return;
-      const name = trainingTemplates[key].name;
-      delete trainingTemplates[key];
-      Object.keys(staffData).forEach(sid=>{
-        if (staffData[sid].trainingCategories && staffData[sid].trainingCategories[key]) delete staffData[sid].trainingCategories[key];
-      });
-      try{ if (window.deleteTrainingTemplateFromFirebase) await window.deleteTrainingTemplateFromFirebase(key); showToast('🗑️','已刪除培訓項目','#e74c3c'); }catch(e){ console.error(e); showToast('❌','刪除失敗','#e74c3c'); }
-      if (selectedTemplateKey===key){ selectedTemplateKey=null; document.getElementById('selectedCategoryInfo').textContent='未選擇'; document.getElementById('btnAddTemplateRecord').disabled=true; }
-      renderManageCategories(); renderTemplateRecords();
-    }
-
-    function renderTemplateRecords(){
-      const box=document.getElementById('manageRecordTemplateList');
-      if (!selectedTemplateKey){ box.innerHTML='<div class="row"><div>請先於上方選擇一個培訓項目</div></div>'; return; }
-      const tpl=trainingTemplates[selectedTemplateKey];
-      const arr=tpl.recordsTemplate||[];
-      if (arr.length===0){ box.innerHTML='<div class="row"><div>尚未新增任何培訓記錄模板</div></div>'; return; }
-      box.innerHTML = arr.map((r,idx)=>`
-        <div class="row">
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <div style="font-weight:800">${r.name}</div>
-            <div style="font-size:12px;color:#7f8c8d">類型：${r.type||'simple'} ${r.passMark?`| 合格分數：${r.passMark}`:''} ${r.assessmentItems?`| 項目數：${r.assessmentItems.length}`:''}</div>
-          </div>
-          ${currentUserRole==='admin'? `<button class="mini-btn del" onclick="deleteTemplateRecord(${idx})">刪除</button>`:''}
-        </div>
-      `).join('');
-    }
-
-    function openAddTemplateRecord(){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可新增'); return; }
-      if (!selectedTemplateKey){ alert('請先選擇培訓項目'); return; }
-      const dlg=document.createElement('div'); dlg.className='confirm-dialog';
-      dlg.innerHTML = `
-        <div class="confirm-content" style="max-width:720px">
-          <div class="card-title">➕ 新增培訓記錄模板</div>
-          <div class="form-group" style="margin:auto">
-            <label>名稱</label>
-            <input id="recName" type="text" placeholder="記錄名稱">
-          </div>
-          <div class="form-group" style="margin:auto">
-            <label>類型</label>
-            <select id="recType">
-              <option value="simple">簡單記錄 (完成/未完成)</option>
-              <option value="assessment">評核項目</option>
-              <option value="checklist">檢查清單</option>
-            </select>
-          </div>
-          <div id="wrapPass" class="form-group" style="margin:auto;display:none">
-            <label>合格分數（0-100）</label>
-            <input id="recPass" type="number" min="0" max="100" value="50">
-          </div>
-          <div id="wrapItems" class="form-group" style="margin:auto;display:none">
-            <label>評核項目（每行一項；在關鍵項目後加 [CRITICAL]）</label>
-            <textarea id="recItems" style="width:100%;height:140px;padding:12px;border:2px solid #ecf0f1;border-radius:10px;font-size:14px;resize:vertical" placeholder="例如：&#10;準備設備 [CRITICAL]&#10;操作流程&#10;安全檢查"></textarea>
-          </div>
-          <div class="confirm-buttons">
-            <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">取消</button>
-            <button class="confirm-btn confirm-yes" onclick="addTemplateRecord()">新增</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(dlg); window.currentConfirmDialog=dlg;
-      const sel=dlg.querySelector('#recType');
-      sel.addEventListener('change',function(){
-        const adv = (this.value==='assessment'||this.value==='checklist');
-        document.getElementById('wrapPass').style.display = adv? 'block':'none';
-        document.getElementById('wrapItems').style.display = adv? 'block':'none';
-      });
-    }
-
-    async function addTemplateRecord(){
-      const name=document.getElementById('recName').value.trim();
-      const type=document.getElementById('recType').value;
-      const tpl=trainingTemplates[selectedTemplateKey];
-      if (!name){ alert('請輸入名稱'); return; }
-      const rec = { name, type };
-      if (type==='assessment' || type==='checklist'){
-        const pass=parseInt(document.getElementById('recPass').value||'50',10);
-        const lines=(document.getElementById('recItems').value||'').split('\n').map(s=>s.trim()).filter(Boolean);
-        if (lines.length===0){ alert('請輸入評核項目'); return; }
-        rec.passMark = pass;
-        rec.assessmentItems = lines.map(s=>({ name:s.replace(/\[CRITICAL\]/gi,'').trim(), isCritical:/\[CRITICAL\]/i.test(s) }));
+      const user = users[loginId];
+      if (!user || user.password !== password) {
+        document.getElementById('loginError').textContent = '登入ID或密碼錯誤';
+        return;
       }
-      tpl.recordsTemplate = tpl.recordsTemplate || [];
-      tpl.recordsTemplate.push(rec);
-      try{ if (window.saveTemplateRecordToFirebase) await window.saveTemplateRecordToFirebase(selectedTemplateKey, rec); showToast('✅','已新增培訓記錄模板','#00b894'); }catch(e){ console.error(e); showToast('❌','儲存失敗','#e74c3c'); }
-      closeAnyDialog(); syncTemplatesToAllStaff(); renderTemplateRecords();
+      
+      currentUser = { loginId, ...user };
+      showToast('✅ 登入成功！');
+      loadStaffList();
+      showPage('mainMenu');
     }
-
-    async function deleteTemplateRecord(idx){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可刪除'); return; }
-      const tpl=trainingTemplates[selectedTemplateKey];
-      const rec=tpl.recordsTemplate[idx];
-      if (!confirm(`刪除記錄模板「${rec.name}」？將同步從所有員工的此分類中移除相同名稱的記錄。`)) return;
-      tpl.recordsTemplate.splice(idx,1);
-      Object.keys(staffData).forEach(sid=>{
-        const cat = staffData[sid].trainingCategories?.[selectedTemplateKey];
-        if (cat){
-          const i = cat.records.findIndex(r=>r.name===rec.name);
-          if (i>-1){ cat.records.splice(i,1); cat.total = cat.records.length; cat.completed = cat.records.filter(r=>r.completed && !r.failed).length; }
-        }
-      });
-      try{ if (window.saveTrainingTemplateToFirebase) await window.saveTrainingTemplateToFirebase(selectedTemplateKey, trainingTemplates[selectedTemplateKey]); showToast('🗑️','已刪除記錄模板','#e74c3c'); }catch(e){ console.error(e); showToast('❌','刪除記錄儲存失敗','#e74c3c'); }
-      renderTemplateRecords();
+    
+    // ========== 登出 ==========
+    function logout() {
+      currentUser = null;
+      currentStaffId = null;
+      document.getElementById('loginId').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('loginError').textContent = '';
+      showPage('loginPage');
     }
-
-    function showUserManagement(){
-      if (currentUserRole!=='admin'){ alert('❌ 權限不足！只有系統管理員可使用帳戶管理！'); return; }
-      hideAll(); document.getElementById('userManagementPage').classList.add('active');
-      renderUsers();
+    
+    // ========== 載入員工列表 ==========
+    function loadStaffList() {
+      const grid = document.getElementById('staffGrid');
+      grid.innerHTML = staffList.map(staff => `
+        <button class="staff-btn" onclick="showStaff('${staff.id}')">
+          👤 ${staff.name}
+        </button>
+      `).join('');
     }
-
-    function renderUsers(){
-      const box=document.getElementById('userList');
-      const users=Object.values(userAccounts);
-      box.innerHTML = users.map(u=>{
-        const roleMap={admin:'系統管理員',supervisor:'主管',staff:'員工'};
-        const roleColor = u.role==='admin'?'#e74c3c': (u.role==='supervisor'?'#f39c12':'#00b894');
-        return `
-          <div class="user-item">
-            <div class="user-info">
-              <div class="user-name">${u.name} (@${u.username})</div>
-              <div class="user-role" style="color:${roleColor}">
-                👤 ${roleMap[u.role]||u.role}
-                ${u.role==='staff' && u.grade? ` | 🏥 職級：${u.grade}`:''}
-                ${u.staffId? ` | 🆔 StaffID: ${u.staffId}`:''}
-                | 📧 ${u.email||'-'} | 📅 ${u.createdDate||'-'}
+    
+    // ========== 顯示員工培訓記錄 ==========
+    function showStaff(staffId) {
+      currentStaffId = staffId;
+      const staff = staffList.find(s => s.id === staffId);
+      
+      document.getElementById('staffName').textContent = `📋 ${staff.name} 的培訓記錄`;
+      
+      const list = document.getElementById('recordsList');
+      list.innerHTML = staff.records.length === 0 
+        ? '<p>目前沒有培訓記錄</p>'
+        : staff.records.map((record, index) => `
+            <div class="record-item ${record.completed ? 'completed' : ''}">
+              <input type="checkbox" class="checkbox" 
+                     ${record.completed ? 'checked' : ''}
+                     onchange="toggleRecord(${index})">
+              <div>
+                <div style="font-weight: bold;">${record.name}</div>
+                <div style="font-size: 14px; opacity: 0.8;">
+                  ${record.completed ? '✅ 已完成' : '⏳ 待完成'}
+                </div>
               </div>
             </div>
-            <div class="item-actions">
-              ${u.role!=='admin'? `<button class="delete-btn" onclick="confirmDeleteUser('${u.username}','${u.name}')">🗑️ 刪除</button>`:''}
-            </div>
-          </div>
-        `;
-      }).join('');
+          `).join('');
+      
+      showPage('trainingPage');
     }
-
-    function showAddUserModal(){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可新增'); return; }
-      const dlg=document.createElement('div'); dlg.className='confirm-dialog';
-      dlg.innerHTML = `
-        <div class="confirm-content" style="max-width:620px">
-          <div class="card-title">➕ 新增用戶</div>
-          <div class="form-group" style="margin:auto">
-            <label>姓名</label>
-            <input id="newUserName" type="text" placeholder="姓名">
-          </div>
-          <div class="form-group" style="margin:auto">
-            <label>角色</label>
-            <select id="newUserRole">
-              <option value="supervisor">主管</option>
-              <option value="staff">員工</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin:auto" id="gradeRow">
-            <label>職級</label>
-            <select id="newUserGrade"></select>
-          </div>
-          <div class="form-group" style="margin:auto">
-            <label>Login ID</label>
-            <input id="newUserLogin" type="text" placeholder="登入ID">
-          </div>
-          <div class="form-group" style="margin:auto">
-            <label>Password</label>
-            <input id="newUserPassword" type="password" placeholder="密碼">
-          </div>
-          <div class="confirm-buttons">
-            <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">取消</button>
-            <button class="confirm-btn confirm-yes" onclick="addNewUser()">新增</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(dlg); window.currentConfirmDialog=dlg;
-
-      const roleSel=dlg.querySelector('#newUserRole');
-      const gradeSel=dlg.querySelector('#newUserGrade');
-      function refreshGrades(){
-        const role=roleSel.value;
-        gradeSel.innerHTML='';
-        if (role==='supervisor'){ ['RN','APN','WM'].forEach(g=>{ const opt=document.createElement('option'); opt.value=g; opt.textContent=g; gradeSel.appendChild(opt); }); }
-        else { ['PCA1','PCA2','PCA3','OTA'].forEach(g=>{ const opt=document.createElement('option'); opt.value=g; opt.textContent=g; gradeSel.appendChild(opt); }); }
+    
+    // ========== 切換培訓記錄狀態 ==========
+    async function toggleRecord(index) {
+      const staff = staffList.find(s => s.id === currentStaffId);
+      const record = staff.records[index];
+      
+      record.completed = !record.completed;
+      record.date = record.completed ? new Date().toISOString() : null;
+      
+      showToast(record.completed ? '✅ 已完成' : '⏳ 已取消完成');
+      
+      // 儲存到 Firebase（稍後實作）
+      if (db) {
+        await saveToFirebase(staff);
       }
-      roleSel.addEventListener('change', refreshGrades); refreshGrades();
+      
+      // 重新顯示
+      showStaff(currentStaffId);
     }
-
-    async function addNewUser(){
-      const dlg = window.currentConfirmDialog;
-      const name = dlg.querySelector('#newUserName').value.trim();
-      const role = dlg.querySelector('#newUserRole').value;
-      const grade= dlg.querySelector('#newUserGrade').value;
-      const login= dlg.querySelector('#newUserLogin').value.trim();
-      const pw   = dlg.querySelector('#newUserPassword').value.trim();
-
-      if (!name || !role || !login || !pw){ alert('請填寫完整資料'); return; }
-      if (userAccounts[login]){ alert('Login ID 已存在'); return; }
-
-      const newUser = { username:login, password:pw, role, name, email:'', createdDate:getCurrentDate() };
-
-      if (role==='staff'){
-        const staffId = `${name.replace(/\s+/g,'_').toLowerCase()}_${Date.now().toString().slice(-4)}`;
-        const newStaff = { name, employeeId:`${Math.floor(100000+Math.random()*900000)}`, grade, joinDate:getCurrentDate(), assessments:{}, trainingCategories:{} };
-        assessmentConfig.forEach(a=>{ newStaff.assessments[a.type] = {passed:false, failed:false}; });
-        staffData[staffId] = newStaff;
-        if (!staffDatabase[grade]) staffDatabase[grade]=[];
-        staffDatabase[grade].push({id:staffId, name});
-        newUser.staffId = staffId;
-        newUser.grade = grade;
-        syncTemplatesToAllStaff();
-        try{ if (window.saveStaffToFirebase) await window.saveStaffToFirebase(staffId,newStaff); }catch(e){ console.error(e); }
-      }
-
-      if (role==='supervisor'){ newUser.grade = grade; }
-
-      userAccounts[login] = newUser;
-      try{ if (window.saveUserToFirebase) await window.saveUserToFirebase(newUser); }catch(e){ console.error(e); }
-
-      showToast('✅','已新增用戶','#00b894');
-      closeAnyDialog(); renderUsers();
+    
+    // ========== 返回主選單 ==========
+    function backToMenu() {
+      showPage('mainMenu');
     }
-
-    function confirmDeleteUser(username, name){
-      if (currentUserRole!=='admin'){ alert('僅系統管理員可刪除'); return; }
-      const dlg=document.createElement('div'); dlg.className='confirm-dialog';
-      dlg.innerHTML = `
-        <div class="confirm-content">
-          <div class="confirm-title">刪除用戶確認</div>
-          <div class="confirm-message">確定刪除用戶「${name} (@${username})」？此動作無法復原。</div>
-          <div class="confirm-buttons">
-            <button class="confirm-btn confirm-no" onclick="closeAnyDialog()">取消</button>
-            <button class="confirm-btn confirm-yes" onclick="deleteUser('${username}')">刪除</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(dlg); window.currentConfirmDialog=dlg;
-    }
-
-    async function deleteUser(username){
-      const user=userAccounts[username];
-      if (!user){ closeAnyDialog(); return; }
-      if (user.role==='staff' && user.staffId && staffData[user.staffId]){
-        const grade=staffData[user.staffId].grade;
-        delete staffData[user.staffId];
-        if (staffDatabase[grade]){
-          const i=staffDatabase[grade].findIndex(s=>s.id===user.staffId);
-          if (i>-1) staffDatabase[grade].splice(i,1);
-        }
-        try{ if (window.deleteStaffFromFirebase) await window.deleteStaffFromFirebase(user.staffId); }catch(e){ console.error(e); }
-      }
-      delete userAccounts[username];
-      try{ if (window.deleteUserFromFirebase) await window.deleteUserFromFirebase(username); }catch(e){ console.error(e); }
-      showToast('🗑️','用戶已刪除','#e74c3c');
-      closeAnyDialog(); renderUsers();
-    }
-
-    function exportUserData(){
-      const data = Object.values(userAccounts);
-      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a=document.createElement('a'); a.href=url; a.download='users.json'; a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    window.saveAssessmentConfigToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.deleteAssessmentConfigFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.saveTrainingTemplateToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.deleteTrainingTemplateFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.saveTemplateRecordToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.saveStaffToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.deleteStaffFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.saveUserToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.deleteUserFromFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-    window.saveTrainingProgressToFirebase = async function(){ console.warn('Firebase 尚未載入'); };
-
-    document.addEventListener('keypress', e=>{
-      if (e.key==='Enter' && document.getElementById('loginPage').classList.contains('active')) handleLogin();
-    });
-
-    syncTemplatesToAllStaff();
+    
+    // ========== 測試：新增假資料 ==========
+    staffList[0].records = [
+      { name: '設備清潔', completed: false, date: null },
+      { name: '安全培訓', completed: true, date: '2025-03-10' }
+    ];
+    
+    staffList[1].records = [
+      { name: '基礎操作', completed: false, date: null }
+    ];
   </script>
-
-  <!-- Firebase CRUD 模式 -->
+  <!-- Firebase SDK -->
   <script type="module">
+    // ========== 匯入 Firebase ==========
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { 
       getFirestore, 
@@ -1299,262 +317,83 @@ function showTrainingDetails(categoryKey){
       doc, 
       getDoc, 
       getDocs, 
-      setDoc, 
-      deleteDoc 
+      setDoc 
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBlLQdM2xL9U0uczsi4eJjyBU56_U9qGUE",
-      authDomain: "tkoh-otidss-training.firebaseapp.com",
-      projectId: "tkoh-otidss-training",
-      storageBucket: "tkoh-otidss-training.firebasestorage.app",
-      messagingSenderId: "362761345155",
-      appId: "1:362761345155:web:729b2534075b29db01a3b6"
-    };
+    // ========== Firebase 設定（請替換成你的設定）==========
+const firebaseConfig = {
+  apiKey: "AIzaSyDDkALOTGl6fZunGU_Xd5FOy45WnXZWT8E",
+  authDomain: "tkoh-ot-training-system.firebaseapp.com",
+  projectId: "tkoh-ot-training-system",
+  storageBucket: "tkoh-ot-training-system.firebasestorage.app",
+  messagingSenderId: "1027139549127",
+  appId: "1:1027139549127:web:b987293382058a54d08be2"
+};
 
-    let app, db;
-
-    async function initFirebase() {
+    // ========== 初始化 Firebase ==========
+    console.log('🔧 正在初始化 Firebase...');
+    const app = initializeApp(firebaseConfig);
+    window.db = getFirestore(app);
+    
+    console.log('✅ Firebase 初始化成功！');
+    
+    // ========== 儲存到 Firebase 的函數 ==========
+    window.saveToFirebase = async function(staff) {
       try {
-        console.log('🔧 正在初始化 Firebase...');
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        window.db = db;
-        window.firebaseApp = app;
-        console.log('✅ Firebase 初始化成功');
-        return true;
-      } catch (error) {
-        console.error('❌ Firebase 初始化失敗:', error);
-        alert('⚠️ 資料庫連線失敗！\n\n錯誤：' + error.message);
-        return false;
-      }
-    }
-
-    async function testFirestoreConnection() {
-      try {
-        console.log('🔍 測試 Firestore 連線...');
-        const testRef = collection(db, 'staff');
-        const snapshot = await getDocs(testRef);
-        console.log('✅ Firestore 連線正常');
-        console.log(`📊 找到 ${snapshot.size} 筆員工資料`);
-        return true;
-      } catch (error) {
-        console.error('❌ Firestore 連線測試失敗:', error);
-        return false;
-      }
-    }
-
-    window.saveTrainingProgressToFirebase = async function(staffId, categoryKey = null, recordIndex = null, completed = null, failed = null){
-      console.log('💾 開始儲存:', { staffId, categoryKey, recordIndex, completed, failed });
-      
-      if (!db) {
-        console.error('❌ Firebase 未初始化');
-        alert('❌ 資料庫未連線！');
-        return;
-      }
-      
-      try {
-        const staff = window.staffData[staffId];
-        if (!staff) {
-          throw new Error('找不到員工資料: ' + staffId);
-        }
+        console.log('💾 正在儲存:', staff.id);
         
-        console.log('📝 更新前資料:', JSON.parse(JSON.stringify(staff)));
-        
-        if (categoryKey && recordIndex !== null && categoryKey in staff.trainingCategories) {
-          const cat = staff.trainingCategories[categoryKey];
-          if (cat.records[recordIndex]) {
-            if (completed !== null) cat.records[recordIndex].completed = completed;
-            if (failed !== null) cat.records[recordIndex].failed = failed;
-            cat.completed = cat.records.filter(r => r.completed && !r.failed).length;
-          }
-        }
-        
-        console.log('📝 更新後資料:', JSON.parse(JSON.stringify(staff)));
-        console.log('⬆️ 正在寫入 Firestore...');
-        
-        await setDoc(doc(db, 'staff', staffId), { 
-          staffId, 
-          staffData: staff,
+        await setDoc(doc(window.db, 'staff', staff.id), {
+          id: staff.id,
+          name: staff.name,
+          records: staff.records,
           lastUpdated: new Date().toISOString()
-        }, { merge: true });
+        });
         
-        console.log('✅ Firestore 儲存成功:', staffId);
-        
+        console.log('✅ 儲存成功！');
       } catch (error) {
         console.error('❌ 儲存失敗:', error);
-        console.error('錯誤詳情:', error.code, error.message);
-        alert('❌ 儲存失敗！\n\n' + error.message);
-        throw error;
+        alert('儲存失敗：' + error.message);
       }
     };
-
-    window.saveAssessmentConfigToFirebase = async function(assessment){
-      if (!db) return;
-      const ref = doc(db, 'assessment-config', assessment.id);
-      await setDoc(ref, assessment, { merge: true });
-    };
     
-    window.deleteAssessmentConfigFromFirebase = async function(assessmentId){
-      if (!db) return;
-      await deleteDoc(doc(db, 'assessment-config', assessmentId));
-    };
-
-    window.saveTrainingTemplateToFirebase = async function(key, template){
-      if (!db) return;
-      await setDoc(doc(db, 'training-templates', key), { key, ...template }, { merge: true });
-    };
-    
-    window.deleteTrainingTemplateFromFirebase = async function(key){
-      if (!db) return;
-      await deleteDoc(doc(db, 'training-templates', key));
-    };
-    
-    window.saveTemplateRecordToFirebase = async function(templateKey, record){
-      if (!db) return;
-      const ref = doc(db, 'training-templates', templateKey);
-      const snap = await getDoc(ref);
-      const data = snap.exists() ? snap.data() : { key: templateKey, recordsTemplate: [] };
-      const list = Array.isArray(data.recordsTemplate) ? data.recordsTemplate : [];
-      if (!list.find(r => r.name === record.name)){
-        list.push(record);
-        await setDoc(ref, { recordsTemplate: list }, { merge: true });
-      }
-    };
-
-    window.saveUserToFirebase = async function(user){
-      if (!db) return;
-      await setDoc(doc(db, 'users', user.username), user, { merge: true });
-    };
-    
-    window.deleteUserFromFirebase = async function(username){
-      if (!db) return;
-      await deleteDoc(doc(db, 'users', username));
-    };
-
-    window.saveStaffToFirebase = async function(staffId, data){
-      if (!db) return;
-      await setDoc(doc(db, 'staff', staffId), { 
-        staffId, 
-        staffData: data,
-        lastUpdated: new Date().toISOString()
-      }, { merge: true });
-    };
-    
-    window.deleteStaffFromFirebase = async function(staffId){
-      if (!db) return;
-      await deleteDoc(doc(db, 'staff', staffId));
-    };
-
-    async function loadAllFromFirebase(){
-      if (!db) {
-        console.error('❌ 無法載入：Firebase 未初始化');
-        return false;
-      }
-      
+    // ========== 從 Firebase 載入資料 ==========
+    window.loadFromFirebase = async function() {
       try {
-        console.log('⏳ 開始載入資料...');
+        console.log('📥 正在載入資料...');
         
-        const assSnap = await getDocs(collection(db, 'assessment-config'));
-        window.assessmentConfig = [];
-        assSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data?.id) window.assessmentConfig.push(data);
-        });
-        console.log('✅ 評估項目:', window.assessmentConfig.length);
-
-        const tplSnap = await getDocs(collection(db, 'training-templates'));
-        window.trainingTemplates = {};
-        tplSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data?.key) {
-            window.trainingTemplates[data.key] = {
-              name: data.name || '未命名',
-              icon: data.icon || '📚',
-              target: data.target || { pca: true, ota: false },
-              recordsTemplate: Array.isArray(data.recordsTemplate) ? data.recordsTemplate : []
-            };
-          }
-        });
-        console.log('✅ 培訓模板:', Object.keys(window.trainingTemplates).length);
-
-        const usersSnap = await getDocs(collection(db, 'users'));
-        window.userAccounts = window.userAccounts || {};
-        usersSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data?.username) window.userAccounts[data.username] = data;
-        });
-        console.log('✅ 用戶數量:', Object.keys(window.userAccounts).length);
-
-        const staffSnap = await getDocs(collection(db, 'staff'));
-        window.staffDatabase = { PCA1: [], PCA2: [], PCA3: [], OTA: [] };
-        window.staffData = window.staffData || {};
+        const snapshot = await getDocs(collection(window.db, 'staff'));
+        const loadedStaff = [];
         
-        staffSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          const staffId = data?.staffId;
-          const staffData = data?.staffData;
-          
-          if (staffId && staffData) {
-            window.staffData[staffId] = staffData;
-            const grade = staffData.grade;
-            
-            if (window.staffDatabase[grade]) {
-              if (!window.staffDatabase[grade].some(s => s.id === staffId)) {
-                window.staffDatabase[grade].push({ 
-                  id: staffId, 
-                  name: staffData.name 
-                });
-              }
-            }
-          }
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          loadedStaff.push({
+            id: data.id,
+            name: data.name,
+            records: data.records || []
+          });
         });
-        console.log('✅ 員工數量:', Object.keys(window.staffData).length);
-
-        if (typeof window.syncTemplatesToAllStaff === 'function') {
-          window.syncTemplatesToAllStaff();
+        
+        if (loadedStaff.length > 0) {
+          // 更新全域的 staffList
+          staffList.length = 0;
+          staffList.push(...loadedStaff);
+          console.log('✅ 載入成功！共', loadedStaff.length, '位員工');
+        } else {
+          console.log('ℹ️ Firebase 中沒有資料，使用預設資料');
         }
-
-        console.log('🎉 資料載入完成！');
-        return true;
         
       } catch (error) {
-        console.error('❌ 資料載入失敗:', error);
-        alert('⚠️ 資料載入失敗！\n\n' + error.message);
-        return false;
+        console.error('❌ 載入失敗:', error);
       }
-    }
-
+    };
+    
+    // ========== 頁面載入時自動載入資料 ==========
     window.addEventListener('load', async () => {
       console.log('🚀 系統啟動中...');
-      
-      const firebaseOK = await initFirebase();
-      if (!firebaseOK) {
-        console.error('❌ 系統啟動失敗：Firebase 初始化失敗');
-        window.firebaseReady = false;
-        return;
-      }
-      
-      const connectionOK = await testFirestoreConnection();
-      if (!connectionOK) {
-        console.error('❌ 系統啟動失敗：Firestore 連線失敗');
-        window.firebaseReady = false;
-        return;
-      }
-      
-      const dataOK = await loadAllFromFirebase();
-      if (!dataOK) {
-        console.error('❌ 系統啟動失敗：資料載入失敗');
-        window.firebaseReady = false;
-        return;
-      }
-      
-      window.firebaseReady = true;
-      console.log('✅ 系統完全就緒！');
-      
-      const loginEl = document.getElementById('loginId');
-      if (loginEl) loginEl.focus();
+      await window.loadFromFirebase();
+      console.log('✅ 系統就緒！');
     });
   </script>
+</body>
 </body>
 </html>
