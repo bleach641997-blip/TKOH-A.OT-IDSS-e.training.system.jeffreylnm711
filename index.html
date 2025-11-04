@@ -813,6 +813,54 @@
             display: flex;
             gap: 5px;
         }
+
+        /* 截止日期計算功能 */
+.deadline-calculator {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.deadline-calculator input,
+.deadline-calculator select {
+    padding: 8px;
+    border: 2px solid #e0e0e0;
+    border-radius: 5px;
+}
+
+/* 職位選擇功能 */
+.position-selector {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.position-option {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.position-option:hover {
+    background: #f8f9fa;
+}
+
+.position-option.selected {
+    border-color: #667eea;
+    background: #e7eaff;
+}
+
+.position-option input[type="checkbox"] {
+    margin-right: 8px;
+}
     </style>
 </head>
 <body>
