@@ -316,6 +316,78 @@
             font-size: 1.1em;
         }
 
+        /* 重要評核時間表 */
+        .important-timeline {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .timeline-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline-items {
+            display: grid;
+            gap: 15px;
+        }
+
+        .timeline-item {
+            background: linear-gradient(135deg, #ffa502 0%, #ff9500 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(255, 165, 2, 0.4);
+        }
+
+        .timeline-item.overdue {
+            background: linear-gradient(135deg, #ff4757 0%, #e84118 100%);
+        }
+
+        .timeline-item.completed {
+            background: linear-gradient(135deg, #2ed573 0%, #26d07c 100%);
+        }
+
+        .timeline-item-info {
+            flex: 1;
+        }
+
+        .timeline-item-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .timeline-item-details {
+            font-size: 0.9em;
+            opacity: 0.95;
+        }
+
+        .timeline-item-status {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+        }
+
         .training-dashboard {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -854,25 +926,6 @@
             color: #667eea;
         }
 
-        .step-score-input {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .step-score-input label {
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .step-score-input input {
-            width: 80px;
-            padding: 6px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-        }
-
         .loading-message {
             text-align: center;
             color: #667eea;
@@ -923,6 +976,34 @@
         .type-card .title {
             font-size: 1.5em;
             font-weight: bold;
+        }
+
+        /* 截止日期設定 */
+        .deadline-settings {
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #ffa502;
+        }
+
+        .deadline-settings-title {
+            font-weight: bold;
+            color: #ffa502;
+            margin-bottom: 10px;
+        }
+
+        .deadline-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .deadline-inputs input {
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
         }
     </style>
 </head>
@@ -1071,6 +1152,17 @@
                 <button class="btn btn-info btn-small" onclick="exportToPDF()">📄 匯出 PDF</button>
                 <button class="btn btn-secondary btn-small" onclick="backToStaffList()">🔙 返回員工列表</button>
             </div>
+
+            <!-- 重要評核時間表 -->
+            <div class="important-timeline" id="importantTimeline" style="display:none;">
+                <div class="timeline-header">
+                    ⏰ 重要評核時間表
+                </div>
+                <div class="timeline-items" id="timelineItems">
+                    <!-- 動態生成時間表項目 -->
+                </div>
+            </div>
+
             <div class="training-dashboard" id="trainingProgress">
                 <!-- 動態生成培訓進度卡片 -->
             </div>
@@ -1547,7 +1639,7 @@
                 }
 
                 if (dashboardHtml.length === 0) {
-                    dashboardHtml.push('<p class="no-data-message">📭 尚無培訓分類，請新增分類開始使用</p>');
+                    dashboardHtml.push('<div class="no-data-message">📭 尚無培訓分類，請新增分類開始使用</div>');
                 }
 
                 document.getElementById('categoryDashboard').innerHTML = dashboardHtml.join('');
@@ -1581,18 +1673,27 @@
                 const itemsHtml = [];
 
                 items.forEach(item => {
+                    let badges = '';
+                    
+                    if (item.hasDeadline) {
+                        badges += `<span class="badge badge-warning">⏰ ${item.deadlineValue} ${item.deadlineUnit === 'days' ? '日' : item.deadlineUnit === 'weeks' ? '周' : '月'}</span>`;
+                    }
+                    
+                    if (item.isImportant) {
+                        badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
+                    }
+
                     let checklistHtml = '';
                     
                     if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
                         const stepsHtml = item.checklist.map((step, index) => {
                             const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
-                            const scoreBadge = `<span class="badge badge-info">${step.score || 0} 分</span>`;
                             
                             return `
                                 <div class="checklist-item ${step.critical ? 'critical' : ''}">
                                     <div class="checklist-step-name">
                                         <span class="step-number">Step ${index + 1}:</span>
-                                        ${step.step} ${criticalBadge} ${scoreBadge}
+                                        ${step.step} ${criticalBadge}
                                     </div>
                                     <div class="checklist-step-actions">
                                         <button class="step-btn step-btn-pass" onclick="editChecklistStep('${item.docId}', ${index})">✏️ 編輯</button>
@@ -1602,14 +1703,11 @@
                             `;
                         }).join('');
 
-                        const passScoreBadge = item.passScore ? `<span class="badge badge-success">及格分數: ${item.passScore} 分</span>` : '';
-
                         checklistHtml = `
                             <div class="checklist-container">
-                                <div class="checklist-header">📋 評核步驟 Checklist ${passScoreBadge}</div>
+                                <div class="checklist-header">📋 評核步驟 Checklist (共 ${item.checklist.length} 個步驟)</div>
                                 ${stepsHtml}
                                 <button class="btn btn-success btn-small" style="margin-top: 10px;" onclick="addChecklistStep('${item.docId}')">➕ 新增步驟</button>
-                                <button class="btn btn-warning btn-small" style="margin-top: 10px;" onclick="editPassScore('${item.docId}', ${item.passScore || 0})">⚙️ 設定及格分數</button>
                             </div>
                         `;
                     }
@@ -1617,9 +1715,13 @@
                     itemsHtml.push(`
                         <div class="item-detail-card">
                             <div class="item-header">
-                                <div class="item-name">${item.name}</div>
+                                <div>
+                                    <div class="item-name">${item.name}</div>
+                                    <div style="margin-top: 8px;">${badges}</div>
+                                </div>
                                 <div style="display: flex; gap: 10px;">
                                     ${!item.hasChecklist ? `<button class="btn btn-info btn-small" onclick="convertToChecklist('${item.docId}')">📋 轉換為 Checklist</button>` : ''}
+                                    <button class="btn btn-warning btn-small" onclick="editItemSettings('${item.docId}')">⚙️ 設定</button>
                                     <button class="btn btn-danger btn-small" onclick="deleteTrainingItem('${item.docId}', '${item.name}')">🗑️ 刪除項目</button>
                                 </div>
                             </div>
@@ -1636,6 +1738,100 @@
             } catch (error) {
                 console.error('載入分類詳情失敗:', error);
                 showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        // ==================== 編輯項目設定 ====================
+        async function editItemSettings(itemId) {
+            try {
+                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+                const item = itemDoc.data();
+
+                const modalBody = `
+                    <div class="input-group">
+                        <label>📝 項目名稱</label>
+                        <input type="text" id="editItemName" value="${item.name}" placeholder="請輸入項目名稱">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="editHasDeadline" ${item.hasDeadline ? 'checked' : ''} onchange="toggleEditDeadlineSettings()">
+                        <label for="editHasDeadline">⏰ 設定截止日期</label>
+                    </div>
+                    <div id="editDeadlineSettings" class="deadline-settings" style="display: ${item.hasDeadline ? 'block' : 'none'};">
+                        <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
+                        <div class="deadline-inputs">
+                            <div class="input-group" style="margin: 0;">
+                                <label>數值</label>
+                                <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
+                            </div>
+                            <div class="input-group" style="margin: 0;">
+                                <label>單位</label>
+                                <select id="editDeadlineUnit">
+                                    <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
+                                    <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
+                                    <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="editIsImportant" ${item.isImportant ? 'checked' : ''}>
+                        <label for="editIsImportant">⭐ 加入重要評核時間表</label>
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="btn btn-success" onclick="saveItemSettings('${itemId}')">✅ 儲存</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+                    </div>
+                `;
+
+                showModal('⚙️ 編輯項目設定', modalBody);
+            } catch (error) {
+                console.error('載入項目設定失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        // ==================== 切換編輯截止日期設定 ====================
+        function toggleEditDeadlineSettings() {
+            const checked = document.getElementById('editHasDeadline').checked;
+            document.getElementById('editDeadlineSettings').style.display = checked ? 'block' : 'none';
+        }
+
+        // ==================== 儲存項目設定 ====================
+        async function saveItemSettings(itemId) {
+            const name = document.getElementById('editItemName').value.trim();
+            const hasDeadline = document.getElementById('editHasDeadline').checked;
+            const isImportant = document.getElementById('editIsImportant').checked;
+
+            if (!name) {
+                showToast('❌ 請輸入項目名稱', 'error');
+                return;
+            }
+
+            try {
+                const updateData = {
+                    name: name,
+                    hasDeadline: hasDeadline,
+                    isImportant: isImportant
+                };
+
+                if (hasDeadline) {
+                    const deadlineValue = parseInt(document.getElementById('editDeadlineValue').value) || 1;
+                    const deadlineUnit = document.getElementById('editDeadlineUnit').value;
+                    updateData.deadlineValue = deadlineValue;
+                    updateData.deadlineUnit = deadlineUnit;
+                } else {
+                    updateData.deadlineValue = null;
+                    updateData.deadlineUnit = null;
+                }
+
+                await db.collection('trainingItems').doc(itemId).update(updateData);
+
+                showToast('✅ 設定已更新', 'success');
+                closeModal();
+                showCategoryDetail(currentCategoryId);
+            } catch (error) {
+                console.error('更新設定失敗:', error);
+                showToast('❌ 更新失敗', 'error');
             }
         }
 
@@ -1759,16 +1955,37 @@
                 </div>
                 <div id="checklistInputGroup" style="margin-top: 15px;">
                     <div class="input-group">
-                        <label>🎯 及格分數</label>
-                        <input type="number" id="newItemPassScore" placeholder="請輸入及格分數" min="0" value="60">
-                    </div>
-                    <div class="input-group">
                         <label>📋 Checklist 步驟</label>
                         <div id="checklistStepsContainer">
                             <!-- 動態生成 -->
                         </div>
                         <button class="btn btn-success btn-small" style="margin-top: 10px;" onclick="addNewChecklistStep()">➕ 新增步驟</button>
                     </div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
+                    <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
+                </div>
+                <div id="deadlineSettings" class="deadline-settings" style="display: none;">
+                    <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
+                    <div class="deadline-inputs">
+                        <div class="input-group" style="margin: 0;">
+                            <label>數值</label>
+                            <input type="number" id="deadlineValue" value="1" min="1" placeholder="請輸入數值">
+                        </div>
+                        <div class="input-group" style="margin: 0;">
+                            <label>單位</label>
+                            <select id="deadlineUnit">
+                                <option value="days">日</option>
+                                <option value="weeks">周</option>
+                                <option value="months">月</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="isImportantCheck">
+                    <label for="isImportantCheck">⭐ 加入重要評核時間表</label>
                 </div>
                 <div class="modal-buttons">
                     <button class="btn btn-success" onclick="createTrainingItem()">✅ 新增</button>
@@ -1787,9 +2004,15 @@
             document.getElementById('checklistInputGroup').style.display = checked ? 'block' : 'none';
         }
 
+        // ==================== 切換截止日期設定 ====================
+        function toggleDeadlineSettings() {
+            const checked = document.getElementById('hasDeadlineCheck').checked;
+            document.getElementById('deadlineSettings').style.display = checked ? 'block' : 'none';
+        }
+
         // ==================== 新增 Checklist 步驟 ====================
         function addNewChecklistStep() {
-            checklistSteps.push({ step: '', critical: false, score: 10 });
+            checklistSteps.push({ step: '', critical: false });
             renderChecklistSteps();
         }
 
@@ -1812,11 +2035,6 @@
                                onchange="toggleCritical(${index})">
                         <label for="critical_${index}">⚠️ Critical（必需合格才能通過培訓）</label>
                     </div>
-                    <div class="step-score-input" style="margin-left: 80px;">
-                        <label>📊 分數:</label>
-                        <input type="number" value="${step.score}" min="0" max="100" 
-                               onchange="updateStepScore(${index}, this.value)">
-                    </div>
                 </div>
             `).join('');
 
@@ -1826,11 +2044,6 @@
         // ==================== 更新 Checklist 步驟 ====================
         function updateChecklistStep(index, value) {
             checklistSteps[index].step = value;
-        }
-
-        // ==================== 更新步驟分數 ====================
-        function updateStepScore(index, value) {
-            checklistSteps[index].score = parseInt(value) || 0;
         }
 
         // ==================== 切換 Critical 狀態 ====================
@@ -1849,6 +2062,8 @@
         async function createTrainingItem() {
             const name = document.getElementById('newItemName').value.trim();
             const hasChecklist = document.getElementById('hasChecklistCheck').checked;
+            const hasDeadline = document.getElementById('hasDeadlineCheck').checked;
+            const isImportant = document.getElementById('isImportantCheck').checked;
 
             if (!name) {
                 showToast('❌ 請輸入項目名稱', 'error');
@@ -1859,20 +2074,24 @@
                 categoryId: currentCategoryId,
                 name: name,
                 hasChecklist: hasChecklist,
-                hasDeadline: false,
+                hasDeadline: hasDeadline,
+                isImportant: isImportant,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             if (hasChecklist) {
-                const passScore = parseInt(document.getElementById('newItemPassScore').value) || 60;
-                
                 if (checklistSteps.length === 0 || checklistSteps.some(s => !s.step.trim())) {
                     showToast('❌ 請至少新增一個步驟並填寫內容', 'error');
                     return;
                 }
-
                 itemData.checklist = checklistSteps;
-                itemData.passScore = passScore;
+            }
+
+            if (hasDeadline) {
+                const deadlineValue = parseInt(document.getElementById('deadlineValue').value) || 1;
+                const deadlineUnit = document.getElementById('deadlineUnit').value;
+                itemData.deadlineValue = deadlineValue;
+                itemData.deadlineUnit = deadlineUnit;
             }
 
             try {
@@ -1899,40 +2118,6 @@
             }
         }
 
-        // ==================== 編輯及格分數 ====================
-        async function editPassScore(itemId, currentScore) {
-            const modalBody = `
-                <div class="input-group">
-                    <label>🎯 及格分數</label>
-                    <input type="number" id="editPassScore" value="${currentScore}" min="0" max="100" placeholder="請輸入及格分數">
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-success" onclick="savePassScore('${itemId}')">✅ 儲存</button>
-                    <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-                </div>
-            `;
-
-            showModal('⚙️ 設定及格分數', modalBody);
-        }
-
-        // ==================== 儲存及格分數 ====================
-        async function savePassScore(itemId) {
-            const passScore = parseInt(document.getElementById('editPassScore').value) || 0;
-
-            try {
-                await db.collection('trainingItems').doc(itemId).update({
-                    passScore: passScore
-                });
-
-                showToast('✅ 及格分數已更新', 'success');
-                closeModal();
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('更新及格分數失敗:', error);
-                showToast('❌ 更新失敗', 'error');
-            }
-        }
-
         // ==================== 轉換為 Checklist ====================
         async function convertToChecklist(itemId) {
             if (!confirm('❓ 確定要將此項目轉換為 Checklist 格式嗎？')) {
@@ -1943,9 +2128,8 @@
                 await db.collection('trainingItems').doc(itemId).update({
                     hasChecklist: true,
                     checklist: [
-                        { step: 'Step 1: 請編輯此步驟', critical: false, score: 10 }
-                    ],
-                    passScore: 60
+                        { step: 'Step 1: 請編輯此步驟', critical: false }
+                    ]
                 });
 
                 showToast('✅ 已轉換為 Checklist 格式', 'success');
@@ -1962,7 +2146,7 @@
                 const itemDoc = await db.collection('trainingItems').doc(itemId).get();
                 const item = itemDoc.data();
 
-                const newStep = { step: `新步驟`, critical: false, score: 10 };
+                const newStep = { step: `新步驟`, critical: false };
                 const updatedChecklist = [...(item.checklist || []), newStep];
 
                 await db.collection('trainingItems').doc(itemId).update({
@@ -1989,10 +2173,6 @@
                         <label>📝 步驟內容</label>
                         <input type="text" id="editStepContent" value="${step.step}" placeholder="請輸入步驟內容">
                     </div>
-                    <div class="input-group">
-                        <label>📊 分數</label>
-                        <input type="number" id="editStepScore" value="${step.score || 0}" min="0" max="100" placeholder="請輸入分數">
-                    </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="editStepCritical" ${step.critical ? 'checked' : ''}>
                         <label for="editStepCritical">⚠️ Critical（必需合格才能通過培訓）</label>
@@ -2013,7 +2193,6 @@
         // ==================== 儲存編輯的步驟 ====================
         async function saveEditedStep(itemId, stepIndex) {
             const content = document.getElementById('editStepContent').value.trim();
-            const score = parseInt(document.getElementById('editStepScore').value) || 0;
             const critical = document.getElementById('editStepCritical').checked;
 
             if (!content) {
@@ -2028,8 +2207,7 @@
                 
                 updatedChecklist[stepIndex] = {
                     step: content,
-                    critical: critical,
-                    score: score
+                    critical: critical
                 };
 
                 await db.collection('trainingItems').doc(itemId).update({
@@ -2132,6 +2310,21 @@
             }
         }
 
+        // ==================== 計算截止日期 ====================
+        function calculateDeadline(joinDate, value, unit) {
+            const date = new Date(joinDate);
+            
+            if (unit === 'days') {
+                date.setDate(date.getDate() + value);
+            } else if (unit === 'weeks') {
+                date.setDate(date.getDate() + (value * 7));
+            } else if (unit === 'months') {
+                date.setMonth(date.getMonth() + value);
+            }
+            
+            return date;
+        }
+
         // ==================== 顯示培訓進度 Dashboard ====================
         async function showTrainingProgress(staffId) {
             currentStaffId = staffId;
@@ -2145,6 +2338,9 @@
 
                 // 根據員工職級決定要顯示哪個類型的培訓
                 const staffTrainingType = ['PCA1', 'PCA2', 'PCA3'].includes(staff.level) ? 'PCA' : 'OTA';
+
+                // 載入重要評核時間表
+                await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
 
                 const categoriesSnapshot = await db.collection('trainingCategories')
                     .where('trainingType', '==', staffTrainingType)
@@ -2186,21 +2382,18 @@
                                 return record.checklistStatus && record.checklistStatus[index] === 'pass';
                             });
                             
-                            // 計算總分
-                            let totalScore = 0;
-                            let earnedScore = 0;
-                            
+                            // 計算完成率（百分比）
+                            let passedSteps = 0;
                             item.checklist.forEach((step, index) => {
-                                totalScore += step.score || 0;
                                 if (record.checklistStatus && record.checklistStatus[index] === 'pass') {
-                                    earnedScore += step.score || 0;
+                                    passedSteps++;
                                 }
                             });
                             
-                            const passScore = item.passScore || 60;
-                            const scorePassed = earnedScore >= passScore;
+                            const completionRate = Math.round((passedSteps / item.checklist.length) * 100);
                             
-                            if (allCriticalPassed && scorePassed && record.status === 'completed') {
+                            // 只有當所有 Critical 步驟通過且完成率 100% 才算完成
+                            if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
                                 completedCount++;
                             }
                         } else if (!item.hasChecklist && record && record.status === 'completed') {
@@ -2250,6 +2443,142 @@
             }
         }
 
+        // ==================== 載入重要評核時間表 ====================
+        async function loadImportantTimeline(staffId, joinDate, trainingType) {
+            try {
+                if (!joinDate) {
+                    document.getElementById('importantTimeline').style.display = 'none';
+                    return;
+                }
+
+                const categoriesSnapshot = await db.collection('trainingCategories')
+                    .where('trainingType', '==', trainingType)
+                    .get();
+
+                const importantItems = [];
+
+                for (const categoryDoc of categoriesSnapshot.docs) {
+                    const category = categoryDoc.data();
+                    
+                    const itemsSnapshot = await db.collection('trainingItems')
+                        .where('categoryId', '==', categoryDoc.id)
+                        .where('isImportant', '==', true)
+                        .get();
+
+                    itemsSnapshot.forEach(doc => {
+                        const item = doc.data();
+                        importantItems.push({
+                            docId: doc.id,
+                            categoryName: category.name,
+                            categoryEmoji: category.emoji,
+                            ...item
+                        });
+                    });
+                }
+
+                if (importantItems.length === 0) {
+                    document.getElementById('importantTimeline').style.display = 'none';
+                    return;
+                }
+
+                // 獲取培訓記錄
+                const recordsSnapshot = await db.collection('trainingRecords')
+                    .where('userId', '==', staffId)
+                    .get();
+
+                const records = {};
+                recordsSnapshot.forEach(doc => {
+                    const record = doc.data();
+                    records[record.itemId] = record;
+                });
+
+                const now = new Date();
+                const timelineHtml = [];
+
+                importantItems.forEach(item => {
+                    let deadline = null;
+                    let daysRemaining = null;
+                    let statusClass = '';
+                    let statusText = '';
+
+                    if (item.hasDeadline) {
+                        deadline = calculateDeadline(joinDate, item.deadlineValue, item.deadlineUnit);
+                        const diffTime = deadline - now;
+                        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    }
+
+                    const record = records[item.docId];
+                    let isCompleted = false;
+
+                    if (item.hasChecklist && record) {
+                        const allCriticalPassed = item.checklist.every((step, index) => {
+                            if (!step.critical) return true;
+                            return record.checklistStatus && record.checklistStatus[index] === 'pass';
+                        });
+                        
+                        let passedSteps = 0;
+                        item.checklist.forEach((step, index) => {
+                            if (record.checklistStatus && record.checklistStatus[index] === 'pass') {
+                                passedSteps++;
+                            }
+                        });
+                        
+                        const completionRate = Math.round((passedSteps / item.checklist.length) * 100);
+                        isCompleted = allCriticalPassed && completionRate === 100 && record.status === 'completed';
+                    } else if (record) {
+                        isCompleted = record.status === 'completed';
+                    }
+
+                    if (isCompleted) {
+                        statusClass = 'completed';
+                        statusText = '✅ 已完成';
+                    } else if (deadline && daysRemaining < 0) {
+                        statusClass = 'overdue';
+                        statusText = `⚠️ 已逾期 ${Math.abs(daysRemaining)} 天`;
+                    } else if (deadline && daysRemaining <= 7) {
+                        statusClass = 'overdue';
+                        statusText = `⏰ 剩餘 ${daysRemaining} 天`;
+                    } else if (deadline) {
+                        statusText = `⏰ 剩餘 ${daysRemaining} 天`;
+                    } else {
+                        statusText = '⏳ 待完成';
+                    }
+
+                    timelineHtml.push(`
+                        <div class="timeline-item ${statusClass}" onclick="quickEvaluate('${item.categoryName}', '${item.docId}')">
+                            <div class="timeline-item-info">
+                                <div class="timeline-item-name">${item.categoryEmoji} ${item.name}</div>
+                                <div class="timeline-item-details">
+                                    📂 ${item.categoryName}
+                                    ${deadline ? ` | 📅 截止日期: ${deadline.toLocaleDateString('zh-TW')}` : ''}
+                                </div>
+                            </div>
+                            <div class="timeline-item-status">${statusText}</div>
+                        </div>
+                    `);
+                });
+
+                document.getElementById('timelineItems').innerHTML = timelineHtml.join('');
+                document.getElementById('importantTimeline').style.display = 'block';
+            } catch (error) {
+                console.error('載入重要評核時間表失敗:', error);
+            }
+        }
+
+        // ==================== 快速評核（從時間表點擊）====================
+        async function quickEvaluate(categoryName, itemId) {
+            try {
+                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+                const item = itemDoc.data();
+                
+                currentCategoryId = item.categoryId;
+                showCategoryEvaluation(item.categoryId);
+            } catch (error) {
+                console.error('快速評核失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
         // ==================== 顯示分類評核（員工評核模式）====================
         async function showCategoryEvaluation(categoryId) {
             currentCategoryId = categoryId;
@@ -2290,19 +2619,17 @@
                         const checklistStatus = record?.checklistStatus || {};
                         const remarks = record?.remarks || {};
                         
-                        // 計算總分和得分
-                        let totalScore = 0;
-                        let earnedScore = 0;
+                        // 計算完成率（百分比）
+                        let totalSteps = item.checklist.length;
+                        let passedSteps = 0;
                         
                         item.checklist.forEach((step, index) => {
-                            totalScore += step.score || 0;
                             if (checklistStatus[index] === 'pass') {
-                                earnedScore += step.score || 0;
+                                passedSteps++;
                             }
                         });
 
-                        const passScore = item.passScore || 60;
-                        const scorePassed = earnedScore >= passScore;
+                        const completionRate = Math.round((passedSteps / totalSteps) * 100);
                         
                         const checklistHtml = item.checklist.map((step, index) => {
                             const status = checklistStatus[index] || 'pending';
@@ -2312,12 +2639,12 @@
 
                             if (status === 'pass') {
                                 statusClass = 'completed';
-                                statusText = `✅ 合格 (+${step.score || 0}分)`;
+                                statusText = '✅ 合格';
                             } else if (status === 'fail') {
                                 statusClass = 'failed';
-                                statusText = '❌ 不合格 (0分)';
+                                statusText = '❌ 不合格';
                             } else {
-                                statusText = `⏳ 待評核 (${step.score || 0}分)`;
+                                statusText = '⏳ 待評核';
                             }
 
                             const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
@@ -2365,14 +2692,14 @@
                         let overallStatus = '';
                         let overallClass = '';
                         
-                        if (allCriticalPassed && scorePassed && record?.status === 'completed') {
-                            overallStatus = '✅ 已完成（所有 Critical 步驟已通過，分數達標）';
+                        if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
+                            overallStatus = '✅ 已完成（所有 Critical 步驟已通過，完成率 100%）';
                             overallClass = 'pass';
                         } else if (!allCriticalPassed) {
                             overallStatus = '⚠️ 尚有 Critical 步驟未通過';
                             overallClass = 'fail';
-                        } else if (!scorePassed) {
-                            overallStatus = `⚠️ 分數未達標（需要 ${passScore} 分，目前 ${earnedScore} 分）`;
+                        } else if (completionRate < 100) {
+                            overallStatus = `⚠️ 完成率未達 100%（目前 ${completionRate}%）`;
                             overallClass = 'fail';
                         } else {
                             overallStatus = '⏳ 待完成';
@@ -2384,23 +2711,19 @@
                                     <div class="item-name">${item.name}</div>
                                 </div>
                                 <div class="score-info">
-                                    <div class="score-title">📊 評分資訊</div>
+                                    <div class="score-title">📊 評核進度</div>
                                     <div class="score-details">
                                         <div class="score-item">
-                                            <div class="score-item-label">總分</div>
-                                            <div class="score-item-value">${totalScore}</div>
+                                            <div class="score-item-label">總步驟</div>
+                                            <div class="score-item-value">${totalSteps}</div>
                                         </div>
                                         <div class="score-item">
-                                            <div class="score-item-label">目前得分</div>
-                                            <div class="score-item-value ${scorePassed ? 'pass' : 'fail'}">${earnedScore}</div>
-                                        </div>
-                                        <div class="score-item">
-                                            <div class="score-item-label">及格分數</div>
-                                            <div class="score-item-value">${passScore}</div>
+                                            <div class="score-item-label">已通過</div>
+                                            <div class="score-item-value ${completionRate === 100 ? 'pass' : 'fail'}">${passedSteps}</div>
                                         </div>
                                         <div class="score-item">
                                             <div class="score-item-label">完成率</div>
-                                            <div class="score-item-value">${Math.round((earnedScore/totalScore)*100)}%</div>
+                                            <div class="score-item-value ${completionRate === 100 ? 'pass' : 'fail'}">${completionRate}%</div>
                                         </div>
                                     </div>
                                     <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 8px; text-align: center;">
@@ -2665,31 +2988,29 @@
                         const record = records[item.docId];
 
                         let status = 'Pending';
-                        let score = '0/0';
+                        let completion = '0%';
                         
                         if (item.hasChecklist && record?.checklistStatus) {
-                            let totalScore = 0;
-                            let earnedScore = 0;
+                            let passedSteps = 0;
                             
                             item.checklist.forEach((step, index) => {
-                                totalScore += step.score || 0;
                                 if (record.checklistStatus[index] === 'pass') {
-                                    earnedScore += step.score || 0;
+                                    passedSteps++;
                                 }
                             });
+                            
+                            const completionRate = Math.round((passedSteps / item.checklist.length) * 100);
                             
                             const allCriticalPassed = item.checklist.every((step, index) => {
                                 if (!step.critical) return true;
                                 return record.checklistStatus[index] === 'pass';
                             });
                             
-                            const passScore = item.passScore || 60;
-                            const scorePassed = earnedScore >= passScore;
-                            
-                            score = `${earnedScore}/${totalScore} (Pass: ${passScore})`;
-                            status = allCriticalPassed && scorePassed && record.status === 'completed' ? 'Completed' : 'Pending';
+                            completion = `${completionRate}%`;
+                            status = allCriticalPassed && completionRate === 100 && record.status === 'completed' ? 'Completed' : 'Pending';
                         } else if (record) {
                             status = record.status === 'completed' ? 'Completed' : 'Failed';
+                            completion = status === 'Completed' ? '100%' : '0%';
                         }
 
                         if (yPos > 270) {
@@ -2697,7 +3018,7 @@
                             yPos = 20;
                         }
 
-                        doc.text(`- ${item.name}: ${status} [${score}]`, 25, yPos);
+                        doc.text(`- ${item.name}: ${status} [${completion}]`, 25, yPos);
                         yPos += 7;
                     });
 
