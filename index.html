@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TKOH OT/IDSS 培訓系統</title>
+    <title>TKOH 培訓系統</title>
     <style>
         * {
             margin: 0;
@@ -12,42 +12,96 @@
         }
 
         body {
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
             max-width: 1400px;
-            width: 100%;
-            animation: slideIn 0.5s ease;
-            max-height: 90vh;
-            overflow-y: auto;
+            margin: 0 auto;
         }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            text-align: center;
-            color: #667eea;
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             margin-bottom: 30px;
-            font-size: 2.5em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        h2 {
+        .header h1 {
             color: #667eea;
-            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ff3838;
+            transform: translateY(-2px);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
         .page {
@@ -58,489 +112,225 @@
             display: block;
         }
 
-        /* 登入頁面 */
-        .login-form {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .input-group {
+        .content-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
 
-        .input-group label {
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+        }
+
+        .btn-danger:hover {
+            background: #ff3838;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
             display: block;
             margin-bottom: 8px;
             color: #333;
             font-weight: bold;
         }
 
-        .input-group input,
-        .input-group select,
-        .input-group textarea {
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            font-size: 1em;
+            transition: all 0.3s;
         }
 
-        .input-group input:focus,
-        .input-group select:focus,
-        .input-group textarea:focus {
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            width: 100%;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-danger {
-            background: #ff4757;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #e84118;
-        }
-
-        .btn-success {
-            background: #2ed573;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #26d07c;
-        }
-
-        .btn-warning {
-            background: #ffa502;
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background: #ff9500;
-        }
-
-        .btn-info {
-            background: #1e90ff;
-            color: white;
-        }
-
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-
-        /* 主選單 */
-        .menu-grid {
+        .category-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
-            margin-top: 30px;
+            margin-top: 20px;
         }
 
-        .menu-card {
+        .category-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .menu-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .menu-card .emoji {
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
-
-        .menu-card .title {
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-
-        /* 職級顏色 */
-        .level-WM { background: linear-gradient(135deg, #c23616 0%, #e84118 100%) !important; }
-        .level-APN { background: linear-gradient(135deg, #ff6b81 0%, #ee5a6f 100%) !important; }
-        .level-RN { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%) !important; }
-        .level-PCA1, .level-PCA2, .level-PCA3, .level-OTA { 
-            background: linear-gradient(135deg, #2ed573 0%, #26d07c 100%) !important; 
-        }
-
-        .level-WM:hover { box-shadow: 0 15px 30px rgba(194, 54, 22, 0.4) !important; }
-        .level-APN:hover { box-shadow: 0 15px 30px rgba(255, 107, 129, 0.4) !important; }
-        .level-RN:hover { box-shadow: 0 15px 30px rgba(0, 210, 255, 0.4) !important; }
-        .level-PCA1:hover, .level-PCA2:hover, .level-PCA3:hover, .level-OTA:hover { 
-            box-shadow: 0 15px 30px rgba(46, 213, 115, 0.4) !important; 
-        }
-
-        /* 帳戶管理 */
-        .account-list {
-            margin-top: 20px;
-        }
-
-        .account-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .account-info {
-            flex: 1;
-        }
-
-        .account-info .name {
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #333;
-        }
-
-        .account-info .details {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-
-        .account-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .badge {
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            font-weight: bold;
-            margin-right: 5px;
-            display: inline-block;
-        }
-
-        .badge-admin {
-            background: #ff4757;
-            color: white;
-        }
-
-        .badge-supervisor {
-            background: #ffa502;
-            color: white;
-        }
-
-        .badge-staff {
-            background: #2ed573;
-            color: white;
-        }
-
-        .badge-info {
-            background: #1e90ff;
-            color: white;
-        }
-
-        .badge-critical {
-            background: #ff4757;
-            color: white;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .badge-WM { background: #c23616; color: white; }
-        .badge-APN { background: #ff6b81; color: white; }
-        .badge-RN { background: #00d2ff; color: white; }
-        .badge-PCA1, .badge-PCA2, .badge-PCA3, .badge-OTA { 
-            background: #2ed573; color: white; 
-        }
-
-        /* ==================== Dashboard 卡片式設計 ==================== */
-        .dashboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-        }
-
-        .dashboard-title {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
-        .dashboard-subtitle {
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-
-        .training-dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-
-        .training-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .training-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .training-card.completed {
-            background: linear-gradient(135deg, #2ed573 0%, #26d07c 100%);
-            color: white;
-        }
-
-        .training-card.completed .card-title,
-        .training-card.completed .card-stats,
-        .training-card.completed .progress-percent {
-            color: white;
-        }
-
-        .training-card.in-progress {
-            border: 2px solid #667eea;
-        }
-
-        .card-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .card-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-
-        .card-progress {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            margin: 0 auto 20px;
-        }
-
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-
-        .progress-ring-circle {
-            transition: stroke-dashoffset 0.5s ease;
-            stroke: #667eea;
-        }
-
-        .training-card.completed .progress-ring-circle {
-            stroke: white;
-        }
-
-        .progress-ring-bg {
-            stroke: #e0e0e0;
-        }
-
-        .training-card.completed .progress-ring-bg {
-            stroke: rgba(255,255,255,0.3);
-        }
-
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-
-        .progress-percent {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .progress-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .training-card.completed .progress-label {
-            color: white;
-        }
-
-        .card-stats {
-            text-align: center;
-            color: #666;
-            font-size: 0.95em;
-        }
-
-        .card-success-badge {
-            background: white;
-            color: #2ed573;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        .card-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        /* 培訓項目詳情 */
-        .item-detail-card {
-            background: white;
-            border-radius: 15px;
             padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .category-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .category-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .category-actions button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .category-actions button:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .items-list {
+            margin-top: 20px;
+        }
+
+        .item-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .item-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
         }
 
         .item-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 10px;
         }
 
-        .item-name {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
+        .item-actions {
+            display: flex;
+            gap: 10px;
         }
 
         .checklist-container {
-            margin-top: 20px;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
         }
 
         .checklist-header {
             font-weight: bold;
-            margin-bottom: 15px;
             color: #667eea;
+            margin-bottom: 10px;
             font-size: 1.1em;
         }
 
         .checklist-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 10px;
             background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 4px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: all 0.3s;
-        }
-
-        .checklist-item:hover {
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
 
         .checklist-item.critical {
-            border-left-color: #ff4757;
-            background: #fff5f5;
+            border-left: 4px solid #ff4757;
         }
 
         .checklist-item.completed {
-            border-left-color: #2ed573;
-            background: #f0fff4;
+            background: #d4edda;
+            border-left: 4px solid #28a745;
         }
 
         .checklist-item.failed {
-            border-left-color: #ff4757;
-            background: #fff5f5;
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
         }
 
-        .checklist-step-name {
-            flex: 1;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 8px;
         }
 
-        .checklist-step-actions {
-            display: flex;
-            gap: 8px;
+        .badge-critical {
+            background: #ff4757;
+            color: white;
         }
 
         .step-btn {
-            padding: 8px 16px;
-            font-size: 13px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 0.9em;
             transition: all 0.3s;
-            font-weight: bold;
+            margin-left: 5px;
         }
 
         .step-btn-pass {
@@ -548,19 +338,9 @@
             color: white;
         }
 
-        .step-btn-pass:hover {
-            background: #26d07c;
-            transform: translateY(-2px);
-        }
-
         .step-btn-fail {
             background: #ff4757;
             color: white;
-        }
-
-        .step-btn-fail:hover {
-            background: #e84118;
-            transform: translateY(-2px);
         }
 
         .step-btn-reset {
@@ -568,12 +348,10 @@
             color: white;
         }
 
-        .step-btn-reset:hover {
-            background: #ff9500;
-            transform: translateY(-2px);
+        .step-btn:hover {
+            transform: scale(1.05);
         }
 
-        /* 彈出視窗 */
         .modal {
             display: none;
             position: fixed;
@@ -583,8 +361,8 @@
             height: 100%;
             background: rgba(0,0,0,0.5);
             z-index: 1000;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
         }
 
         .modal.active {
@@ -593,32 +371,45 @@
 
         .modal-content {
             background: white;
-            border-radius: 15px;
             padding: 30px;
+            border-radius: 15px;
             max-width: 600px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 90vh;
             overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
 
         .modal-header {
-            font-size: 1.5em;
-            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
             color: #667eea;
         }
 
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
+        .close-modal {
+            background: #ff4757;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s;
         }
 
-        .modal-buttons .btn {
-            flex: 1;
+        .close-modal:hover {
+            background: #ff3838;
+            transform: rotate(90deg);
         }
 
-        /* 吐司通知 */
         .toast {
             position: fixed;
             top: 20px;
@@ -626,43 +417,374 @@
             background: white;
             padding: 15px 25px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             z-index: 2000;
-            animation: slideInRight 0.3s ease;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 5px solid #2ed573;
+        }
+
+        .toast.error {
+            border-left: 5px solid #ff4757;
+        }
+
+        .toast.warning {
+            border-left: 5px solid #ffa502;
+        }
+
+        .progress-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .staff-select-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .staff-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .staff-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            text-align: center;
+        }
+
+        .staff-card:hover {
+            background: #e9ecef;
+            transform: translateY(-3px);
+        }
+
+        .staff-card.selected {
+            border-color: #667eea;
+            background: #e7eaff;
+        }
+
+        .staff-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .staff-role {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .checklist-step-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checklist-step-input input {
+            flex: 1;
+        }
+
+        .checklist-step-input button {
+            padding: 8px 15px;
+        }
+
+        .checklist-steps-list {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .checklist-step-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .login-container h2 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        /* 培訓項目餅圖設計 */
+        .item-pie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .item-pie-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .item-pie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .item-pie-card.status-pending {
+            border: 3px solid #ffa502;
+        }
+
+        .item-pie-card.status-pass {
+            border: 3px solid #2ed573;
+        }
+
+        .item-pie-card.status-fail {
+            border: 3px solid #ff4757;
+        }
+
+        .pie-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .pie-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .pie-status {
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .pie-status.pending {
+            background: #ffa502;
+            color: white;
+        }
+
+        .pie-status.pass {
+            background: #2ed573;
+            color: white;
+        }
+
+        .pie-status.fail {
+            background: #ff4757;
+            color: white;
+        }
+
+        /* 展開的評核介面 */
+        .item-evaluation-expanded {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .evaluation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .evaluation-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 重要評核時間表 */
+        .important-timeline {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .timeline-header {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        @keyframes slideInRight {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .timeline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .toast-success {
-            border-left: 4px solid #2ed573;
+        .timeline-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
         }
 
-        .toast-error {
-            border-left: 4px solid #ff4757;
+        .timeline-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
         }
 
-        .toast-warning {
-            border-left: 4px solid #ffa502;
+        .timeline-item.overdue {
+            border-left-color: #ff4757;
+            background: #fff5f5;
         }
 
-        .emoji-picker {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
+        .timeline-item.completed {
+            border-left-color: #2ed573;
+            background: #f0fff4;
+        }
+
+        .timeline-item-info {
+            flex: 1;
+        }
+
+        .timeline-item-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .timeline-item-deadline {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .timeline-item-status {
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .deadline-calculator {
+            display: flex;
             gap: 10px;
-            margin: 20px 0;
-            max-height: 300px;
-            overflow-y: auto;
+            align-items: center;
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
         }
 
-        .emoji-option {
-            font-size: 2em;
-            padding: 10px;
+        .deadline-calculator input,
+        .deadline-calculator select {
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+        }
+
+        .position-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .position-option {
+            flex: 1;
+            padding: 15px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             cursor: pointer;
@@ -670,1454 +792,743 @@
             transition: all 0.3s;
         }
 
-        .emoji-option:hover {
-            border-color: #667eea;
-            transform: scale(1.1);
-        }
-
-        .emoji-option.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
-
-        .staff-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .staff-card {
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .staff-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .staff-card-name {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .staff-card-info {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            cursor: pointer;
-        }
-
-        .checkbox-group label {
-            margin: 0;
-            cursor: pointer;
-            font-weight: normal;
-        }
-
-        .steps-editor {
+        .position-option:hover {
             background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 10px;
         }
 
-        .step-edit-item {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 3px solid #667eea;
+        .position-option.selected {
+            border-color: #667eea;
+            background: #e7eaff;
         }
 
-        .step-edit-item.critical {
-            border-left-color: #ff4757;
+        .position-option input[type="checkbox"] {
+            margin-right: 8px;
         }
 
-        .step-edit-header {
+        .checklist-step-name {
+            flex: 1;
+        }
+
+        .checklist-step-actions {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 5px;
         }
-
-        .step-number {
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .loading-message {
-            text-align: center;
-            color: #667eea;
-            font-size: 1.2em;
-            padding: 20px;
-        }
-
-        .no-data-message {
-            text-align: center;
-            color: #999;
-            padding: 40px;
-            font-size: 1.1em;
-        }
-
-        /* 培訓項目餅圖設計 */
-.item-pie-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.item-pie-card {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-    cursor: pointer;
-    transition: all 0.3s;
-    text-align: center;
-}
-
-.item-pie-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.item-pie-card.status-pending {
-    border: 3px solid #ffa502;
-}
-
-.item-pie-card.status-pass {
-    border: 3px solid #2ed573;
-}
-
-.item-pie-card.status-fail {
-    border: 3px solid #ff4757;
-}
-
-.pie-icon {
-    font-size: 3em;
-    margin-bottom: 10px;
-}
-
-.pie-title {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.pie-status {
-    font-size: 0.9em;
-    padding: 5px 10px;
-    border-radius: 15px;
-    display: inline-block;
-    margin-top: 5px;
-}
-
-.pie-status.pending {
-    background: #ffa502;
-    color: white;
-}
-
-.pie-status.pass {
-    background: #2ed573;
-    color: white;
-}
-
-.pie-status.fail {
-    background: #ff4757;
-    color: white;
-}
-
-/* 展開的評核介面 */
-.item-evaluation-expanded {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.evaluation-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #f0f0f0;
-}
-
-.evaluation-title {
-    font-size: 1.4em;
-    font-weight: bold;
-    color: #333;
-}
-
-/* 重要評核時間表 */
-.important-timeline {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
-}
-
-.timeline-header {
-    font-size: 1.3em;
-    font-weight: bold;
-    color: #667eea;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.timeline-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.timeline-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    border-left: 4px solid #667eea;
-    transition: all 0.3s;
-}
-
-.timeline-item:hover {
-    background: #e9ecef;
-    transform: translateX(5px);
-}
-
-.timeline-item.overdue {
-    border-left-color: #ff4757;
-    background: #fff5f5;
-}
-
-.timeline-item.completed {
-    border-left-color: #2ed573;
-    background: #f0fff4;
-}
-
-.timeline-item-info {
-    flex: 1;
-}
-
-.timeline-item-name {
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 5px;
-}
-
-.timeline-item-deadline {
-    font-size: 0.9em;
-    color: #666;
-}
-
-.timeline-item-status {
-    padding: 5px 12px;
-    border-radius: 12px;
-    font-size: 0.85em;
-    font-weight: bold;
-}
-        
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 登入頁面 -->
-        <div id="loginPage" class="page active">
-            <h1>🏥 TKOH OT/IDSS 培訓系統</h1>
-            <div class="login-form">
-                <div class="input-group">
-                    <label>👤 帳號</label>
-                    <input type="text" id="loginId" placeholder="請輸入帳號">
-                </div>
-                <div class="input-group">
-                    <label>🔒 密碼</label>
-                    <input type="password" id="loginPw" placeholder="請輸入密碼">
-                </div>
-                <button class="btn btn-primary" onclick="login()">🚀 登入系統</button>
-                <div id="loginStatus" class="loading-message" style="display:none;"></div>
+    <div id="loginPage">
+        <div class="login-container">
+            <h2>🏥 TKOH 培訓系統</h2>
+            <div class="form-group">
+                <label>員工編號</label>
+                <input type="text" id="loginStaffId" placeholder="請輸入員工編號">
             </div>
+            <div class="form-group">
+                <label>密碼</label>
+                <input type="password" id="loginPassword" placeholder="請輸入密碼">
+            </div>
+            <button class="btn" onclick="login()" style="width: 100%;">登入</button>
         </div>
+    </div>
 
-        <!-- 主選單頁面 -->
-        <div id="mainPage" class="page">
-            <div class="top-bar">
+    <div id="mainApp" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1>🏥 TKOH 培訓系統</h1>
                 <div class="user-info">
-                    <span id="userWelcome">👤 歡迎，系統管理員</span>
-                </div>
-                <button class="btn btn-danger" onclick="logout()">🚪 登出</button>
-            </div>
-
-            <h2>📋 主選單</h2>
-            <div class="menu-grid" id="mainMenu">
-                <!-- 動態生成選單 -->
-            </div>
-        </div>
-
-        <!-- 帳戶管理頁面 -->
-        <div id="accountPage" class="page">
-            <div class="top-bar">
-                <h2>👥 帳戶管理系統</h2>
-                <div>
-                    <button class="btn btn-success" onclick="showAddAccountModal()">➕ 新增帳戶</button>
-                    <button class="btn btn-secondary" onclick="showPage('mainPage')">🔙 返回</button>
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div>
+                        <div id="userName" style="font-weight: bold;"></div>
+                        <div id="userRole" style="font-size: 0.9em; color: #666;"></div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">登出</button>
                 </div>
             </div>
-            <div class="account-list" id="accountList">
-                <!-- 動態生成帳戶列表 -->
-            </div>
-        </div>
 
-        <!-- 員工培訓記錄介面（Dashboard 設計）-->
-        <div id="trainingManagePage" class="page">
-            <div class="dashboard-header">
-                <div class="dashboard-title">📚 員工培訓記錄介面</div>
-                <div class="dashboard-subtitle">培訓管理系統</div>
-            </div>
-            <div style="text-align: right; margin-bottom: 20px;">
-                <button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
-                <button class="btn btn-secondary" onclick="showPage('mainPage')">🔙 返回主選單</button>
-            </div>
-            <div class="training-dashboard" id="categoryDashboard">
-                <!-- 動態生成培訓分類卡片 -->
-            </div>
-        </div>
+            <div class="nav-tabs" id="navTabs"></div>
 
-        <!-- 培訓分類詳情頁面 -->
-        <div id="categoryDetailPage" class="page">
-            <div class="top-bar">
-                <h2 id="categoryDetailTitle">培訓項目</h2>
-                <div>
-                    <button class="btn btn-success btn-small" id="addItemBtn" onclick="showAddItemModal()">➕ 新增項目</button>
-                    <button class="btn btn-secondary btn-small" onclick="backToDashboard()">🔙 返回</button>
+            <!-- 培訓進度頁面 -->
+            <div id="progressPage" class="page">
+                <!-- 重要評核時間表 -->
+                <div class="important-timeline">
+                    <div class="timeline-header">
+                        ⏰ 重要評核時間表
+                    </div>
+                    <div class="timeline-list" id="importantTimeline">
+                        <!-- 動態生成 -->
+                    </div>
+                </div>
+
+                <div class="staff-select-container" id="staffSelectContainer" style="display: none;">
+                    <h3>選擇員工</h3>
+                    <div class="staff-grid" id="staffGrid"></div>
+                </div>
+
+                <div id="progressContent"></div>
+            </div>
+
+            <!-- 分類管理頁面 -->
+            <div id="categoryPage" class="page">
+                <div class="content-box">
+                    <button class="btn" onclick="openAddCategoryModal()">➕ 新增培訓分類</button>
+                    <div class="category-grid" id="categoryGrid"></div>
                 </div>
             </div>
-            <div id="categoryDetailContent">
-                <!-- 動態生成培訓項目 -->
-            </div>
-        </div>
 
-        <!-- 選擇員工職級頁面 -->
-        <div id="staffLevelPage" class="page">
-            <div class="top-bar">
-                <h2>📊 選擇員工職級</h2>
-                <button class="btn btn-secondary" onclick="showPage('mainPage')">🔙 返回</button>
-            </div>
-            <div class="menu-grid">
-                <div class="menu-card level-PCA1" onclick="showStaffList('PCA1')">
-                    <div class="emoji">👨‍💼</div>
-                    <div class="title">PCA1</div>
-                </div>
-                <div class="menu-card level-PCA2" onclick="showStaffList('PCA2')">
-                    <div class="emoji">👨‍💼</div>
-                    <div class="title">PCA2</div>
-                </div>
-                <div class="menu-card level-PCA3" onclick="showStaffList('PCA3')">
-                    <div class="emoji">👨‍💼</div>
-                    <div class="title">PCA3</div>
-                </div>
-                <div class="menu-card level-OTA" onclick="showStaffList('OTA')">
-                    <div class="emoji">🩺</div>
-                    <div class="title">OTA</div>
+            <!-- 培訓項目管理頁面 -->
+            <div id="itemsPage" class="page">
+                <div class="content-box">
+                    <button class="btn btn-secondary" onclick="showPage('categoryPage')">← 返回分類</button>
+                    <h2 id="itemsCategoryTitle"></h2>
+                    <button class="btn" onclick="openAddItemModal()">➕ 新增培訓項目</button>
+                    <div class="items-list" id="itemsList"></div>
                 </div>
             </div>
-        </div>
 
-        <!-- 員工列表頁面 -->
-        <div id="staffListPage" class="page">
-            <div class="top-bar">
-                <h2 id="staffListTitle">員工列表</h2>
-                <button class="btn btn-secondary" onclick="showPage('staffLevelPage')">🔙 返回</button>
+            <!-- 評核頁面 -->
+            <div id="itemEvaluationPage" class="page">
+                <div class="content-box">
+                    <button class="btn btn-secondary" onclick="backToProgress()">← 返回</button>
+                    <h2 id="evaluationCategoryTitle"></h2>
+                    <div id="evaluationContent"></div>
+                    <div id="expandedEvaluation"></div>
+                </div>
             </div>
-            <div class="staff-grid" id="staffList">
-                <!-- 動態生成員工列表 -->
-            </div>
-        </div>
 
-        <!-- 培訓進度頁面（Dashboard 設計）-->
-        <div id="trainingProgressPage" class="page">
-            <div class="dashboard-header">
-                <div class="dashboard-title" id="progressStaffName">培訓進度</div>
-                <div class="dashboard-subtitle">Training Progress Dashboard</div>
-            </div>
-            <div style="text-align: right; margin-bottom: 20px;">
-                <button class="btn btn-info btn-small" onclick="exportToPDF()">📄 匯出 PDF</button>
-                <button class="btn btn-secondary btn-small" onclick="backToStaffList()">🔙 返回員工列表</button>
-            </div>
-            <div class="training-dashboard" id="trainingProgress">
-                <!-- 動態生成培訓進度卡片 -->
-            </div>
-        </div>
-
-        <!-- 培訓項目評核頁面 -->
-        <div id="itemEvaluationPage" class="page">
-            <div class="top-bar">
-                <h2 id="evaluationCategoryTitle">培訓項目評核</h2>
-                <button class="btn btn-secondary btn-small" onclick="backToProgress()">🔙 返回進度</button>
-            </div>
-            <div id="evaluationContent">
-                <!-- 動態生成評核內容 -->
+            <!-- 員工管理頁面 -->
+            <div id="staffPage" class="page">
+                <div class="content-box">
+                    <button class="btn" onclick="openAddStaffModal()">➕ 新增員工</button>
+                    <div id="staffList" style="margin-top: 20px;"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 彈出視窗 -->
-    <div id="modal" class="modal">
+    <!-- 新增分類 Modal -->
+    <div id="addCategoryModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header" id="modalTitle">標題</div>
-            <div id="modalBody">
-                <!-- 動態內容 -->
+            <div class="modal-header">
+                <h2>新增培訓分類</h2>
+                <button class="close-modal" onclick="closeModal('addCategoryModal')">×</button>
             </div>
+            <div class="form-group">
+                <label>圖示 Emoji</label>
+                <input type="text" id="categoryEmoji" placeholder="例如: 📚">
+            </div>
+            <div class="form-group">
+                <label>分類名稱</label>
+                <input type="text" id="categoryName" placeholder="請輸入分類名稱">
+            </div>
+            <button class="btn" onclick="addCategory()">新增</button>
         </div>
     </div>
+
+    <!-- 編輯分類 Modal -->
+    <div id="editCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>編輯培訓分類</h2>
+                <button class="close-modal" onclick="closeModal('editCategoryModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>圖示 Emoji</label>
+                <input type="text" id="editCategoryEmoji">
+            </div>
+            <div class="form-group">
+                <label>分類名稱</label>
+                <input type="text" id="editCategoryName">
+            </div>
+            <button class="btn" onclick="updateCategory()">更新</button>
+        </div>
+    </div>
+
+    <!-- 新增培訓項目 Modal -->
+    <div id="addItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新增培訓項目</h2>
+                <button class="close-modal" onclick="closeModal('addItemModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>項目名稱</label>
+                <input type="text" id="itemName" placeholder="請輸入項目名稱">
+            </div>
+            <div class="form-group">
+                <label>項目說明</label>
+                <textarea id="itemDescription" rows="3" placeholder="請輸入項目說明"></textarea>
+            </div>
+
+            <!-- 截止日期計算功能 -->
+            <div class="form-group">
+                <label>⏰ 截止日期計算</label>
+                <div class="deadline-calculator">
+                    <span>入職後</span>
+                    <input type="number" id="deadlineValue" placeholder="數量" min="1" style="width: 80px;">
+                    <select id="deadlineUnit">
+                        <option value="day">日</option>
+                        <option value="week">周</option>
+                        <option value="month">月</option>
+                    </select>
+                    <span>內完成</span>
+                </div>
+            </div>
+
+            <!-- 選擇職位功能 -->
+            <div class="form-group">
+                <label>📋 適用職位</label>
+                <div class="position-selector">
+                    <div class="position-option" onclick="togglePosition('PCA')">
+                        <input type="checkbox" id="positionPCA" onclick="event.stopPropagation()">
+                        <label for="positionPCA">PCA</label>
+                    </div>
+                    <div class="position-option" onclick="togglePosition('OTA')">
+                        <input type="checkbox" id="positionOTA" onclick="event.stopPropagation()">
+                        <label for="positionOTA">OTA</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 加入重要評核時間表 -->
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="addToImportantTimeline">
+                    <label for="addToImportantTimeline">⭐ 加入重要評核時間表</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="itemHasChecklist" onchange="toggleChecklistInput()">
+                    <label for="itemHasChecklist">此項目需要評核步驟 (Checklist)</label>
+                </div>
+            </div>
+            <div id="checklistInputArea" style="display: none;">
+                <div class="form-group">
+                    <label>評核步驟</label>
+                    <div class="checklist-step-input">
+                        <input type="text" id="newChecklistStep" placeholder="輸入評核步驟">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="newStepCritical">
+                            <label for="newStepCritical">Critical</label>
+                        </div>
+                        <button class="btn btn-small" onclick="addChecklistStep()">➕ 新增步驟</button>
+                    </div>
+                    <div class="checklist-steps-list" id="checklistStepsList"></div>
+                </div>
+            </div>
+            <button class="btn" onclick="addTrainingItem()">新增項目</button>
+        </div>
+    </div>
+
+    <!-- 編輯培訓項目 Modal -->
+    <div id="editItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>編輯培訓項目</h2>
+                <button class="close-modal" onclick="closeModal('editItemModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>項目名稱</label>
+                <input type="text" id="editItemName">
+            </div>
+            <div class="form-group">
+                <label>項目說明</label>
+                <textarea id="editItemDescription" rows="3"></textarea>
+            </div>
+
+            <!-- 編輯截止日期計算功能 -->
+            <div class="form-group">
+                <label>⏰ 截止日期計算</label>
+                <div class="deadline-calculator">
+                    <span>入職後</span>
+                    <input type="number" id="editDeadlineValue" placeholder="數量" min="1" style="width: 80px;">
+                    <select id="editDeadlineUnit">
+                        <option value="day">日</option>
+                        <option value="week">周</option>
+                        <option value="month">月</option>
+                    </select>
+                    <span>內完成</span>
+                </div>
+            </div>
+
+            <!-- 編輯選擇職位功能 -->
+            <div class="form-group">
+                <label>📋 適用職位</label>
+                <div class="position-selector">
+                    <div class="position-option" onclick="toggleEditPosition('PCA')">
+                        <input type="checkbox" id="editPositionPCA" onclick="event.stopPropagation()">
+                        <label for="editPositionPCA">PCA</label>
+                    </div>
+                    <div class="position-option" onclick="toggleEditPosition('OTA')">
+                        <input type="checkbox" id="editPositionOTA" onclick="event.stopPropagation()">
+                        <label for="editPositionOTA">OTA</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 編輯加入重要評核時間表 -->
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="editAddToImportantTimeline">
+                    <label for="editAddToImportantTimeline">⭐ 加入重要評核時間表</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="editItemHasChecklist" onchange="toggleEditChecklistInput()">
+                    <label for="editItemHasChecklist">此項目需要評核步驟 (Checklist)</label>
+                </div>
+            </div>
+            <div id="editChecklistInputArea" style="display: none;">
+                <div class="form-group">
+                    <label>評核步驟</label>
+                    <div class="checklist-step-input">
+                        <input type="text" id="editNewChecklistStep" placeholder="輸入評核步驟">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="editNewStepCritical">
+                            <label for="editNewStepCritical">Critical</label>
+                        </div>
+                        <button class="btn btn-small" onclick="addEditChecklistStep()">➕ 新增步驟</button>
+                    </div>
+                    <div class="checklist-steps-list" id="editChecklistStepsList"></div>
+                </div>
+            </div>
+            <button class="btn" onclick="updateTrainingItem()">更新項目</button>
+        </div>
+    </div>
+
+    <!-- 新增員工 Modal -->
+    <div id="addStaffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新增員工</h2>
+                <button class="close-modal" onclick="closeModal('addStaffModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>員工編號</label>
+                <input type="text" id="newStaffId" placeholder="請輸入員工編號">
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="newStaffName" placeholder="請輸入姓名">
+            </div>
+            <div class="form-group">
+                <label>職位</label>
+                <select id="newStaffPosition">
+                    <option value="PCA">PCA</option>
+                    <option value="OTA">OTA</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>入職日期</label>
+                <input type="date" id="newStaffJoinDate">
+            </div>
+            <div class="form-group">
+                <label>角色</label>
+                <select id="newStaffRole">
+                    <option value="staff">員工</option>
+                    <option value="supervisor">主管</option>
+                    <option value="admin">管理員</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>密碼</label>
+                <input type="password" id="newStaffPassword" placeholder="請輸入密碼">
+            </div>
+            <button class="btn" onclick="addStaff()">新增員工</button>
+        </div>
+    </div>
+
+    <!-- 編輯員工 Modal -->
+    <div id="editStaffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>編輯員工</h2>
+                <button class="close-modal" onclick="closeModal('editStaffModal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>員工編號</label>
+                <input type="text" id="editStaffId" disabled>
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="editStaffName">
+            </div>
+            <div class="form-group">
+                <label>職位</label>
+                <select id="editStaffPosition">
+                    <option value="PCA">PCA</option>
+                    <option value="OTA">OTA</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>入職日期</label>
+                <input type="date" id="editStaffJoinDate">
+            </div>
+            <div class="form-group">
+                <label>角色</label>
+                <select id="editStaffRole">
+                    <option value="staff">員工</option>
+                    <option value="supervisor">主管</option>
+                    <option value="admin">管理員</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>新密碼（留空表示不修改）</label>
+                <input type="password" id="editStaffPassword" placeholder="請輸入新密碼">
+            </div>
+            <button class="btn" onclick="updateStaff()">更新員工</button>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div id="toast" class="toast"></div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <!-- jsPDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <script>
-        // ==================== Firebase 初始化 ====================
+        // Firebase 配置
         const firebaseConfig = {
-            apiKey: "AIzaSyDDkALOTGl6fZunGU_Xd5FOy45WnXZWT8E",
-            authDomain: "tkoh-ot-training-system.firebaseapp.com",
-            projectId: "tkoh-ot-training-system",
-            storageBucket: "tkoh-ot-training-system.firebasestorage.app",
-            messagingSenderId: "1027139549127",
-            appId: "1:1027139549127:web:b987293382058a54d08be2"
+            apiKey: "AIzaSyBnocao757داعBu7pm37250J8cJIBrs",
+            authDomain: "tkoh-a-ot-idss-e-training.firebaseapp.com",
+            projectId: "tkoh-a-ot-idss-e-training",
+            storageBucket: "tkoh-a-ot-idss-e-training.firebasestorage.app",
+            messagingSenderId: "185074093048",
+            appId: "1:185074093048:web:711fcc3f17bdf7eb3e4c46"
         };
 
+        // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // ==================== 全域變數 ====================
+        // 全局變數
         let currentUser = null;
-        let currentStaffLevel = '';
-        let currentStaffId = '';
-        let currentCategoryId = '';
-        let selectedEmoji = '📚';
-        let systemInitialized = false;
-        let checklistSteps = [];
+        let currentCategoryId = null;
+        let currentItemId = null;
+        let currentStaffId = null;
+        let tempChecklist = [];
+        let tempEditChecklist = [];
 
-        // ==================== Emoji 列表 ====================
-        const EMOJI_LIST = [
-            '📚', '📖', '📝', '📋', '📊', '📈', '📉', '📄', '📃', '📑',
-            '🛡️', '⚔️', '🔰', '🎯', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️',
-            '💼', '💻', '⌨️', '🖥️', '🖨️', '📱', '📲', '☎️', '📞', '📟',
-            '⚕️', '🩺', '💊', '💉', '🩹', '🩼', '🦷', '🧬', '🔬', '🔭',
-            '🔧', '🔨', '⚒️', '🛠️', '⚙️', '🔩', '⚡', '🔌', '💡', '🔦',
-            '🎓', '🎒', '📐', '📏', '✏️', '✒️', '🖊️', '🖍️', '🖌️', '🖋️',
-            '🌟', '⭐', '✨', '💫', '🌠', '🎆', '🎇', '🎉', '🎊', '🎈',
-            '🔑', '🗝️', '🔐', '🔒', '🔓', '🔏', '🗄️', '🗂️', '📁', '📂',
-            '🧼', '🧹', '🧽', '🧴', '🧪', '🧫', '🩸', '💉', '🔬', '🔭',
-            '🏥', '🏨', '🏢', '🏛️', '🏗️', '🏭', '🏬', '🏪', '🏩', '🏦',
-            '🔍', '🔎', '📡', '📻', '📺', '📹', '📷', '📸', '🎬', '🎤'
-        ];
-
-        // ==================== 初始化系統 ====================
-        async function initializeSystem() {
-            if (systemInitialized) return;
-            
-            try {
-                console.log('🔧 開始初始化系統...');
-                
-                const adminSnapshot = await db.collection('accounts')
-                    .where('id', '==', 'tkohot')
-                    .limit(1)
-                    .get();
-                
-                if (adminSnapshot.empty) {
-                    console.log('📝 創建系統管理員帳戶...');
-                    await db.collection('accounts').add({
-                        id: 'tkohot',
-                        password: 'A123456*#',
-                        name: '系統管理員',
-                        role: 'admin',
-                        level: 'ADMIN',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    console.log('✅ 系統管理員帳戶已創建');
-                }
-
-                const categoriesSnapshot = await db.collection('trainingCategories').limit(1).get();
-                
-                if (categoriesSnapshot.empty) {
-                    console.log('📝 創建預設培訓分類...');
-                    
-                    const cat1Ref = await db.collection('trainingCategories').add({
-                        name: 'Decontamination',
-                        emoji: '🧼',
-                        order: 1,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    const cat2Ref = await db.collection('trainingCategories').add({
-                        name: 'Sterilization',
-                        emoji: '🔥',
-                        order: 2,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    const cat3Ref = await db.collection('trainingCategories').add({
-                        name: 'Endoscope',
-                        emoji: '🔬',
-                        order: 3,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    // 為 Decontamination 創建項目
-                    await db.collection('trainingItems').add({
-                        categoryId: cat1Ref.id,
-                        name: '清潔與消毒程序',
-                        hasDeadline: false,
-                        hasChecklist: true,
-                        checklist: [
-                            { step: 'Step 1: 準備清潔用品', critical: false },
-                            { step: 'Step 2: 清潔設備表面', critical: true },
-                            { step: 'Step 3: 消毒處理', critical: true },
-                            { step: 'Step 4: 記錄清潔時間', critical: false }
-                        ],
-                        order: 1,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    console.log('✅ 預設培訓資料已創建');
-                }
-
-                systemInitialized = true;
-                console.log('✅ 系統初始化完成');
-            } catch (error) {
-                console.error('❌ 系統初始化失敗:', error);
-                showToast('⚠️ 系統初始化中，請稍後再試', 'warning');
-            }
-        }
-
-        window.addEventListener('load', () => {
-            initializeSystem();
-        });
-
-        // ==================== 登入系統 ====================
+        // ==================== 登入登出 ====================
         async function login() {
-            const id = document.getElementById('loginId').value.trim();
-            const pw = document.getElementById('loginPw').value;
-            const statusDiv = document.getElementById('loginStatus');
+            const staffId = document.getElementById('loginStaffId').value.trim();
+            const password = document.getElementById('loginPassword').value;
 
-            if (!id || !pw) {
-                showToast('❌ 請輸入帳號和密碼', 'error');
+            if (!staffId || !password) {
+                showToast('⚠️ 請填寫完整資料', 'warning');
                 return;
             }
 
             try {
-                statusDiv.style.display = 'block';
-                statusDiv.textContent = '🔍 正在驗證...';
-
-                await initializeSystem();
-
-                const accountsSnapshot = await db.collection('accounts')
-                    .where('id', '==', id)
+                const usersSnapshot = await db.collection('users')
+                    .where('staffId', '==', staffId)
+                    .where('password', '==', password)
                     .limit(1)
                     .get();
 
-                if (!accountsSnapshot.empty) {
-                    const doc = accountsSnapshot.docs[0];
-                    const account = doc.data();
-                    
-                    if (account.password === pw) {
-                        currentUser = { docId: doc.id, ...account };
-                        
-                        statusDiv.style.display = 'none';
-                        showToast(`✅ 歡迎，${currentUser.name}！`, 'success');
-                        showMainPage();
-                    } else {
-                        statusDiv.style.display = 'none';
-                        showToast('❌ 帳號或密碼錯誤', 'error');
-                    }
-                } else {
-                    statusDiv.style.display = 'none';
-                    showToast('❌ 帳號或密碼錯誤', 'error');
+                if (usersSnapshot.empty) {
+                    showToast('❌ 員工編號或密碼錯誤', 'error');
+                    return;
                 }
+
+                const userDoc = usersSnapshot.docs[0];
+                currentUser = { docId: userDoc.id, ...userDoc.data() };
+                currentStaffId = currentUser.staffId;
+
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userRole').textContent = getRoleText(currentUser.role);
+                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0);
+
+                initializeNavigation();
+                showPage('progressPage');
+                loadProgress();
+
+                showToast('✅ 登入成功', 'success');
             } catch (error) {
-                console.error('❌ 登入錯誤:', error);
-                statusDiv.style.display = 'none';
-                showToast('❌ 登入失敗，請稍後再試', 'error');
+                console.error('登入錯誤:', error);
+                showToast('❌ 登入失敗', 'error');
             }
         }
 
-        // ==================== 登出系統 ====================
         function logout() {
-            if (confirm('❓ 確定要登出嗎？')) {
-                currentUser = null;
-                document.getElementById('loginId').value = '';
-                document.getElementById('loginPw').value = '';
-                showPage('loginPage');
-                showToast('👋 已登出系統', 'success');
-            }
+            currentUser = null;
+            currentStaffId = null;
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('loginStaffId').value = '';
+            document.getElementById('loginPassword').value = '';
+            showToast('✅ 已登出', 'success');
         }
 
-        // ==================== 顯示主選單 ====================
-        function showMainPage() {
-            const welcomeText = document.getElementById('userWelcome');
-            welcomeText.textContent = `👤 歡迎，${currentUser.name}`;
-
-            const menuHtml = [];
-
-            if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
-                menuHtml.push(`
-                    <div class="menu-card" onclick="showPage('staffLevelPage')">
-                        <div class="emoji">📊</div>
-                        <div class="title">選擇員工職級</div>
-                    </div>
-                `);
-            } else if (currentUser.role === 'staff') {
-                menuHtml.push(`
-                    <div class="menu-card" onclick="viewMyProgress()">
-                        <div class="emoji">📈</div>
-                        <div class="title">我的培訓進度</div>
-                    </div>
-                `);
-            }
-
-            if (currentUser.role === 'admin') {
-                menuHtml.push(`
-                    <div class="menu-card" onclick="showAccountManage()">
-                        <div class="emoji">👥</div>
-                        <div class="title">帳戶管理系統</div>
-                    </div>
-                `);
-            }
-
-            if (currentUser.role === 'admin') {
-                menuHtml.push(`
-                    <div class="menu-card" onclick="showTrainingManage()">
-                        <div class="emoji">📚</div>
-                        <div class="title">員工培訓記錄介面</div>
-                    </div>
-                `);
-            }
-
-            document.getElementById('mainMenu').innerHTML = menuHtml.join('');
-            showPage('mainPage');
+        function getRoleText(role) {
+            const roles = {
+                'admin': '管理員',
+                'supervisor': '主管',
+                'staff': '員工'
+            };
+            return roles[role] || '員工';
         }
 
-        // ==================== 員工查看自己的進度 ====================
-        function viewMyProgress() {
-            currentStaffId = currentUser.docId;
-            showTrainingProgress(currentStaffId);
+        // ==================== 導航系統 ====================
+        function initializeNavigation() {
+            const tabs = [
+                { id: 'progressPage', name: '📊 培訓進度', roles: ['admin', 'supervisor', 'staff'] },
+                { id: 'categoryPage', name: '📚 分類管理', roles: ['admin'] },
+                { id: 'staffPage', name: '👥 員工管理', roles: ['admin'] }
+            ];
+
+            const navHtml = tabs
+                .filter(tab => tab.roles.includes(currentUser.role))
+                .map(tab => `<button class="nav-tab" onclick="showPage('${tab.id}')">${tab.name}</button>`)
+                .join('');
+
+            document.getElementById('navTabs').innerHTML = navHtml;
         }
 
-        // ==================== 顯示帳戶管理 ====================
-        async function showAccountManage() {
-            showPage('accountPage');
-            await loadAccounts();
-        }
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
 
-        // ==================== 載入帳戶列表 ====================
-        async function loadAccounts() {
-            try {
-                const accountsSnapshot = await db.collection('accounts').get();
-                
-                const accountListHtml = [];
+            document.getElementById(pageId).classList.add('active');
 
-                accountsSnapshot.forEach(doc => {
-                    const account = doc.data();
-                    
-                    if (account.role === 'admin') return;
-
-                    const roleBadge = account.role === 'supervisor' 
-                        ? '<span class="badge badge-supervisor">👔 主管</span>'
-                        : '<span class="badge badge-staff">👤 員工</span>';
-
-                    const levelBadge = `<span class="badge badge-${account.level}">${account.level}</span>`;
-
-                    accountListHtml.push(`
-                        <div class="account-item">
-                            <div class="account-info">
-                                <div class="name">👤 ${account.name} ${roleBadge} ${levelBadge}</div>
-                                <div class="details">
-                                    📋 帳號: ${account.id} | 📅 入職日期: ${account.joinDate || '未設定'}
-                                </div>
-                            </div>
-                            <div class="account-actions">
-                                <button class="btn btn-danger btn-small" onclick="deleteAccount('${doc.id}', '${account.name}')">🗑️ 刪除</button>
-                            </div>
-                        </div>
-                    `);
-                });
-
-                if (accountListHtml.length === 0) {
-                    accountListHtml.push('<p class="no-data-message">📭 尚無其他帳戶</p>');
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => {
+                if (tab.textContent.includes(getPageName(pageId))) {
+                    tab.classList.add('active');
                 }
+            });
 
-                document.getElementById('accountList').innerHTML = accountListHtml.join('');
-            } catch (error) {
-                console.error('載入帳戶失敗:', error);
-                showToast('❌ 載入帳戶失敗', 'error');
+            if (pageId === 'progressPage') {
+                loadProgress();
+            } else if (pageId === 'categoryPage') {
+                loadCategories();
+            } else if (pageId === 'staffPage') {
+                loadStaffList();
             }
         }
 
-        // ==================== 顯示新增帳戶視窗 ====================
-        function showAddAccountModal() {
-            const modalBody = `
-                <div class="input-group">
-                    <label>👤 姓名</label>
-                    <input type="text" id="newAccountName" placeholder="請輸入姓名">
-                </div>
-                <div class="input-group">
-                    <label>📊 用戶職級</label>
-                    <select id="newAccountLevel" onchange="updateRoleOptions()">
-                        <option value="">請選擇職級</option>
-                        <option value="WM">WM (病房經理)</option>
-                        <option value="APN">APN (資深護師)</option>
-                        <option value="RN">RN (註冊護士)</option>
-                        <option value="PCA1">PCA1</option>
-                        <option value="PCA2">PCA2</option>
-                        <option value="PCA3">PCA3</option>
-                        <option value="OTA">OTA</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>👔 用戶角色</label>
-                    <select id="newAccountRole" disabled>
-                        <option value="">請先選擇職級</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>📅 入職日期</label>
-                    <input type="date" id="newAccountJoinDate">
-                </div>
-                <div class="input-group">
-                    <label>🔑 登入帳號</label>
-                    <input type="text" id="newAccountId" placeholder="請輸入登入帳號">
-                </div>
-                <div class="input-group">
-                    <label>🔒 登入密碼</label>
-                    <input type="password" id="newAccountPw" placeholder="請輸入登入密碼">
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-success" onclick="createAccount()">✅ 新增</button>
-                    <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-                </div>
-            `;
-
-            showModal('➕ 新增帳戶', modalBody);
+        function getPageName(pageId) {
+            const names = {
+                'progressPage': '培訓進度',
+                'categoryPage': '分類管理',
+                'staffPage': '員工管理'
+            };
+            return names[pageId] || '';
         }
 
-        // ==================== 更新角色選項 ====================
-        function updateRoleOptions() {
-            const level = document.getElementById('newAccountLevel').value;
-            const roleSelect = document.getElementById('newAccountRole');
-
-            if (!level) {
-                roleSelect.disabled = true;
-                roleSelect.innerHTML = '<option value="">請先選擇職級</option>';
-                return;
-            }
-
-            roleSelect.disabled = false;
-
-            if (['WM', 'APN', 'RN'].includes(level)) {
-                roleSelect.innerHTML = '<option value="supervisor">👔 主管</option>';
-            } else if (['PCA1', 'PCA2', 'PCA3', 'OTA'].includes(level)) {
-                roleSelect.innerHTML = '<option value="staff">👤 員工</option>';
-            }
-        }
-
-        // ==================== 創建帳戶 ====================
-        async function createAccount() {
-            const name = document.getElementById('newAccountName').value.trim();
-            const level = document.getElementById('newAccountLevel').value;
-            const role = document.getElementById('newAccountRole').value;
-            const joinDate = document.getElementById('newAccountJoinDate').value;
-            const id = document.getElementById('newAccountId').value.trim();
-            const pw = document.getElementById('newAccountPw').value;
-
-            if (!name || !level || !role || !joinDate || !id || !pw) {
-                showToast('❌ 請填寫所有欄位', 'error');
-                return;
-            }
-
+        // ==================== 培訓進度 ====================
+        async function loadProgress() {
             try {
-                const existingSnapshot = await db.collection('accounts')
-                    .where('id', '==', id)
-                    .limit(1)
-                    .get();
+                // 載入重要評核時間表
+                await loadImportantTimeline();
 
-                if (!existingSnapshot.empty) {
-                    showToast('❌ 此帳號已存在', 'error');
-                    return;
+                if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
+                    document.getElementById('staffSelectContainer').style.display = 'block';
+                    await loadStaffGrid();
+                } else {
+                    document.getElementById('staffSelectContainer').style.display = 'none';
+                    await displayProgress(currentStaffId);
                 }
-
-                await db.collection('accounts').add({
-                    id: id,
-                    password: pw,
-                    name: name,
-                    role: role,
-                    level: level,
-                    joinDate: joinDate,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                showToast('✅ 帳戶新增成功', 'success');
-                closeModal();
-                loadAccounts();
             } catch (error) {
-                console.error('新增帳戶失敗:', error);
-                showToast('❌ 新增帳戶失敗', 'error');
-            }
-        }
-
-        // ==================== 刪除帳戶 ====================
-        async function deleteAccount(docId, name) {
-            if (!confirm(`❓ 確定要刪除帳戶「${name}」嗎？\n⚠️ 此操作無法復原！`)) {
-                return;
-            }
-
-            try {
-                await db.collection('accounts').doc(docId).delete();
-
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', docId)
-                    .get();
-
-                const batch = db.batch();
-                recordsSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-
-                showToast('✅ 帳戶已刪除', 'success');
-                loadAccounts();
-            } catch (error) {
-                console.error('刪除帳戶失敗:', error);
-                showToast('❌ 刪除帳戶失敗', 'error');
-            }
-        }
-
-        // ==================== 顯示培訓管理 Dashboard ====================
-        async function showTrainingManage() {
-            showPage('trainingManagePage');
-            await loadCategoryDashboard();
-        }
-
-        // ==================== 載入培訓分類 Dashboard ====================
-        async function loadCategoryDashboard() {
-            try {
-                const categoriesSnapshot = await db.collection('trainingCategories').get();
-                
-                const categories = [];
-                categoriesSnapshot.forEach(doc => {
-                    categories.push({ docId: doc.id, ...doc.data() });
-                });
-                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-                const dashboardHtml = [];
-
-                for (const category of categories) {
-                    const itemsSnapshot = await db.collection('trainingItems')
-                        .where('categoryId', '==', category.docId)
-                        .get();
-
-                    const totalItems = itemsSnapshot.size;
-                    const percentage = 100; // 管理介面顯示為100%
-
-                    const circumference = 2 * Math.PI * 60;
-                    const offset = circumference - (percentage / 100) * circumference;
-
-                    dashboardHtml.push(`
-                        <div class="training-card" onclick="showCategoryDetail('${category.docId}')">
-                            <div class="card-icon">${category.emoji}</div>
-                            <div class="card-title">${category.name}</div>
-                            <div class="card-progress">
-                                <svg class="progress-ring" width="150" height="150">
-                                    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"/>
-                                    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"
-                                        stroke-dasharray="${circumference}" 
-                                        stroke-dashoffset="${offset}"/>
-                                </svg>
-                                <div class="progress-text">
-                                    <div class="progress-percent">${totalItems}</div>
-                                    <div class="progress-label">個項目</div>
-                                </div>
-                            </div>
-                            <div class="card-stats">${totalItems} 項培訓項目</div>
-                            <div class="card-actions">
-                                <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除</button>
-                            </div>
-                        </div>
-                    `);
-                }
-
-                if (dashboardHtml.length === 0) {
-                    dashboardHtml.push('<p class="no-data-message">📭 尚無培訓分類，請新增分類開始使用</p>');
-                }
-
-                document.getElementById('categoryDashboard').innerHTML = dashboardHtml.join('');
-            } catch (error) {
-                console.error('載入培訓Dashboard失敗:', error);
+                console.error('載入進度失敗:', error);
                 showToast('❌ 載入失敗', 'error');
             }
         }
 
-        // ==================== 顯示分類詳情（管理模式）====================
-        async function showCategoryDetail(categoryId) {
-            currentCategoryId = categoryId;
-            showPage('categoryDetailPage');
-
+        // ==================== 重要評核時間表 ====================
+        async function loadImportantTimeline() {
             try {
-                const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
-                const category = categoryDoc.data();
+                const userDoc = await db.collection('users').doc(currentUser.docId).get();
+                const userData = userDoc.data();
+                const joinDate = userData.joinDate ? new Date(userData.joinDate) : new Date();
 
-                document.getElementById('categoryDetailTitle').textContent = `${category.emoji} ${category.name}`;
-
+                // 獲取所有加入重要時間表的培訓項目
                 const itemsSnapshot = await db.collection('trainingItems')
-                    .where('categoryId', '==', categoryId)
+                    .where('isImportant', '==', true)
                     .get();
 
-                const items = [];
-                itemsSnapshot.forEach(doc => {
-                    items.push({ docId: doc.id, ...doc.data() });
+                // 獲取該員工的評核記錄
+                const recordsSnapshot = await db.collection('trainingRecords')
+                    .where('userId', '==', currentStaffId)
+                    .get();
+
+                const records = {};
+                recordsSnapshot.forEach(doc => {
+                    const record = doc.data();
+                    records[record.itemId] = record;
                 });
-                items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                const itemsHtml = [];
+                const timelineItems = [];
+                const today = new Date();
 
-                items.forEach(item => {
-                    let checklistHtml = '';
+                for (const doc of itemsSnapshot.docs) {
+                    const item = doc.data();
                     
-                    if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
-                        const stepsHtml = item.checklist.map((step, index) => {
-                            const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
-                            return `
-                                <div class="checklist-item ${step.critical ? 'critical' : ''}">
-                                    <div class="checklist-step-name">
-                                        <span class="step-number">Step ${index + 1}:</span>
-                                        ${step.step} ${criticalBadge}
-                                    </div>
-                                    <div class="checklist-step-actions">
-                                        <button class="step-btn step-btn-pass" onclick="editChecklistStep('${item.docId}', ${index})">✏️ 編輯</button>
-                                        <button class="step-btn step-btn-fail" onclick="deleteChecklistStep('${item.docId}', ${index})">🗑️ 刪除</button>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-
-                        checklistHtml = `
-                            <div class="checklist-container">
-                                <div class="checklist-header">📋 評核步驟 Checklist</div>
-                                ${stepsHtml}
-                                <button class="btn btn-success btn-small" style="margin-top: 10px;" onclick="addChecklistStep('${item.docId}')">➕ 新增步驟</button>
-                            </div>
-                        `;
+                    // 檢查職位是否符合
+                    if (item.positions && item.positions.length > 0) {
+                        if (!item.positions.includes(userData.position)) {
+                            continue; // 跳過不適用的職位
+                        }
                     }
 
-                    itemsHtml.push(`
-                        <div class="item-detail-card">
-                            <div class="item-header">
-                                <div class="item-name">${item.name}</div>
-                                <div style="display: flex; gap: 10px;">
-                                    ${!item.hasChecklist ? `<button class="btn btn-info btn-small" onclick="convertToChecklist('${item.docId}')">📋 轉換為 Checklist</button>` : ''}
-                                    <button class="btn btn-danger btn-small" onclick="deleteTrainingItem('${item.docId}', '${item.name}')">🗑️ 刪除項目</button>
-                                </div>
+                    // 計算截止日期
+                    let deadline = null;
+                    if (item.deadlineValue && item.deadlineUnit) {
+                        deadline = new Date(joinDate);
+                        if (item.deadlineUnit === 'day') {
+                            deadline.setDate(deadline.getDate() + item.deadlineValue);
+                        } else if (item.deadlineUnit === 'week') {
+                            deadline.setDate(deadline.getDate() + (item.deadlineValue * 7));
+                        } else if (item.deadlineUnit === 'month') {
+                            deadline.setMonth(deadline.getMonth() + item.deadlineValue);
+                        }
+                    }
+
+                    // 判斷狀態
+                    let status = 'pending';
+                    let statusText = '⏳ 待完成';
+                    let statusClass = '';
+
+                    const record = records[doc.id];
+                    if (item.hasChecklist && record?.checklistStatus) {
+                        const allCriticalPassed = item.checklist.every((step, index) => {
+                            if (!step.critical) return true;
+                            return record.checklistStatus[index] === 'pass';
+                        });
+
+                        const hasCriticalFailed = item.checklist.some((step, index) => {
+                            if (!step.critical) return false;
+                            return record.checklistStatus[index] === 'fail';
+                        });
+
+                        if (allCriticalPassed) {
+                            status = 'completed';
+                            statusText = '✅ 已完成';
+                            statusClass = 'completed';
+                        } else if (hasCriticalFailed) {
+                            status = 'failed';
+                            statusText = '❌ 不合格';
+                            statusClass = 'overdue';
+                        }
+                    }
+
+                    // 檢查是否逾期
+                    if (deadline && status === 'pending' && today > deadline) {
+                        statusClass = 'overdue';
+                        statusText = '⚠️ 已逾期';
+                    }
+
+                    timelineItems.push({
+                        name: item.name,
+                        deadline: deadline,
+                        status: status,
+                        statusText: statusText,
+                        statusClass: statusClass,
+                        categoryId: item.categoryId
+                    });
+                }
+
+                // 按截止日期排序
+                timelineItems.sort((a, b) => {
+                    if (!a.deadline) return 1;
+                    if (!b.deadline) return -1;
+                    return a.deadline - b.deadline;
+                });
+
+                // 顯示時間表
+                const timelineHtml = timelineItems.length > 0 ? timelineItems.map(item => {
+                    const deadlineStr = item.deadline ? 
+                        `截止日期: ${item.deadline.toLocaleDateString('zh-HK')}` : 
+                        '無截止日期';
+
+                    return `
+                        <div class="timeline-item ${item.statusClass}">
+                            <div class="timeline-item-info">
+                                <div class="timeline-item-name">${item.name}</div>
+                                <div class="timeline-item-deadline">${deadlineStr}</div>
                             </div>
-                            ${checklistHtml}
-                        </div>
-                    `);
-                });
-
-                if (itemsHtml.length === 0) {
-                    itemsHtml.push('<p class="no-data-message">📭 此分類尚無培訓項目</p>');
-                }
-
-                document.getElementById('categoryDetailContent').innerHTML = itemsHtml.join('');
-            } catch (error) {
-                console.error('載入分類詳情失敗:', error);
-                showToast('❌ 載入失敗', 'error');
-            }
-        }
-
-        // ==================== 返回 Dashboard ====================
-        function backToDashboard() {
-            showTrainingManage();
-        }
-
-        // ==================== 顯示新增分類視窗 ====================
-        function showAddCategoryModal() {
-            selectedEmoji = '📚';
-            
-            const emojiOptions = EMOJI_LIST.map(emoji => 
-                `<div class="emoji-option ${emoji === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${emoji}')">${emoji}</div>`
-            ).join('');
-
-            const modalBody = `
-                <div class="input-group">
-                    <label>📝 分類名稱</label>
-                    <input type="text" id="newCategoryName" placeholder="請輸入分類名稱">
-                </div>
-                <div class="input-group">
-                    <label>😀 選擇 Emoji</label>
-                    <div class="emoji-picker" id="emojiPicker">
-                        ${emojiOptions}
-                    </div>
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-success" onclick="createCategory()">✅ 新增</button>
-                    <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-                </div>
-            `;
-
-            showModal('➕ 新增培訓分類', modalBody);
-        }
-
-        // ==================== 選擇 Emoji ====================
-        function selectEmoji(emoji) {
-            selectedEmoji = emoji;
-            document.querySelectorAll('.emoji-option').forEach(el => {
-                el.classList.remove('selected');
-            });
-            event.target.classList.add('selected');
-        }
-
-        // ==================== 創建培訓分類 ====================
-        async function createCategory() {
-            const name = document.getElementById('newCategoryName').value.trim();
-
-            if (!name) {
-                showToast('❌ 請輸入分類名稱', 'error');
-                return;
-            }
-
-            try {
-                const categoriesSnapshot = await db.collection('trainingCategories').get();
-                
-                let maxOrder = 0;
-                categoriesSnapshot.forEach(doc => {
-                    const order = doc.data().order || 0;
-                    if (order > maxOrder) maxOrder = order;
-                });
-
-                await db.collection('trainingCategories').add({
-                    name: name,
-                    emoji: selectedEmoji,
-                    order: maxOrder + 1,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                showToast('✅ 分類新增成功', 'success');
-                closeModal();
-                loadCategoryDashboard();
-            } catch (error) {
-                console.error('新增分類失敗:', error);
-                showToast('❌ 新增分類失敗', 'error');
-            }
-        }
-
-        // ==================== 刪除培訓分類 ====================
-        async function deleteCategory(docId, name) {
-            if (!confirm(`❓ 確定要刪除分類「${name}」嗎？\n⚠️ 分類下的所有培訓項目也會被刪除！`)) {
-                return;
-            }
-
-            try {
-                const itemsSnapshot = await db.collection('trainingItems')
-                    .where('categoryId', '==', docId)
-                    .get();
-
-                const batch = db.batch();
-                itemsSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                
-                batch.delete(db.collection('trainingCategories').doc(docId));
-                
-                await batch.commit();
-
-                showToast('✅ 分類已刪除', 'success');
-                loadCategoryDashboard();
-            } catch (error) {
-                console.error('刪除分類失敗:', error);
-                showToast('❌ 刪除分類失敗', 'error');
-            }
-        }
-
-        // ==================== 顯示新增項目視窗 ====================
-        function showAddItemModal() {
-            const modalBody = `
-                <div class="input-group">
-                    <label>📝 項目名稱</label>
-                    <input type="text" id="newItemName" placeholder="請輸入培訓項目名稱">
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
-                    <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
-                </div>
-                <div id="checklistInputGroup" style="margin-top: 15px;">
-                    <div class="input-group">
-                        <label>📋 Checklist 步驟</label>
-                        <div id="checklistStepsContainer">
-                            <!-- 動態生成 -->
-                        </div>
-                        <button class="btn btn-success btn-small" style="margin-top: 10px;" onclick="addNewChecklistStep()">➕ 新增步驟</button>
-                    </div>
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-success" onclick="createTrainingItem()">✅ 新增</button>
-                    <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-                </div>
-            `;
-
-            showModal('➕ 新增培訓項目', modalBody);
-            checklistSteps = [];
-            addNewChecklistStep(); // 預設新增一個步驟
-        }
-
-        // ==================== 切換 Checklist 輸入 ====================
-        function toggleChecklistInput() {
-            const checked = document.getElementById('hasChecklistCheck').checked;
-            document.getElementById('checklistInputGroup').style.display = checked ? 'block' : 'none';
-        }
-
-        // ==================== 新增 Checklist 步驟 ====================
-        function addNewChecklistStep() {
-            checklistSteps.push({ step: '', critical: false });
-            renderChecklistSteps();
-        }
-
-        // ==================== 渲染 Checklist 步驟 ====================
-        function renderChecklistSteps() {
-            const container = document.getElementById('checklistStepsContainer');
-            
-            const stepsHtml = checklistSteps.map((step, index) => `
-                <div class="step-edit-item ${step.critical ? 'critical' : ''}" style="margin-bottom: 12px;">
-                    <div class="step-edit-header">
-                        <span class="step-number">Step ${index + 1}:</span>
-                        <input type="text" data-index="${index}" value="${step.step}" 
-                               placeholder="輸入步驟內容" 
-                               style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;"
-                               onchange="updateChecklistStep(${index}, this.value)">
-                        <button class="btn btn-danger btn-small" onclick="removeChecklistStep(${index})">🗑️</button>
-                    </div>
-                    <div class="checkbox-group" style="margin-top: 8px; margin-left: 80px;">
-                        <input type="checkbox" id="critical_${index}" ${step.critical ? 'checked' : ''} 
-                               onchange="toggleCritical(${index})">
-                        <label for="critical_${index}">⚠️ Critical（必需合格才能通過培訓）</label>
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = stepsHtml;
-        }
-
-        // ==================== 更新 Checklist 步驟 ====================
-        function updateChecklistStep(index, value) {
-            checklistSteps[index].step = value;
-        }
-
-        // ==================== 切換 Critical 狀態 ====================
-        function toggleCritical(index) {
-            checklistSteps[index].critical = !checklistSteps[index].critical;
-            renderChecklistSteps();
-        }
-
-        // ==================== 移除 Checklist 步驟 ====================
-        function removeChecklistStep(index) {
-            checklistSteps.splice(index, 1);
-            renderChecklistSteps();
-        }
-
-        // ==================== 創建培訓項目 ====================
-        async function createTrainingItem() {
-            const name = document.getElementById('newItemName').value.trim();
-            const hasChecklist = document.getElementById('hasChecklistCheck').checked;
-
-            if (!name) {
-                showToast('❌ 請輸入項目名稱', 'error');
-                return;
-            }
-
-            let itemData = {
-                categoryId: currentCategoryId,
-                name: name,
-                hasChecklist: hasChecklist,
-                hasDeadline: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            if (hasChecklist) {
-                if (checklistSteps.length === 0 || checklistSteps.some(s => !s.step.trim())) {
-                    showToast('❌ 請至少新增一個步驟並填寫內容', 'error');
-                    return;
-                }
-
-                itemData.checklist = checklistSteps;
-            }
-
-            try {
-                const itemsSnapshot = await db.collection('trainingItems')
-                    .where('categoryId', '==', currentCategoryId)
-                    .get();
-
-                let maxOrder = 0;
-                itemsSnapshot.forEach(doc => {
-                    const order = doc.data().order || 0;
-                    if (order > maxOrder) maxOrder = order;
-                });
-
-                itemData.order = maxOrder + 1;
-
-                await db.collection('trainingItems').add(itemData);
-
-                showToast('✅ 培訓項目新增成功', 'success');
-                closeModal();
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('新增培訓項目失敗:', error);
-                showToast('❌ 新增培訓項目失敗', 'error');
-            }
-        }
-
-        // ==================== 轉換為 Checklist ====================
-        async function convertToChecklist(itemId) {
-            if (!confirm('❓ 確定要將此項目轉換為 Checklist 格式嗎？')) {
-                return;
-            }
-
-            try {
-                await db.collection('trainingItems').doc(itemId).update({
-                    hasChecklist: true,
-                    checklist: [
-                        { step: 'Step 1: 請編輯此步驟', critical: false }
-                    ]
-                });
-
-                showToast('✅ 已轉換為 Checklist 格式', 'success');
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('轉換失敗:', error);
-                showToast('❌ 轉換失敗', 'error');
-            }
-        }
-
-        // ==================== 新增 Checklist 步驟（編輯現有項目）====================
-        async function addChecklistStep(itemId) {
-            try {
-                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
-                const item = itemDoc.data();
-
-                const newStep = { step: `新步驟`, critical: false };
-                const updatedChecklist = [...(item.checklist || []), newStep];
-
-                await db.collection('trainingItems').doc(itemId).update({
-                    checklist: updatedChecklist
-                });
-
-                showToast('✅ 步驟已新增', 'success');
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('新增步驟失敗:', error);
-                showToast('❌ 新增步驟失敗', 'error');
-            }
-        }
-
-        // ==================== 編輯 Checklist 步驟 ====================
-        async function editChecklistStep(itemId, stepIndex) {
-            try {
-                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
-                const item = itemDoc.data();
-                const step = item.checklist[stepIndex];
-
-                const modalBody = `
-                    <div class="input-group">
-                        <label>📝 步驟內容</label>
-                        <input type="text" id="editStepContent" value="${step.step}" placeholder="請輸入步驟內容">
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="editStepCritical" ${step.critical ? 'checked' : ''}>
-                        <label for="editStepCritical">⚠️ Critical（必需合格才能通過培訓）</label>
-                    </div>
-                    <div class="modal-buttons">
-                        <button class="btn btn-success" onclick="saveEditedStep('${itemId}', ${stepIndex})">✅ 儲存</button>
-                        <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-                    </div>
-                `;
-
-                showModal('✏️ 編輯步驟', modalBody);
-            } catch (error) {
-                console.error('載入步驟失敗:', error);
-                showToast('❌ 載入步驟失敗', 'error');
-            }
-        }
-
-        // ==================== 儲存編輯的步驟 ====================
-        async function saveEditedStep(itemId, stepIndex) {
-            const content = document.getElementById('editStepContent').value.trim();
-            const critical = document.getElementById('editStepCritical').checked;
-
-            if (!content) {
-                showToast('❌ 請輸入步驟內容', 'error');
-                return;
-            }
-
-            try {
-                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
-                const item = itemDoc.data();
-                const updatedChecklist = [...item.checklist];
-                
-                updatedChecklist[stepIndex] = {
-                    step: content,
-                    critical: critical
-                };
-
-                await db.collection('trainingItems').doc(itemId).update({
-                    checklist: updatedChecklist
-                });
-
-                showToast('✅ 步驟已更新', 'success');
-                closeModal();
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('更新步驟失敗:', error);
-                showToast('❌ 更新步驟失敗', 'error');
-            }
-        }
-
-        // ==================== 刪除 Checklist 步驟 ====================
-        async function deleteChecklistStep(itemId, stepIndex) {
-            if (!confirm('❓ 確定要刪除此步驟嗎？')) {
-                return;
-            }
-
-            try {
-                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
-                const item = itemDoc.data();
-                const updatedChecklist = item.checklist.filter((_, index) => index !== stepIndex);
-
-                await db.collection('trainingItems').doc(itemId).update({
-                    checklist: updatedChecklist
-                });
-
-                showToast('✅ 步驟已刪除', 'success');
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('刪除步驟失敗:', error);
-                showToast('❌ 刪除步驟失敗', 'error');
-            }
-        }
-
-        // ==================== 刪除培訓項目 ====================
-        async function deleteTrainingItem(docId, name) {
-            if (!confirm(`❓ 確定要刪除培訓項目「${name}」嗎？`)) {
-                return;
-            }
-
-            try {
-                await db.collection('trainingItems').doc(docId).delete();
-                showToast('✅ 培訓項目已刪除', 'success');
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('刪除培訓項目失敗:', error);
-                showToast('❌ 刪除培訓項目失敗', 'error');
-            }
-        }
-
-        // ==================== 顯示員工列表 ====================
-        async function showStaffList(level) {
-            currentStaffLevel = level;
-            
-            const levelNames = {
-                'WM': 'WM (病房經理)',
-                'APN': 'APN (資深護師)',
-                'RN': 'RN (註冊護士)',
-                'PCA1': 'PCA1',
-                'PCA2': 'PCA2',
-                'PCA3': 'PCA3',
-                'OTA': 'OTA'
-            };
-            
-            document.getElementById('staffListTitle').textContent = `📊 ${levelNames[level]} - 員工列表`;
-            showPage('staffListPage');
-
-            try {
-                const accountsSnapshot = await db.collection('accounts')
-                    .where('level', '==', level)
-                    .where('role', '==', 'staff')
-                    .get();
-
-                const staffListHtml = [];
-
-                accountsSnapshot.forEach(doc => {
-                    const account = doc.data();
-                    staffListHtml.push(`
-                        <div class="staff-card level-${level}" onclick="showTrainingProgress('${doc.id}')">
-                            <div class="staff-card-name">👤 ${account.name}</div>
-                            <div class="staff-card-info">
-                                📅 入職日期: ${account.joinDate || '未設定'}
+                            <div class="timeline-item-status" style="background: ${getStatusColor(item.status)}; color: white;">
+                                ${item.statusText}
                             </div>
                         </div>
-                    `);
-                });
+                    `;
+                }).join('') : '<div style="text-align: center; color: #999; padding: 20px;">暫無重要評核項目</div>';
 
-                if (staffListHtml.length === 0) {
-                    staffListHtml.push('<p class="no-data-message">📭 此職級尚無員工</p>');
-                }
+                document.getElementById('importantTimeline').innerHTML = timelineHtml;
 
-                document.getElementById('staffList').innerHTML = staffListHtml.join('');
             } catch (error) {
-                console.error('載入員工列表失敗:', error);
-                showToast('❌ 載入員工列表失敗', 'error');
+                console.error('載入重要評核時間表失敗:', error);
             }
         }
 
-        // ==================== 顯示培訓進度 Dashboard ====================
-        async function showTrainingProgress(staffId) {
+        function getStatusColor(status) {
+            const colors = {
+                'completed': '#2ed573',
+                'failed': '#ff4757',
+                'pending': '#ffa502'
+            };
+            return colors[status] || '#999';
+        }
+
+        async function loadStaffGrid() {
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                const users = [];
+                usersSnapshot.forEach(doc => {
+                    users.push({ docId: doc.id, ...doc.data() });
+                });
+
+                const gridHtml = users.map(user => `
+                    <div class="staff-card ${user.staffId === currentStaffId ? 'selected' : ''}" 
+                         onclick="selectStaff('${user.staffId}')">
+                        <div class="staff-name">${user.name}</div>
+                        <div class="staff-role">${user.staffId}</div>
+                        <div class="staff-role">${user.position || ''}</div>
+                    </div>
+                `).join('');
+
+                document.getElementById('staffGrid').innerHTML = gridHtml;
+            } catch (error) {
+                console.error('載入員工清單失敗:', error);
+            }
+        }
+
+        async function selectStaff(staffId) {
             currentStaffId = staffId;
-            showPage('trainingProgressPage');
+            document.querySelectorAll('.staff-card').forEach(card => card.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            await displayProgress(staffId);
+            await loadImportantTimeline(); // 重新載入時間表
+        }
 
+        async function displayProgress(staffId) {
             try {
-                const staffDoc = await db.collection('accounts').doc(staffId).get();
-                const staff = staffDoc.data();
-
-                document.getElementById('progressStaffName').textContent = `${staff.name} - 培訓進度`;
-
                 const categoriesSnapshot = await db.collection('trainingCategories').get();
-                
                 const categories = [];
                 categoriesSnapshot.forEach(doc => {
                     categories.push({ docId: doc.id, ...doc.data() });
                 });
                 categories.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                const progressHtml = [];
+                let progressHtml = '';
 
                 for (const category of categories) {
                     const itemsSnapshot = await db.collection('trainingItems')
                         .where('categoryId', '==', category.docId)
                         .get();
+
+                    const items = [];
+                    itemsSnapshot.forEach(doc => {
+                        items.push({ docId: doc.id, ...doc.data() });
+                    });
 
                     const recordsSnapshot = await db.collection('trainingRecords')
                         .where('userId', '==', staffId)
@@ -2130,151 +1541,212 @@
                     });
 
                     let completedCount = 0;
-                    let totalCount = itemsSnapshot.size;
-
-                    itemsSnapshot.forEach(doc => {
-                        const item = doc.data();
-                        const record = records[doc.id];
-                        
-                        if (item.hasChecklist && record && record.checklistStatus) {
-                            const allCriticalPassed = item.checklist.every((step, index) => {
-                                if (!step.critical) return true;
-                                return record.checklistStatus[index] === 'pass';
-                            });
-                            
-                            if (allCriticalPassed && record.status === 'completed') {
-                                completedCount++;
+                    items.forEach(item => {
+                        if (item.hasChecklist) {
+                            const record = records[item.docId];
+                            if (record?.checklistStatus) {
+                                const allCriticalPassed = item.checklist.every((step, index) => {
+                                    if (!step.critical) return true;
+                                    return record.checklistStatus[index] === 'pass';
+                                });
+                                if (allCriticalPassed) completedCount++;
                             }
-                        } else if (!item.hasChecklist && record && record.status === 'completed') {
-                            completedCount++;
+                        } else {
+                            if (records[item.docId]?.status === 'completed') completedCount++;
                         }
                     });
 
+                    const totalCount = items.length;
                     const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-                    const isCompleted = percentage === 100;
 
-                    const circumference = 2 * Math.PI * 60;
-                    const offset = circumference - (percentage / 100) * circumference;
-
-                    progressHtml.push(`
-                        <div class="training-card ${isCompleted ? 'completed' : 'in-progress'}" 
-                             onclick="showCategoryEvaluation('${category.docId}')">
-                            <div class="card-icon">${category.emoji}</div>
-                            <div class="card-title">${category.name}</div>
-                            <div class="card-progress">
-                                <svg class="progress-ring" width="150" height="150">
-                                    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"/>
-                                    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"
-                                        stroke-dasharray="${circumference}" 
-                                        stroke-dashoffset="${offset}"/>
-                                </svg>
-                                <div class="progress-text">
-                                    <div class="progress-percent">${percentage}%</div>
-                                    <div class="progress-label">${completedCount}/${totalCount} 項目完成</div>
-                                </div>
+                    progressHtml += `
+                        <div class="progress-card">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">
+                                ${category.emoji} ${category.name}
+                            </h3>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>進度: ${completedCount} / ${totalCount}</span>
+                                <span style="font-weight: bold; color: #667eea;">${percentage}%</span>
                             </div>
-                            <div class="card-stats">${completedCount}/${totalCount} 項目已完成</div>
-                            ${isCompleted ? '<div class="card-success-badge">✅ 全部完成！</div>' : ''}
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: ${percentage}%">${percentage}%</div>
+                            </div>
+                            <button class="btn btn-small" style="margin-top: 15px;" 
+                                    onclick="showCategoryEvaluation('${category.docId}')">
+                                📝 進入評核
+                            </button>
                         </div>
-                    `);
+                    `;
                 }
 
-                if (progressHtml.length === 0) {
-                    progressHtml.push('<p class="no-data-message">📭 尚無培訓項目</p>');
-                }
-
-                document.getElementById('trainingProgress').innerHTML = progressHtml.join('');
+                document.getElementById('progressContent').innerHTML = progressHtml;
             } catch (error) {
-                console.error('載入培訓進度失敗:', error);
-                showToast('❌ 載入培訓進度失敗', 'error');
+                console.error('顯示進度失敗:', error);
+                showToast('❌ 載入失敗', 'error');
             }
         }
 
- // ==================== 顯示分類評核（餅圖設計）====================
-async function showCategoryEvaluation(categoryId) {
-    currentCategoryId = categoryId;
-    showPage('itemEvaluationPage');
+        // ==================== 顯示分類評核（餅圖設計）====================
+        async function showCategoryEvaluation(categoryId) {
+            currentCategoryId = categoryId;
+            showPage('itemEvaluationPage');
 
-    try {
-        const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
-        const category = categoryDoc.data();
+            try {
+                const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
+                const category = categoryDoc.data();
 
-        document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
+                document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
 
-        const itemsSnapshot = await db.collection('trainingItems')
-            .where('categoryId', '==', categoryId)
-            .get();
+                const itemsSnapshot = await db.collection('trainingItems')
+                    .where('categoryId', '==', categoryId)
+                    .get();
 
-        const items = [];
-        itemsSnapshot.forEach(doc => {
-            items.push({ docId: doc.id, ...doc.data() });
-        });
-        items.sort((a, b) => (a.order || 0) - (b.order || 0));
+                const items = [];
+                itemsSnapshot.forEach(doc => {
+                    items.push({ docId: doc.id, ...doc.data() });
+                });
+                items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        const recordsSnapshot = await db.collection('trainingRecords')
-            .where('userId', '==', currentStaffId)
-            .get();
+                const recordsSnapshot = await db.collection('trainingRecords')
+                    .where('userId', '==', currentStaffId)
+                    .get();
 
-        const records = {};
-        recordsSnapshot.forEach(doc => {
-            const record = doc.data();
-            records[record.itemId] = { docId: doc.id, ...record };
-        });
-
-        // 餅圖顯示
-        const pieHtml = items.map(item => {
-            const record = records[item.docId];
-            let status = 'pending';
-            let statusText = '⏳ 待完成';
-            let statusClass = 'pending';
-
-            if (item.hasChecklist && record?.checklistStatus) {
-                const allCriticalPassed = item.checklist.every((step, index) => {
-                    if (!step.critical) return true;
-                    return record.checklistStatus[index] === 'pass';
+                const records = {};
+                recordsSnapshot.forEach(doc => {
+                    const record = doc.data();
+                    records[record.itemId] = { docId: doc.id, ...record };
                 });
 
-                const hasCriticalFailed = item.checklist.some((step, index) => {
-                    if (!step.critical) return false;
-                    return record.checklistStatus[index] === 'fail';
-                });
+                // 餅圖顯示
+                const pieHtml = items.map(item => {
+                    const record = records[item.docId];
+                    let status = 'pending';
+                    let statusText = '⏳ 待完成';
+                    let statusClass = 'pending';
 
-                if (hasCriticalFailed) {
-                    status = 'fail';
-                    statusText = '❌ 不合格';
-                    statusClass = 'fail';
-                } else if (allCriticalPassed) {
-                    status = 'pass';
-                    statusText = '✅ 合格';
-                    statusClass = 'pass';
-                }
+                    if (item.hasChecklist && record?.checklistStatus) {
+                        const allCriticalPassed = item.checklist.every((step, index) => {
+                            if (!step.critical) return true;
+                            return record.checklistStatus[index] === 'pass';
+                        });
+
+                        const hasCriticalFailed = item.checklist.some((step, index) => {
+                            if (!step.critical) return false;
+                            return record.checklistStatus[index] === 'fail';
+                        });
+
+                        if (hasCriticalFailed) {
+                            status = 'fail';
+                            statusText = '❌ 不合格';
+                            statusClass = 'fail';
+                        } else if (allCriticalPassed) {
+                            status = 'pass';
+                            statusText = '✅ 合格';
+                            statusClass = 'pass';
+                        }
+                    }
+
+                    return `
+                        <div class="item-pie-card status-${statusClass}" onclick="expandItemEvaluation('${item.docId}')">
+                            <div class="pie-icon">📋</div>
+                            <div class="pie-title">${item.name}</div>
+                            <div class="pie-status ${statusClass}">${statusText}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('evaluationContent').innerHTML = `
+                    <div class="item-pie-grid">
+                        ${pieHtml}
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('載入評核內容失敗:', error);
+                showToast('❌ 載入失敗', 'error');
             }
+        }
 
-            return `
-                <div class="item-pie-card status-${statusClass}" onclick="expandItemEvaluation('${item.docId}')">
-                    <div class="pie-icon">📋</div>
-                    <div class="pie-title">${item.name}</div>
-                    <div class="pie-status ${statusClass}">${statusText}</div>
-                </div>
-            `;
-        }).join('');
+        // ==================== 展開培訓項目評核 ====================
+        async function expandItemEvaluation(itemId) {
+            try {
+                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+                const item = itemDoc.data();
 
-        document.getElementById('evaluationContent').innerHTML = `
-            <div class="item-pie-grid">
-                ${pieHtml}
-            </div>
-            <div id="expandedEvaluation"></div>
-        `;
+                const recordsSnapshot = await db.collection('trainingRecords')
+                    .where('userId', '==', currentStaffId)
+                    .where('itemId', '==', itemId)
+                    .limit(1)
+                    .get();
 
-    } catch (error) {
-        console.error('載入評核內容失敗:', error);
-        showToast('❌ 載入失敗', 'error');
-    }
-}
+                const record = recordsSnapshot.empty ? null : recordsSnapshot.docs[0].data();
+                const checklistStatus = record?.checklistStatus || {};
 
-        // ==================== 更新 Checklist 步驟狀態 ====================
+                if (!item.hasChecklist || !item.checklist) {
+                    showToast('⚠️ 此項目無評核步驟', 'warning');
+                    return;
+                }
+
+                const checklistHtml = item.checklist.map((step, index) => {
+                    const status = checklistStatus[index] || 'pending';
+                    let statusClass = '';
+                    let statusText = '';
+
+                    if (status === 'pass') {
+                        statusClass = 'completed';
+                        statusText = '✅ 合格';
+                    } else if (status === 'fail') {
+                        statusClass = 'failed';
+                        statusText = '❌ 不合格';
+                    } else {
+                        statusText = '⏳ 待評核';
+                    }
+
+                    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
+
+                    return `
+                        <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
+                            <div class="checklist-step-name">
+                                ${step.step} ${criticalBadge} ${statusText}
+                            </div>
+                            ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                                <div class="checklist-step-actions">
+                                    <button class="step-btn step-btn-pass" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'pass')">✅ 合格</button>
+                                    <button class="step-btn step-btn-fail" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'fail')">❌ 不合格</button>
+                                    <button class="step-btn step-btn-reset" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'pending')">🔄 重設</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('expandedEvaluation').innerHTML = `
+                    <div class="item-evaluation-expanded">
+                        <div class="evaluation-header">
+                            <div class="evaluation-title">📋 ${item.name}</div>
+                            <button class="btn btn-secondary btn-small" onclick="closeExpandedEvaluation()">❌ 關閉</button>
+                        </div>
+                        <div class="checklist-container">
+                            <div class="checklist-header">評核步驟 Checklist</div>
+                            ${checklistHtml}
+                        </div>
+                    </div>
+                `;
+
+                // 平滑滾動到展開的內容
+                document.getElementById('expandedEvaluation').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } catch (error) {
+                console.error('展開評核失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        // ==================== 關閉展開的評核 ====================
+        function closeExpandedEvaluation() {
+            document.getElementById('expandedEvaluation').innerHTML = '';
+        }
+
         async function updateChecklistStepStatus(itemId, stepIndex, status) {
             try {
                 const recordsSnapshot = await db.collection('trainingRecords')
@@ -2286,322 +1758,718 @@ async function showCategoryEvaluation(categoryId) {
                 let checklistStatus = {};
 
                 if (!recordsSnapshot.empty) {
-                    const record = recordsSnapshot.docs[0].data();
-                    checklistStatus = record.checklistStatus || {};
-                }
+                    const recordDoc = recordsSnapshot.docs[0];
+                    checklistStatus = recordDoc.data().checklistStatus || {};
+                    checklistStatus[stepIndex] = status;
 
-                if (status === 'pending') {
-                    delete checklistStatus[stepIndex];
+                    await db.collection('trainingRecords').doc(recordDoc.id).update({
+                        checklistStatus: checklistStatus,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: currentUser.staffId
+                    });
                 } else {
                     checklistStatus[stepIndex] = status;
-                }
-
-                const recordData = {
-                    userId: currentStaffId,
-                    itemId: itemId,
-                    checklistStatus: checklistStatus,
-                    status: 'pending',
-                    evaluatedBy: currentUser.docId,
-                    evaluatedAt: new Date().toISOString()
-                };
-
-                if (recordsSnapshot.empty) {
-                    await db.collection('trainingRecords').add(recordData);
-                } else {
-                    await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
+                    await db.collection('trainingRecords').add({
+                        userId: currentStaffId,
+                        itemId: itemId,
+                        checklistStatus: checklistStatus,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: currentUser.staffId
+                    });
                 }
 
                 showToast('✅ 步驟評核已更新', 'success');
                 closeExpandedEvaluation();
                 showCategoryEvaluation(currentCategoryId);
+                loadImportantTimeline(); // 重新載入時間表
+
             } catch (error) {
-                console.error('更新步驟狀態失敗:', error);
+                console.error('更新評核狀態失敗:', error);
                 showToast('❌ 更新失敗', 'error');
             }
         }
 
-        // ==================== 標記項目完成 ====================
-        async function markItemComplete(itemId) {
-            try {
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', currentStaffId)
-                    .where('itemId', '==', itemId)
-                    .limit(1)
-                    .get();
-
-                const recordData = {
-                    status: 'completed',
-                    evaluatedBy: currentUser.docId,
-                    evaluatedAt: new Date().toISOString()
-                };
-
-                if (recordsSnapshot.empty) {
-                    recordData.userId = currentStaffId;
-                    recordData.itemId = itemId;
-                    await db.collection('trainingRecords').add(recordData);
-                } else {
-                    await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
-                }
-
-                showToast('✅ 項目已標記完成', 'success');
-                showCategoryEvaluation(currentCategoryId);
-            } catch (error) {
-                console.error('標記完成失敗:', error);
-                showToast('❌ 操作失敗', 'error');
-            }
-        }
-
-        // ==================== 標記項目未完成（重設）====================
-        async function markItemIncomplete(itemId) {
-            try {
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', currentStaffId)
-                    .where('itemId', '==', itemId)
-                    .limit(1)
-                    .get();
-
-                if (!recordsSnapshot.empty) {
-                    await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).delete();
-                }
-
-                showToast('✅ 項目已重設', 'success');
-                showCategoryEvaluation(currentCategoryId);
-            } catch (error) {
-                console.error('重設失敗:', error);
-                showToast('❌ 操作失敗', 'error');
-            }
-        }
-
-        // ==================== 返回培訓進度 ====================
         function backToProgress() {
-            showTrainingProgress(currentStaffId);
+            showPage('progressPage');
+            loadProgress();
         }
 
-        // ==================== 返回員工列表 ====================
-        function backToStaffList() {
-            if (currentUser.role === 'staff') {
-                showMainPage();
-            } else {
-                showStaffList(currentStaffLevel);
-            }
-        }
-
-        // ==================== 展開培訓項目評核 ====================
-async function expandItemEvaluation(itemId) {
-    try {
-        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
-        const item = itemDoc.data();
-
-        const recordsSnapshot = await db.collection('trainingRecords')
-            .where('userId', '==', currentStaffId)
-            .where('itemId', '==', itemId)
-            .limit(1)
-            .get();
-
-        const record = recordsSnapshot.empty ? null : recordsSnapshot.docs[0].data();
-        const checklistStatus = record?.checklistStatus || {};
-
-        if (!item.hasChecklist || !item.checklist) {
-            showToast('⚠️ 此項目無評核步驟', 'warning');
-            return;
-        }
-
-        const checklistHtml = item.checklist.map((step, index) => {
-            const status = checklistStatus[index] || 'pending';
-            let statusClass = '';
-            let statusText = '';
-
-            if (status === 'pass') {
-                statusClass = 'completed';
-                statusText = '✅ 合格';
-            } else if (status === 'fail') {
-                statusClass = 'failed';
-                statusText = '❌ 不合格';
-            } else {
-                statusText = '⏳ 待評核';
-            }
-
-            const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
-
-            return `
-                <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
-                    <div class="checklist-step-name">
-                        ${step.step} ${criticalBadge} ${statusText}
-                    </div>
-                    ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                        <div class="checklist-step-actions">
-                            <button class="step-btn step-btn-pass" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'pass')">✅ 合格</button>
-                            <button class="step-btn step-btn-fail" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'fail')">❌ 不合格</button>
-                            <button class="step-btn step-btn-reset" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'pending')">🔄 重設</button>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }).join('');
-
-        document.getElementById('expandedEvaluation').innerHTML = `
-            <div class="item-evaluation-expanded">
-                <div class="evaluation-header">
-                    <div class="evaluation-title">📋 ${item.name}</div>
-                    <button class="btn btn-secondary btn-small" onclick="closeExpandedEvaluation()">❌ 關閉</button>
-                </div>
-                <div class="checklist-container">
-                    <div class="checklist-header">評核步驟 Checklist</div>
-                    ${checklistHtml}
-                </div>
-            </div>
-        `;
-
-        // 平滑滾動到展開的內容
-        document.getElementById('expandedEvaluation').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    } catch (error) {
-        console.error('展開評核失敗:', error);
-        showToast('❌ 載入失敗', 'error');
-    }
-}
-
-// ==================== 關閉展開的評核 ====================
-function closeExpandedEvaluation() {
-    document.getElementById('expandedEvaluation').innerHTML = '';
-}
-        
-        // ==================== 匯出 PDF ====================
-        async function exportToPDF() {
+        // ==================== 分類管理 ====================
+        async function loadCategories() {
             try {
-                showToast('📄 正在生成 PDF...', 'warning');
-
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-
-                const staffDoc = await db.collection('accounts').doc(currentStaffId).get();
-                const staff = staffDoc.data();
-
-                doc.setFontSize(20);
-                doc.text('TKOH OT Training System', 105, 20, { align: 'center' });
-                
-                doc.setFontSize(16);
-                doc.text(`Staff: ${staff.name}`, 105, 30, { align: 'center' });
-                doc.text(`Level: ${staff.level}`, 105, 40, { align: 'center' });
-                doc.text(`Join Date: ${staff.joinDate}`, 105, 50, { align: 'center' });
-
-                let yPos = 70;
-
-                const categoriesSnapshot = await db.collection('trainingCategories').get();
-                
+                const snapshot = await db.collection('trainingCategories').get();
                 const categories = [];
-                categoriesSnapshot.forEach(doc => {
+                snapshot.forEach(doc => {
                     categories.push({ docId: doc.id, ...doc.data() });
                 });
-                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-                
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', currentStaffId)
-                    .get();
 
-                const records = {};
-                recordsSnapshot.forEach(doc => {
-                    const record = doc.data();
-                    records[record.itemId] = record;
+                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                const html = categories.map(cat => `
+                    <div class="category-card" onclick="showCategoryItems('${cat.docId}')">
+                        <div class="category-actions">
+                            <button onclick="event.stopPropagation(); openEditCategoryModal('${cat.docId}')">✏️</button>
+                            <button onclick="event.stopPropagation(); deleteCategory('${cat.docId}')">🗑️</button>
+                        </div>
+                        <h3>${cat.emoji} ${cat.name}</h3>
+                        <p style="opacity: 0.8; margin-top: 10px;">點擊查看培訓項目</p>
+                    </div>
+                `).join('');
+
+                document.getElementById('categoryGrid').innerHTML = html;
+            } catch (error) {
+                console.error('載入分類失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        function openAddCategoryModal() {
+            document.getElementById('categoryEmoji').value = '';
+            document.getElementById('categoryName').value = '';
+            openModal('addCategoryModal');
+        }
+
+        async function addCategory() {
+            const emoji = document.getElementById('categoryEmoji').value.trim();
+            const name = document.getElementById('categoryName').value.trim();
+
+            if (!emoji || !name) {
+                showToast('⚠️ 請填寫完整資料', 'warning');
+                return;
+            }
+
+            try {
+                const snapshot = await db.collection('trainingCategories').get();
+                const order = snapshot.size;
+
+                await db.collection('trainingCategories').add({
+                    emoji: emoji,
+                    name: name,
+                    order: order,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                for (const category of categories) {
-                    if (yPos > 250) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
+                showToast('✅ 分類新增成功', 'success');
+                closeModal('addCategoryModal');
+                loadCategories();
+            } catch (error) {
+                console.error('新增分類失敗:', error);
+                showToast('❌ 新增失敗', 'error');
+            }
+        }
 
-                    doc.setFontSize(14);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(`${category.emoji} ${category.name}`, 20, yPos);
-                    yPos += 10;
+        async function openEditCategoryModal(categoryId) {
+            try {
+                const doc = await db.collection('trainingCategories').doc(categoryId).get();
+                const category = doc.data();
 
-                    const itemsSnapshot = await db.collection('trainingItems')
-                        .where('categoryId', '==', category.docId)
-                        .get();
+                currentCategoryId = categoryId;
+                document.getElementById('editCategoryEmoji').value = category.emoji;
+                document.getElementById('editCategoryName').value = category.name;
+                openModal('editCategoryModal');
+            } catch (error) {
+                console.error('載入分類資料失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
 
-                    const items = [];
-                    itemsSnapshot.forEach(doc => {
-                        items.push({ docId: doc.id, ...doc.data() });
-                    });
-                    items.sort((a, b) => (a.order || 0) - (b.order || 0));
+        async function updateCategory() {
+            const emoji = document.getElementById('editCategoryEmoji').value.trim();
+            const name = document.getElementById('editCategoryName').value.trim();
 
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'normal');
+            if (!emoji || !name) {
+                showToast('⚠️ 請填寫完整資料', 'warning');
+                return;
+            }
 
-                    items.forEach(item => {
-                        const record = records[item.docId];
+            try {
+                await db.collection('trainingCategories').doc(currentCategoryId).update({
+                    emoji: emoji,
+                    name: name,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-                        let status = 'Pending';
-                        if (item.hasChecklist && record?.checklistStatus) {
-                            const allCriticalPassed = item.checklist.every((step, index) => {
-                                if (!step.critical) return true;
-                                return record.checklistStatus[index] === 'pass';
-                            });
-                            status = allCriticalPassed && record.status === 'completed' ? 'Completed' : 'Pending';
-                        } else if (record) {
-                            status = record.status === 'completed' ? 'Completed' : 'Failed';
-                        }
+                showToast('✅ 分類更新成功', 'success');
+                closeModal('editCategoryModal');
+                loadCategories();
+            } catch (error) {
+                console.error('更新分類失敗:', error);
+                showToast('❌ 更新失敗', 'error');
+            }
+        }
 
-                        if (yPos > 270) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
+        async function deleteCategory(categoryId) {
+            if (!confirm('確定要刪除此分類嗎？此操作無法復原。')) return;
 
-                        doc.text(`- ${item.name}: ${status}`, 25, yPos);
-                        yPos += 7;
-                    });
+            try {
+                await db.collection('trainingCategories').doc(categoryId).delete();
+                showToast('✅ 分類已刪除', 'success');
+                loadCategories();
+            } catch (error) {
+                console.error('刪除分類失敗:', error);
+                showToast('❌ 刪除失敗', 'error');
+            }
+        }
 
-                    yPos += 5;
+        // ==================== 培訓項目管理 ====================
+        async function showCategoryItems(categoryId) {
+            currentCategoryId = categoryId;
+            showPage('itemsPage');
+
+            try {
+                const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
+                const category = categoryDoc.data();
+
+                document.getElementById('itemsCategoryTitle').textContent = `${category.emoji} ${category.name}`;
+
+                const snapshot = await db.collection('trainingItems')
+                    .where('categoryId', '==', categoryId)
+                    .get();
+
+                const items = [];
+                snapshot.forEach(doc => {
+                    items.push({ docId: doc.id, ...doc.data() });
+                });
+
+                items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                const html = items.map(item => {
+                    const checklistHtml = item.hasChecklist && item.checklist ? 
+                        `<div class="checklist-container">
+                            <div class="checklist-header">📋 評核步驟 Checklist</div>
+                            ${item.checklist.map(step => `
+                                <div class="checklist-item ${step.critical ? 'critical' : ''}">
+                                    ${step.step}
+                                    ${step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>` : '';
+
+                    const deadlineInfo = item.deadlineValue && item.deadlineUnit ?
+                        `<div style="margin-top: 10px; color: #666;">
+                            ⏰ 截止日期: 入職後 ${item.deadlineValue} ${getUnitText(item.deadlineUnit)} 內完成
+                        </div>` : '';
+
+                    const positionInfo = item.positions && item.positions.length > 0 ?
+                        `<div style="margin-top: 5px; color: #666;">
+                            📋 適用職位: ${item.positions.join(', ')}
+                        </div>` : '';
+
+                    const importantBadge = item.isImportant ?
+                        '<span class="badge" style="background: #ffa502; color: white; margin-left: 10px;">⭐ 重要評核</span>' : '';
+
+                    return `
+                        <div class="item-card">
+                            <div class="item-header">
+                                <h3>${item.name}${importantBadge}</h3>
+                                <div class="item-actions">
+                                    <button class="btn btn-small" onclick="openEditItemModal('${item.docId}')">✏️ 編輯</button>
+                                    <button class="btn btn-danger btn-small" onclick="deleteTrainingItem('${item.docId}')">🗑️ 刪除</button>
+                                </div>
+                            </div>
+                            <p style="color: #666; margin-top: 10px;">${item.description || ''}</p>
+                            ${deadlineInfo}
+                            ${positionInfo}
+                            ${checklistHtml}
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('itemsList').innerHTML = html || '<p style="text-align: center; color: #999;">暫無培訓項目</p>';
+
+            } catch (error) {
+                console.error('載入培訓項目失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        function getUnitText(unit) {
+            const units = {
+                'day': '日',
+                'week': '周',
+                'month': '月'
+            };
+            return units[unit] || '';
+        }
+
+        function openAddItemModal() {
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemDescription').value = '';
+            document.getElementById('deadlineValue').value = '';
+            document.getElementById('deadlineUnit').value = 'day';
+            document.getElementById('positionPCA').checked = false;
+            document.getElementById('positionOTA').checked = false;
+            document.getElementById('addToImportantTimeline').checked = false;
+            document.getElementById('itemHasChecklist').checked = false;
+            tempChecklist = [];
+            toggleChecklistInput();
+            updatePositionSelector();
+            openModal('addItemModal');
+        }
+
+        function togglePosition(position) {
+            const checkbox = document.getElementById(`position${position}`);
+            checkbox.checked = !checkbox.checked;
+            updatePositionSelector();
+        }
+
+        function toggleEditPosition(position) {
+            const checkbox = document.getElementById(`editPosition${position}`);
+            checkbox.checked = !checkbox.checked;
+            updateEditPositionSelector();
+        }
+
+        function updatePositionSelector() {
+            const pcaOption = document.querySelector('.position-option:has(#positionPCA)');
+            const otaOption = document.querySelector('.position-option:has(#positionOTA)');
+            
+            pcaOption.classList.toggle('selected', document.getElementById('positionPCA').checked);
+            otaOption.classList.toggle('selected', document.getElementById('positionOTA').checked);
+        }
+
+        function updateEditPositionSelector() {
+            const pcaOption = document.querySelector('.position-option:has(#editPositionPCA)');
+            const otaOption = document.querySelector('.position-option:has(#editPositionOTA)');
+            
+            pcaOption.classList.toggle('selected', document.getElementById('editPositionPCA').checked);
+            otaOption.classList.toggle('selected', document.getElementById('editPositionOTA').checked);
+        }
+
+        function toggleChecklistInput() {
+            const hasChecklist = document.getElementById('itemHasChecklist').checked;
+            document.getElementById('checklistInputArea').style.display = hasChecklist ? 'block' : 'none';
+            if (!hasChecklist) {
+                tempChecklist = [];
+                updateChecklistDisplay();
+            }
+        }
+
+        function toggleEditChecklistInput() {
+            const hasChecklist = document.getElementById('editItemHasChecklist').checked;
+            document.getElementById('editChecklistInputArea').style.display = hasChecklist ? 'block' : 'none';
+        }
+
+        function addChecklistStep() {
+            const stepInput = document.getElementById('newChecklistStep');
+            const isCritical = document.getElementById('newStepCritical').checked;
+            const stepText = stepInput.value.trim();
+
+            if (!stepText) {
+                showToast('⚠️ 請輸入評核步驟', 'warning');
+                return;
+            }
+
+            tempChecklist.push({
+                step: stepText,
+                critical: isCritical
+            });
+
+            stepInput.value = '';
+            document.getElementById('newStepCritical').checked = false;
+            updateChecklistDisplay();
+        }
+
+        function updateChecklistDisplay() {
+            const html = tempChecklist.map((step, index) => `
+                <div class="checklist-step-item">
+                    <span>
+                        ${step.step}
+                        ${step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : ''}
+                    </span>
+                    <button class="btn btn-danger btn-small" onclick="removeChecklistStep(${index})">🗑️</button>
+                </div>
+            `).join('');
+
+            document.getElementById('checklistStepsList').innerHTML = html || '<p style="text-align: center; color: #999;">暫無評核步驟</p>';
+        }
+
+        function removeChecklistStep(index) {
+            tempChecklist.splice(index, 1);
+            updateChecklistDisplay();
+        }
+
+        async function addTrainingItem() {
+            const name = document.getElementById('itemName').value.trim();
+            const description = document.getElementById('itemDescription').value.trim();
+            const deadlineValue = document.getElementById('deadlineValue').value;
+            const deadlineUnit = document.getElementById('deadlineUnit').value;
+            const hasChecklist = document.getElementById('itemHasChecklist').checked;
+            const isImportant = document.getElementById('addToImportantTimeline').checked;
+
+            const positions = [];
+            if (document.getElementById('positionPCA').checked) positions.push('PCA');
+            if (document.getElementById('positionOTA').checked) positions.push('OTA');
+
+            if (!name) {
+                showToast('⚠️ 請填寫項目名稱', 'warning');
+                return;
+            }
+
+            if (hasChecklist && tempChecklist.length === 0) {
+                showToast('⚠️ 請至少新增一個評核步驟', 'warning');
+                return;
+            }
+
+            try {
+                const snapshot = await db.collection('trainingItems')
+                    .where('categoryId', '==', currentCategoryId)
+                    .get();
+                const order = snapshot.size;
+
+                const itemData = {
+                    categoryId: currentCategoryId,
+                    name: name,
+                    description: description,
+                    order: order,
+                    hasChecklist: hasChecklist,
+                    isImportant: isImportant,
+                    positions: positions,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (deadlineValue) {
+                    itemData.deadlineValue = parseInt(deadlineValue);
+                    itemData.deadlineUnit = deadlineUnit;
                 }
 
-                doc.save(`${staff.name}_Training_Report.pdf`);
-                showToast('✅ PDF 已匯出', 'success');
+                if (hasChecklist) {
+                    itemData.checklist = tempChecklist;
+                }
+
+                await db.collection('trainingItems').add(itemData);
+
+                showToast('✅ 培訓項目新增成功', 'success');
+                closeModal('addItemModal');
+                showCategoryItems(currentCategoryId);
             } catch (error) {
-                console.error('匯出 PDF 失敗:', error);
-                showToast('❌ 匯出 PDF 失敗', 'error');
+                console.error('新增培訓項目失敗:', error);
+                showToast('❌ 新增失敗', 'error');
+            }
+        }
+
+        async function openEditItemModal(itemId) {
+            try {
+                const doc = await db.collection('trainingItems').doc(itemId).get();
+                const item = doc.data();
+
+                currentItemId = itemId;
+                document.getElementById('editItemName').value = item.name;
+                document.getElementById('editItemDescription').value = item.description || '';
+                document.getElementById('editDeadlineValue').value = item.deadlineValue || '';
+                document.getElementById('editDeadlineUnit').value = item.deadlineUnit || 'day';
+                document.getElementById('editItemHasChecklist').checked = item.hasChecklist || false;
+                document.getElementById('editAddToImportantTimeline').checked = item.isImportant || false;
+
+                // 設置職位選擇
+                document.getElementById('editPositionPCA').checked = item.positions?.includes('PCA') || false;
+                document.getElementById('editPositionOTA').checked = item.positions?.includes('OTA') || false;
+                updateEditPositionSelector();
+
+                tempEditChecklist = item.checklist ? [...item.checklist] : [];
+
+                toggleEditChecklistInput();
+                updateEditChecklistDisplay();
+
+                openModal('editItemModal');
+            } catch (error) {
+                console.error('載入項目資料失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        function addEditChecklistStep() {
+            const stepInput = document.getElementById('editNewChecklistStep');
+            const isCritical = document.getElementById('editNewStepCritical').checked;
+            const stepText = stepInput.value.trim();
+
+            if (!stepText) {
+                showToast('⚠️ 請輸入評核步驟', 'warning');
+                return;
+            }
+
+            tempEditChecklist.push({
+                step: stepText,
+                critical: isCritical
+            });
+
+            stepInput.value = '';
+            document.getElementById('editNewStepCritical').checked = false;
+            updateEditChecklistDisplay();
+        }
+
+        function updateEditChecklistDisplay() {
+            const html = tempEditChecklist.map((step, index) => `
+                <div class="checklist-step-item">
+                    <span>
+                        ${step.step}
+                        ${step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : ''}
+                    </span>
+                    <button class="btn btn-danger btn-small" onclick="removeEditChecklistStep(${index})">🗑️</button>
+                </div>
+            `).join('');
+
+            document.getElementById('editChecklistStepsList').innerHTML = html || '<p style="text-align: center; color: #999;">暫無評核步驟</p>';
+        }
+
+        function removeEditChecklistStep(index) {
+            tempEditChecklist.splice(index, 1);
+            updateEditChecklistDisplay();
+        }
+
+        async function updateTrainingItem() {
+            const name = document.getElementById('editItemName').value.trim();
+            const description = document.getElementById('editItemDescription').value.trim();
+            const deadlineValue = document.getElementById('editDeadlineValue').value;
+            const deadlineUnit = document.getElementById('editDeadlineUnit').value;
+            const hasChecklist = document.getElementById('editItemHasChecklist').checked;
+            const isImportant = document.getElementById('editAddToImportantTimeline').checked;
+
+            const positions = [];
+            if (document.getElementById('editPositionPCA').checked) positions.push('PCA');
+            if (document.getElementById('editPositionOTA').checked) positions.push('OTA');
+
+            if (!name) {
+                showToast('⚠️ 請填寫項目名稱', 'warning');
+                return;
+            }
+
+            if (hasChecklist && tempEditChecklist.length === 0) {
+                showToast('⚠️ 請至少新增一個評核步驟', 'warning');
+                return;
+            }
+
+            try {
+                const updateData = {
+                    name: name,
+                    description: description,
+                    hasChecklist: hasChecklist,
+                    isImportant: isImportant,
+                    positions: positions,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (deadlineValue) {
+                    updateData.deadlineValue = parseInt(deadlineValue);
+                    updateData.deadlineUnit = deadlineUnit;
+                } else {
+                    updateData.deadlineValue = firebase.firestore.FieldValue.delete();
+                    updateData.deadlineUnit = firebase.firestore.FieldValue.delete();
+                }
+
+                if (hasChecklist) {
+                    updateData.checklist = tempEditChecklist;
+                } else {
+                    updateData.checklist = firebase.firestore.FieldValue.delete();
+                }
+
+                await db.collection('trainingItems').doc(currentItemId).update(updateData);
+
+                showToast('✅ 培訓項目更新成功', 'success');
+                closeModal('editItemModal');
+                showCategoryItems(currentCategoryId);
+            } catch (error) {
+                console.error('更新培訓項目失敗:', error);
+                showToast('❌ 更新失敗', 'error');
+            }
+        }
+
+        async function deleteTrainingItem(itemId) {
+            if (!confirm('確定要刪除此培訓項目嗎？')) return;
+
+            try {
+                await db.collection('trainingItems').doc(itemId).delete();
+                showToast('✅ 培訓項目已刪除', 'success');
+                showCategoryItems(currentCategoryId);
+            } catch (error) {
+                console.error('刪除培訓項目失敗:', error);
+                showToast('❌ 刪除失敗', 'error');
+            }
+        }
+
+        // ==================== 員工管理 ====================
+        async function loadStaffList() {
+            try {
+                const snapshot = await db.collection('users').get();
+                const users = [];
+                snapshot.forEach(doc => {
+                    users.push({ docId: doc.id, ...doc.data() });
+                });
+
+                const html = users.map(user => `
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div>
+                                <h3>${user.name}</h3>
+                                <p style="color: #666; margin-top: 5px;">
+                                    員工編號: ${user.staffId} | 
+                                    職位: ${user.position || '-'} | 
+                                    角色: ${getRoleText(user.role)} |
+                                    入職日期: ${user.joinDate || '-'}
+                                </p>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn btn-small" onclick="openEditStaffModal('${user.docId}')">✏️ 編輯</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteStaff('${user.docId}')">🗑️ 刪除</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('staffList').innerHTML = html;
+            } catch (error) {
+                console.error('載入員工清單失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        function openAddStaffModal() {
+            document.getElementById('newStaffId').value = '';
+            document.getElementById('newStaffName').value = '';
+            document.getElementById('newStaffPosition').value = 'PCA';
+            document.getElementById('newStaffJoinDate').value = '';
+            document.getElementById('newStaffRole').value = 'staff';
+            document.getElementById('newStaffPassword').value = '';
+            openModal('addStaffModal');
+        }
+
+        async function addStaff() {
+            const staffId = document.getElementById('newStaffId').value.trim();
+            const name = document.getElementById('newStaffName').value.trim();
+            const position = document.getElementById('newStaffPosition').value;
+            const joinDate = document.getElementById('newStaffJoinDate').value;
+            const role = document.getElementById('newStaffRole').value;
+            const password = document.getElementById('newStaffPassword').value;
+
+            if (!staffId || !name || !password || !joinDate) {
+                showToast('⚠️ 請填寫完整資料', 'warning');
+                return;
+            }
+
+            try {
+                const existingUser = await db.collection('users')
+                    .where('staffId', '==', staffId)
+                    .limit(1)
+                    .get();
+
+                if (!existingUser.empty) {
+                    showToast('❌ 員工編號已存在', 'error');
+                    return;
+                }
+
+                await db.collection('users').add({
+                    staffId: staffId,
+                    name: name,
+                    position: position,
+                    joinDate: joinDate,
+                    role: role,
+                    password: password,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast('✅ 員工新增成功', 'success');
+                closeModal('addStaffModal');
+                loadStaffList();
+            } catch (error) {
+                console.error('新增員工失敗:', error);
+                showToast('❌ 新增失敗', 'error');
+            }
+        }
+
+        async function openEditStaffModal(userId) {
+            try {
+                const doc = await db.collection('users').doc(userId).get();
+                const user = doc.data();
+
+                currentItemId = userId;
+                document.getElementById('editStaffId').value = user.staffId;
+                document.getElementById('editStaffName').value = user.name;
+                document.getElementById('editStaffPosition').value = user.position || 'PCA';
+                document.getElementById('editStaffJoinDate').value = user.joinDate || '';
+                document.getElementById('editStaffRole').value = user.role;
+                document.getElementById('editStaffPassword').value = '';
+
+                openModal('editStaffModal');
+            } catch (error) {
+                console.error('載入員工資料失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
+
+        async function updateStaff() {
+            const name = document.getElementById('editStaffName').value.trim();
+            const position = document.getElementById('editStaffPosition').value;
+            const joinDate = document.getElementById('editStaffJoinDate').value;
+            const role = document.getElementById('editStaffRole').value;
+            const password = document.getElementById('editStaffPassword').value;
+
+            if (!name || !joinDate) {
+                showToast('⚠️ 請填寫完整資料', 'warning');
+                return;
+            }
+
+            try {
+                const updateData = {
+                    name: name,
+                    position: position,
+                    joinDate: joinDate,
+                    role: role,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (password) {
+                    updateData.password = password;
+                }
+
+                await db.collection('users').doc(currentItemId).update(updateData);
+
+                showToast('✅ 員工資料更新成功', 'success');
+                closeModal('editStaffModal');
+                loadStaffList();
+            } catch (error) {
+                console.error('更新員工資料失敗:', error);
+                showToast('❌ 更新失敗', 'error');
+            }
+        }
+
+        async function deleteStaff(userId) {
+            if (!confirm('確定要刪除此員工嗎？')) return;
+
+            try {
+                await db.collection('users').doc(userId).delete();
+                showToast('✅ 員工已刪除', 'success');
+                loadStaffList();
+            } catch (error) {
+                console.error('刪除員工失敗:', error);
+                showToast('❌ 刪除失敗', 'error');
             }
         }
 
         // ==================== 工具函數 ====================
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            document.getElementById(pageId).classList.add('active');
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
         }
 
-        function showModal(title, body) {
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalBody').innerHTML = body;
-            document.getElementById('modal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
         }
 
         function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
+            const toast = document.getElementById('toast');
             toast.textContent = message;
-            document.body.appendChild(toast);
+            toast.className = `toast ${type} active`;
 
             setTimeout(() => {
-                toast.remove();
+                toast.classList.remove('active');
             }, 3000);
         }
 
-        document.getElementById('modal').addEventListener('click', (e) => {
-            if (e.target.id === 'modal') {
-                closeModal();
-            }
-        });
-
-        document.getElementById('loginPw').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                login();
-            }
+        // Enter 鍵登入
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
         });
     </script>
 </body>
