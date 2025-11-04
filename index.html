@@ -772,6 +772,174 @@
             padding: 40px;
             font-size: 1.1em;
         }
+
+        /* 培訓項目餅圖設計 */
+.item-pie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.item-pie-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.item-pie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.item-pie-card.status-pending {
+    border: 3px solid #ffa502;
+}
+
+.item-pie-card.status-pass {
+    border: 3px solid #2ed573;
+}
+
+.item-pie-card.status-fail {
+    border: 3px solid #ff4757;
+}
+
+.pie-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.pie-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.pie-status {
+    font-size: 0.9em;
+    padding: 5px 10px;
+    border-radius: 15px;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.pie-status.pending {
+    background: #ffa502;
+    color: white;
+}
+
+.pie-status.pass {
+    background: #2ed573;
+    color: white;
+}
+
+.pie-status.fail {
+    background: #ff4757;
+    color: white;
+}
+
+/* 展開的評核介面 */
+.item-evaluation-expanded {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.evaluation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.evaluation-title {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 重要評核時間表 */
+.important-timeline {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.timeline-header {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.timeline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s;
+}
+
+.timeline-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.timeline-item.overdue {
+    border-left-color: #ff4757;
+    background: #fff5f5;
+}
+
+.timeline-item.completed {
+    border-left-color: #2ed573;
+    background: #f0fff4;
+}
+
+.timeline-item-info {
+    flex: 1;
+}
+
+.timeline-item-name {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.timeline-item-deadline {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.timeline-item-status {
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+        
     </style>
 </head>
 <body>
@@ -2024,120 +2192,87 @@
             }
         }
 
-        // ==================== 顯示分類評核（員工評核模式）====================
-        async function showCategoryEvaluation(categoryId) {
-            currentCategoryId = categoryId;
-            showPage('itemEvaluationPage');
+ // ==================== 顯示分類評核（餅圖設計）====================
+async function showCategoryEvaluation(categoryId) {
+    currentCategoryId = categoryId;
+    showPage('itemEvaluationPage');
 
-            try {
-                const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
-                const category = categoryDoc.data();
+    try {
+        const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
+        const category = categoryDoc.data();
 
-                document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
+        document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
 
-                const itemsSnapshot = await db.collection('trainingItems')
-                    .where('categoryId', '==', categoryId)
-                    .get();
+        const itemsSnapshot = await db.collection('trainingItems')
+            .where('categoryId', '==', categoryId)
+            .get();
 
-                const items = [];
-                itemsSnapshot.forEach(doc => {
-                    items.push({ docId: doc.id, ...doc.data() });
-                });
-                items.sort((a, b) => (a.order || 0) - (b.order || 0));
+        const items = [];
+        itemsSnapshot.forEach(doc => {
+            items.push({ docId: doc.id, ...doc.data() });
+        });
+        items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', currentStaffId)
-                    .get();
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .get();
 
-                const records = {};
-                recordsSnapshot.forEach(doc => {
-                    const record = doc.data();
-                    records[record.itemId] = { docId: doc.id, ...record };
-                });
+        const records = {};
+        recordsSnapshot.forEach(doc => {
+            const record = doc.data();
+            records[record.itemId] = { docId: doc.id, ...record };
+        });
 
-                const itemsHtml = [];
+        // 餅圖顯示
+        const pieHtml = items.map(item => {
+            const record = records[item.docId];
+            let status = 'pending';
+            let statusText = '⏳ 待完成';
+            let statusClass = 'pending';
 
-                items.forEach(item => {
-                    const record = records[item.docId];
-
-                    if (item.hasChecklist && item.checklist) {
-                        const checklistStatus = record?.checklistStatus || {};
-                        
-                        const checklistHtml = item.checklist.map((step, index) => {
-                            const status = checklistStatus[index] || 'pending';
-                            let statusClass = '';
-                            let statusText = '';
-
-                            if (status === 'pass') {
-                                statusClass = 'completed';
-                                statusText = '✅ 合格';
-                            } else if (status === 'fail') {
-                                statusClass = 'failed';
-                                statusText = '❌ 不合格';
-                            } else {
-                                statusText = '⏳ 待評核';
-                            }
-
-                            const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
-
-                            return `
-                                <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
-                                    <div class="checklist-step-name">
-                                        ${step.step} ${criticalBadge} ${statusText}
-                                    </div>
-                                    ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                        <div class="checklist-step-actions">
-                                            <button class="step-btn step-btn-pass" onclick="updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
-                                            <button class="step-btn step-btn-fail" onclick="updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
-                                            <button class="step-btn step-btn-reset" onclick="updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `;
-                        }).join('');
-
-                        const allCriticalPassed = item.checklist.every((step, index) => {
-                            if (!step.critical) return true;
-                            return checklistStatus[index] === 'pass';
-                        });
-
-                        const overallStatus = allCriticalPassed && record?.status === 'completed' 
-                            ? '✅ 已完成（所有 Critical 步驟已通過）'
-                            : record?.status === 'completed'
-                            ? '⚠️ 尚有 Critical 步驟未通過'
-                            : '⏳ 待完成';
-
-                        itemsHtml.push(`
-                            <div class="item-detail-card">
-                                <div class="item-header">
-                                    <div class="item-name">${item.name}</div>
-                                    ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                        <div style="display: flex; gap: 10px;">
-                                            <button class="btn btn-success btn-small" onclick="markItemComplete('${item.docId}')">✅ 標記完成</button>
-                                            <button class="btn btn-danger btn-small" onclick="markItemIncomplete('${item.docId}')">🔄 重設</button>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                                <div style="margin-bottom: 15px; color: #666;">${overallStatus}</div>
-                                <div class="checklist-container">
-                                    <div class="checklist-header">📋 評核步驟 Checklist</div>
-                                    ${checklistHtml}
-                                </div>
-                            </div>
-                        `);
-                    }
+            if (item.hasChecklist && record?.checklistStatus) {
+                const allCriticalPassed = item.checklist.every((step, index) => {
+                    if (!step.critical) return true;
+                    return record.checklistStatus[index] === 'pass';
                 });
 
-                if (itemsHtml.length === 0) {
-                    itemsHtml.push('<p class="no-data-message">📭 此分類尚無培訓項目</p>');
+                const hasCriticalFailed = item.checklist.some((step, index) => {
+                    if (!step.critical) return false;
+                    return record.checklistStatus[index] === 'fail';
+                });
+
+                if (hasCriticalFailed) {
+                    status = 'fail';
+                    statusText = '❌ 不合格';
+                    statusClass = 'fail';
+                } else if (allCriticalPassed) {
+                    status = 'pass';
+                    statusText = '✅ 合格';
+                    statusClass = 'pass';
                 }
-
-                document.getElementById('evaluationContent').innerHTML = itemsHtml.join('');
-            } catch (error) {
-                console.error('載入評核內容失敗:', error);
-                showToast('❌ 載入失敗', 'error');
             }
-        }
+
+            return `
+                <div class="item-pie-card status-${statusClass}" onclick="expandItemEvaluation('${item.docId}')">
+                    <div class="pie-icon">📋</div>
+                    <div class="pie-title">${item.name}</div>
+                    <div class="pie-status ${statusClass}">${statusText}</div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('evaluationContent').innerHTML = `
+            <div class="item-pie-grid">
+                ${pieHtml}
+            </div>
+            <div id="expandedEvaluation"></div>
+        `;
+
+    } catch (error) {
+        console.error('載入評核內容失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
+}
 
         // ==================== 更新 Checklist 步驟狀態 ====================
         async function updateChecklistStepStatus(itemId, stepIndex, status) {
@@ -2177,6 +2312,7 @@
                 }
 
                 showToast('✅ 步驟評核已更新', 'success');
+                closeExpandedEvaluation();
                 showCategoryEvaluation(currentCategoryId);
             } catch (error) {
                 console.error('更新步驟狀態失敗:', error);
@@ -2250,6 +2386,86 @@
             }
         }
 
+        // ==================== 展開培訓項目評核 ====================
+async function expandItemEvaluation(itemId) {
+    try {
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
+
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
+
+        const record = recordsSnapshot.empty ? null : recordsSnapshot.docs[0].data();
+        const checklistStatus = record?.checklistStatus || {};
+
+        if (!item.hasChecklist || !item.checklist) {
+            showToast('⚠️ 此項目無評核步驟', 'warning');
+            return;
+        }
+
+        const checklistHtml = item.checklist.map((step, index) => {
+            const status = checklistStatus[index] || 'pending';
+            let statusClass = '';
+            let statusText = '';
+
+            if (status === 'pass') {
+                statusClass = 'completed';
+                statusText = '✅ 合格';
+            } else if (status === 'fail') {
+                statusClass = 'failed';
+                statusText = '❌ 不合格';
+            } else {
+                statusText = '⏳ 待評核';
+            }
+
+            const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
+
+            return `
+                <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
+                    <div class="checklist-step-name">
+                        ${step.step} ${criticalBadge} ${statusText}
+                    </div>
+                    ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                        <div class="checklist-step-actions">
+                            <button class="step-btn step-btn-pass" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'pass')">✅ 合格</button>
+                            <button class="step-btn step-btn-fail" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'fail')">❌ 不合格</button>
+                            <button class="step-btn step-btn-reset" onclick="updateChecklistStepStatus('${itemId}', ${index}, 'pending')">🔄 重設</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('expandedEvaluation').innerHTML = `
+            <div class="item-evaluation-expanded">
+                <div class="evaluation-header">
+                    <div class="evaluation-title">📋 ${item.name}</div>
+                    <button class="btn btn-secondary btn-small" onclick="closeExpandedEvaluation()">❌ 關閉</button>
+                </div>
+                <div class="checklist-container">
+                    <div class="checklist-header">評核步驟 Checklist</div>
+                    ${checklistHtml}
+                </div>
+            </div>
+        `;
+
+        // 平滑滾動到展開的內容
+        document.getElementById('expandedEvaluation').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (error) {
+        console.error('展開評核失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
+}
+
+// ==================== 關閉展開的評核 ====================
+function closeExpandedEvaluation() {
+    document.getElementById('expandedEvaluation').innerHTML = '';
+}
+        
         // ==================== 匯出 PDF ====================
         async function exportToPDF() {
             try {
