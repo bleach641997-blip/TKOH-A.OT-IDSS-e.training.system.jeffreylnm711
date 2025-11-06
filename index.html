@@ -1789,14 +1789,15 @@
                             <div class="card-icon">${category.emoji}</div>
                             <div class="card-title">${category.name}</div>
                             <div class="card-progress">
-                                <svg class="progress-ring" width="150" height="150">
-                                    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"/>
-                                    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"
-                                        stroke-dasharray="${circumference}" 
-                                        stroke-dashoffset="${offset}"/>
-                                </svg>
+                                <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
+    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"/>
+    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"
+        stroke-dasharray="${circumference}" 
+        stroke-dashoffset="${offset}"
+        stroke-linecap="round"/>
+</svg>
                                 <div class="progress-text">
                                     <div class="progress-percent">${totalItems}</div>
                                     <div class="progress-label">個項目</div>
@@ -1906,14 +1907,15 @@ async function showCategoryDetail(categoryId) {
                         </div>
                         
                         <div class="item-card-progress">
-                            <svg class="item-progress-ring" width="120" height="120">
-                                <circle class="item-progress-ring-bg" cx="60" cy="60" r="50" 
-                                    fill="none" stroke-width="10"/>
-                                <circle class="item-progress-ring-circle" cx="60" cy="60" r="50" 
-                                    fill="none" stroke-width="10"
-                                    stroke-dasharray="${circumference}" 
-                                    stroke-dashoffset="${offset}"/>
-                            </svg>
+                            <svg class="item-progress-ring" width="120" height="120" viewBox="0 0 120 120">
+    <circle class="item-progress-ring-bg" cx="60" cy="60" r="50" 
+        fill="none" stroke-width="10"/>
+    <circle class="item-progress-ring-circle" cx="60" cy="60" r="50" 
+        fill="none" stroke-width="10"
+        stroke-dasharray="${circumference}" 
+        stroke-dashoffset="${offset}"
+        stroke-linecap="round"/>
+</svg>
                             <div class="item-progress-text">
                                 <div class="item-progress-percent">${totalSteps}</div>
                                 <div class="item-progress-label">步驟</div>
@@ -2629,14 +2631,15 @@ function toggleItemCard(itemId) {
                             <div class="card-icon">${category.emoji}</div>
                             <div class="card-title">${category.name}</div>
                             <div class="card-progress">
-                                <svg class="progress-ring" width="150" height="150">
-                                    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"/>
-                                    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-                                        fill="none" stroke-width="12"
-                                        stroke-dasharray="${circumference}" 
-                                        stroke-dashoffset="${offset}"/>
-                                </svg>
+                                <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
+    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"/>
+    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"
+        stroke-dasharray="${circumference}" 
+        stroke-dashoffset="${offset}"
+        stroke-linecap="round"/>
+</svg>
                                 <div class="progress-text">
                                     <div class="progress-percent">${percentage}%</div>
                                     <div class="progress-label">${completedCount}/${totalCount} 項目完成</div>
@@ -2946,14 +2949,15 @@ async function showCategoryEvaluation(categoryId) {
                             </div>
                             
                             <div class="item-card-progress">
-                                <svg class="item-progress-ring" width="120" height="120">
-                                    <circle class="item-progress-ring-bg" cx="60" cy="60" r="50" 
-                                        fill="none" stroke-width="10"/>
-                                    <circle class="item-progress-ring-circle" cx="60" cy="60" r="50" 
-                                        fill="none" stroke-width="10"
-                                        stroke-dasharray="${circumference}" 
-                                        stroke-dashoffset="${offset}"/>
-                                </svg>
+                                <svg class="item-progress-ring" width="120" height="120" viewBox="0 0 120 120">
+    <circle class="item-progress-ring-bg" cx="60" cy="60" r="50" 
+        fill="none" stroke-width="10"/>
+    <circle class="item-progress-ring-circle" cx="60" cy="60" r="50" 
+        fill="none" stroke-width="10"
+        stroke-dasharray="${circumference}" 
+        stroke-dashoffset="${offset}"
+        stroke-linecap="round"/>
+</svg>
                                 <div class="item-progress-text">
                                     <div class="item-progress-percent">${completionRate}%</div>
                                     <div class="item-progress-label">${passedSteps}/${totalSteps}</div>
