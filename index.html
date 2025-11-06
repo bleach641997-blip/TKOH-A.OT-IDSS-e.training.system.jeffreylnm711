@@ -2811,182 +2811,236 @@ function toggleItemCard(itemId) {
             }
         }
 
-        // ==================== 顯示分類評核（員工評核模式）====================
-        async function showCategoryEvaluation(categoryId) {
-            currentCategoryId = categoryId;
-            showPage('itemEvaluationPage');
+// ==================== 顯示分類評核（員工評核模式）====================
+async function showCategoryEvaluation(categoryId) {
+    currentCategoryId = categoryId;
+    showPage('itemEvaluationPage');
 
-            try {
-                const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
-                const category = categoryDoc.data();
+    try {
+        const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
+        const category = categoryDoc.data();
 
-                document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
+        document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
 
-                const itemsSnapshot = await db.collection('trainingItems')
-                    .where('categoryId', '==', categoryId)
-                    .get();
+        const itemsSnapshot = await db.collection('trainingItems')
+            .where('categoryId', '==', categoryId)
+            .get();
 
-                const items = [];
-                itemsSnapshot.forEach(doc => {
-                    items.push({ docId: doc.id, ...doc.data() });
-                });
-                items.sort((a, b) => (a.order || 0) - (b.order || 0));
+        const items = [];
+        itemsSnapshot.forEach(doc => {
+            items.push({ docId: doc.id, ...doc.data() });
+        });
+        items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', currentStaffId)
-                    .get();
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .get();
 
-                const records = {};
-                recordsSnapshot.forEach(doc => {
-                    const record = doc.data();
-                    records[record.itemId] = { docId: doc.id, ...record };
-                });
+        const records = {};
+        recordsSnapshot.forEach(doc => {
+            const record = doc.data();
+            records[record.itemId] = { docId: doc.id, ...record };
+        });
 
-                const itemsHtml = [];
+        const itemsHtml = [];
 
-                items.forEach(item => {
-                    const record = records[item.docId];
+        items.forEach(item => {
+            const record = records[item.docId];
 
-                    if (item.hasChecklist && item.checklist) {
-                        const checklistStatus = record?.checklistStatus || {};
-                        const remarks = record?.remarks || {};
-                        
-                        // 計算完成率（百分比）
-                        let totalSteps = item.checklist.length;
-                        let passedSteps = 0;
-                        
-                        item.checklist.forEach((step, index) => {
-                            if (checklistStatus[index] === 'pass') {
-                                passedSteps++;
-                            }
-                        });
-
-                        const completionRate = Math.round((passedSteps / totalSteps) * 100);
-                        
-                        const checklistHtml = item.checklist.map((step, index) => {
-                            const status = checklistStatus[index] || 'pending';
-                            const remark = remarks[index] || '';
-                            let statusClass = '';
-                            let statusText = '';
-
-                            if (status === 'pass') {
-                                statusClass = 'completed';
-                                statusText = '✅ 合格';
-                            } else if (status === 'fail') {
-                                statusClass = 'failed';
-                                statusText = '❌ 不合格';
-                            } else {
-                                statusText = '⏳ 待評核';
-                            }
-
-                            const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
-
-                            return `
-                                <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
-                                    <div class="checklist-step-header">
-                                        <div class="checklist-step-name">
-                                            <span class="step-number">Step ${index + 1}:</span>
-                                            ${step.step} ${criticalBadge}
-                                        </div>
-                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                            <div class="checklist-step-actions">
-                                                <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
-                                                <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
-                                                <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                    <div style="margin: 8px 0; color: #666;">${statusText}</div>
-                                    ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                        <div class="step-remarks">
-                                            <label>💬 評核意見/備註:</label>
-                                            <textarea 
-                                                id="remark_${item.docId}_${index}" 
-                                                placeholder="請輸入評核意見或備註..."
-                                                onchange="saveRemark('${item.docId}', ${index})"
-                                            >${remark}</textarea>
-                                        </div>
-                                    ` : remark ? `
-                                        <div class="step-remarks">
-                                            <label>💬 評核意見:</label>
-                                            <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-top: 5px;">${remark}</div>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `;
-                        }).join('');
-
-                        const allCriticalPassed = item.checklist.every((step, index) => {
-                            if (!step.critical) return true;
-                            return checklistStatus[index] === 'pass';
-                        });
-
-                        let overallStatus = '';
-                        let overallClass = '';
-                        
-                        if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
-                            overallStatus = '✅ 已完成（所有 Critical 步驟已通過，完成率 100%）';
-                            overallClass = 'pass';
-                        } else if (!allCriticalPassed) {
-                            overallStatus = '⚠️ 尚有 Critical 步驟未通過';
-                            overallClass = 'fail';
-                        } else if (completionRate < 100) {
-                            overallStatus = `⚠️ 完成率未達 100%（目前 ${completionRate}%）`;
-                            overallClass = 'fail';
-                        } else {
-                            overallStatus = '⏳ 待完成';
-                        }
-
-                        itemsHtml.push(`
-                            <div class="item-detail-card">
-                                <div class="item-header">
-                                    <div class="item-name">${item.name}</div>
-                                </div>
-                                <div class="score-info">
-                                    <div class="score-title">📊 評核進度</div>
-                                    <div class="score-details">
-                                        <div class="score-item">
-                                            <div class="score-item-label">總步驟</div>
-                                            <div class="score-item-value">${totalSteps}</div>
-                                        </div>
-                                        <div class="score-item">
-                                            <div class="score-item-label">已通過</div>
-                                            <div class="score-item-value ${completionRate === 100 ? 'pass' : 'fail'}">${passedSteps}</div>
-                                        </div>
-                                        <div class="score-item">
-                                            <div class="score-item-label">完成率</div>
-                                            <div class="score-item-value ${completionRate === 100 ? 'pass' : 'fail'}">${completionRate}%</div>
-                                        </div>
-                                    </div>
-                                    <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 8px; text-align: center;">
-                                        <span class="score-item-value ${overallClass}" style="font-size: 1.1em;">${overallStatus}</span>
-                                    </div>
-                                </div>
-                                <div class="checklist-container">
-                                    <div class="checklist-header">📋 評核步驟 Checklist</div>
-                                    ${checklistHtml}
-                                </div>
-                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                    <div class="evaluation-actions">
-                                        <button class="btn btn-success" onclick="markItemComplete('${item.docId}')">✅ 標記完成</button>
-                                        <button class="btn btn-danger" onclick="markItemIncomplete('${item.docId}')">🔄 重設項目</button>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `);
+            if (item.hasChecklist && item.checklist) {
+                const checklistStatus = record?.checklistStatus || {};
+                const remarks = record?.remarks || {};
+                
+                // 計算完成率（百分比）
+                let totalSteps = item.checklist.length;
+                let passedSteps = 0;
+                
+                item.checklist.forEach((step, index) => {
+                    if (checklistStatus[index] === 'pass') {
+                        passedSteps++;
                     }
                 });
 
-                if (itemsHtml.length === 0) {
-                    itemsHtml.push('<p class="no-data-message">📭 此分類尚無培訓項目</p>');
+                const completionRate = Math.round((passedSteps / totalSteps) * 100);
+                
+                const circumference = 2 * Math.PI * 50;
+                const offset = circumference - (completionRate / 100) * circumference;
+
+                const allCriticalPassed = item.checklist.every((step, index) => {
+                    if (!step.critical) return true;
+                    return checklistStatus[index] === 'pass';
+                });
+
+                let badges = '';
+                
+                if (item.hasDeadline) {
+                    badges += `<span class="badge badge-warning">⏰ ${item.deadlineValue} ${item.deadlineUnit === 'days' ? '日' : item.deadlineUnit === 'weeks' ? '周' : '月'}</span>`;
+                }
+                
+                if (item.isImportant) {
+                    badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
                 }
 
-                document.getElementById('evaluationContent').innerHTML = itemsHtml.join('');
-            } catch (error) {
-                console.error('載入評核內容失敗:', error);
-                showToast('❌ 載入失敗', 'error');
+                const checklistHtml = item.checklist.map((step, index) => {
+                    const status = checklistStatus[index] || 'pending';
+                    const remark = remarks[index] || '';
+                    let statusClass = '';
+                    let statusText = '';
+
+                    if (status === 'pass') {
+                        statusClass = 'completed';
+                        statusText = '✅ 合格';
+                    } else if (status === 'fail') {
+                        statusClass = 'failed';
+                        statusText = '❌ 不合格';
+                    } else {
+                        statusText = '⏳ 待評核';
+                    }
+
+                    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
+
+                    return `
+                        <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
+                            <div class="checklist-step-header">
+                                <div class="checklist-step-name">
+                                    <span class="step-number">Step ${index + 1}:</span>
+                                    ${step.step} ${criticalBadge}
+                                </div>
+                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                                    <div class="checklist-step-actions">
+                                        <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
+                                        <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
+                                        <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="margin: 8px 0; color: #666;">${statusText}</div>
+                            ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                                <div class="step-remarks">
+                                    <label>💬 評核意見/備註:</label>
+                                    <textarea 
+                                        id="remark_${item.docId}_${index}" 
+                                        placeholder="請輸入評核意見或備註..."
+                                        onchange="saveRemark('${item.docId}', ${index})"
+                                    >${remark}</textarea>
+                                </div>
+                            ` : remark ? `
+                                <div class="step-remarks">
+                                    <label>💬 評核意見:</label>
+                                    <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-top: 5px;">${remark}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                let overallStatus = '';
+                let overallClass = '';
+                
+                if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
+                    overallStatus = '✅ 已完成';
+                    overallClass = 'completed';
+                } else if (!allCriticalPassed) {
+                    overallStatus = '⚠️ 尚有 Critical 步驟未通過';
+                    overallClass = '';
+                } else if (completionRate < 100) {
+                    overallStatus = `⚠️ 完成率 ${completionRate}%`;
+                    overallClass = '';
+                } else {
+                    overallStatus = '⏳ 待完成';
+                    overallClass = '';
+                }
+
+                itemsHtml.push(`
+                    <div class="item-card ${overallClass}" id="eval_item_${item.docId}" onclick="toggleEvalItemCard('${item.docId}')">
+                        <button class="back-button" onclick="event.stopPropagation(); toggleEvalItemCard('${item.docId}')">🔙 收起</button>
+                        
+                        <div class="item-card-header">
+                            <div class="item-card-title-section">
+                                <div class="item-card-name">${item.name}</div>
+                                <div class="item-card-badges">${badges}</div>
+                            </div>
+                            
+                            <div class="item-card-progress">
+                                <svg class="item-progress-ring" width="120" height="120">
+                                    <circle class="item-progress-ring-bg" cx="60" cy="60" r="50" 
+                                        fill="none" stroke-width="10"/>
+                                    <circle class="item-progress-ring-circle" cx="60" cy="60" r="50" 
+                                        fill="none" stroke-width="10"
+                                        stroke-dasharray="${circumference}" 
+                                        stroke-dashoffset="${offset}"/>
+                                </svg>
+                                <div class="item-progress-text">
+                                    <div class="item-progress-percent">${completionRate}%</div>
+                                    <div class="item-progress-label">${passedSteps}/${totalSteps}</div>
+                                </div>
+                            </div>
+
+                            <div class="item-card-actions">
+                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                                    <button class="btn btn-success btn-small" onclick="event.stopPropagation(); markItemComplete('${item.docId}')">✅ 標記完成</button>
+                                    <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); markItemIncomplete('${item.docId}')">🔄 重設項目</button>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="item-card-content">
+                            <div class="score-info">
+                                <div class="score-title">📊 評核進度</div>
+                                <div class="score-details">
+                                    <div class="score-item">
+                                        <div class="score-item-label">總步驟</div>
+                                        <div class="score-item-value">${totalSteps}</div>
+                                    </div>
+                                    <div class="score-item">
+                                        <div class="score-item-label">已通過</div>
+                                        <div class="score-item-value ${completionRate === 100 ? 'pass' : 'fail'}">${passedSteps}</div>
+                                    </div>
+                                    <div class="score-item">
+                                        <div class="score-item-label">完成率</div>
+                                        <div class="score-item-value ${completionRate === 100 ? 'pass' : 'fail'}">${completionRate}%</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 8px; text-align: center;">
+                                    <span class="score-item-value ${overallClass}" style="font-size: 1.1em;">${overallStatus}</span>
+                                </div>
+                            </div>
+                            <div class="checklist-container">
+                                <div class="checklist-header">📋 評核步驟 Checklist</div>
+                                ${checklistHtml}
+                            </div>
+                        </div>
+                    </div>
+                `);
             }
+        });
+
+        if (itemsHtml.length === 0) {
+            itemsHtml.push('<p class="no-items-message">📭 此分類尚無培訓項目</p>');
         }
+
+        document.getElementById('evaluationContent').innerHTML = `<div class="items-dashboard">${itemsHtml.join('')}</div>`;
+    } catch (error) {
+        console.error('載入評核內容失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
+}
+
+// ==================== 切換評核項目卡片展開/收起 ====================
+function toggleEvalItemCard(itemId) {
+    const card = document.getElementById(`eval_item_${itemId}`);
+    const allCards = document.querySelectorAll('#evaluationContent .item-card');
+    
+    if (card.classList.contains('expanded')) {
+        // 收起當前卡片
+        card.classList.remove('expanded');
+    } else {
+        // 先收起所有卡片
+        allCards.forEach(c => c.classList.remove('expanded'));
+        // 展開當前卡片
+        card.classList.add('expanded');
+    }
+}
 
         // ==================== 更新 Checklist 步驟狀態（不自動返回）====================
         async function updateChecklistStepStatus(itemId, stepIndex, status) {
