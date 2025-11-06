@@ -1095,6 +1095,7 @@
 .item-card.expanded .item-card-progress {
     width: 100px;
     height: 100px;
+    margin-left: 20px; /* 向左對齊 */
 }
 
 .item-progress-ring {
@@ -3042,55 +3043,163 @@ function toggleEvalItemCard(itemId) {
     }
 }
 
-        // ==================== 更新 Checklist 步驟狀態（不自動返回）====================
-        async function updateChecklistStepStatus(itemId, stepIndex, status) {
-            try {
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', currentStaffId)
-                    .where('itemId', '==', itemId)
-                    .limit(1)
-                    .get();
+// ==================== 更新 Checklist 步驟狀態（不自動返回）====================
+async function updateChecklistStepStatus(itemId, stepIndex, status) {
+    try {
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
 
-                let checklistStatus = {};
-                let remarks = {};
+        let checklistStatus = {};
+        let remarks = {};
 
-                if (!recordsSnapshot.empty) {
-                    const record = recordsSnapshot.docs[0].data();
-                    checklistStatus = record.checklistStatus || {};
-                    remarks = record.remarks || {};
-                }
+        if (!recordsSnapshot.empty) {
+            const record = recordsSnapshot.docs[0].data();
+            checklistStatus = record.checklistStatus || {};
+            remarks = record.remarks || {};
+        }
 
-                if (status === 'pending') {
-                    delete checklistStatus[stepIndex];
-                } else {
-                    checklistStatus[stepIndex] = status;
-                }
+        if (status === 'pending') {
+            delete checklistStatus[stepIndex];
+        } else {
+            checklistStatus[stepIndex] = status;
+        }
 
-                const recordData = {
-                    userId: currentStaffId,
-                    itemId: itemId,
-                    checklistStatus: checklistStatus,
-                    remarks: remarks,
-                    status: 'pending',
-                    evaluatedBy: currentUser.docId,
-                    evaluatedAt: new Date().toISOString()
-                };
+        const recordData = {
+            userId: currentStaffId,
+            itemId: itemId,
+            checklistStatus: checklistStatus,
+            remarks: remarks,
+            status: 'pending',
+            evaluatedBy: currentUser.docId,
+            evaluatedAt: new Date().toISOString()
+        };
 
-                if (recordsSnapshot.empty) {
-                    await db.collection('trainingRecords').add(recordData);
-                } else {
-                    await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
-                }
+        if (recordsSnapshot.empty) {
+            await db.collection('trainingRecords').add(recordData);
+        } else {
+            await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
+        }
 
-                showToast('✅ 步驟評核已更新', 'success');
+        showToast('✅ 步驟評核已更新', 'success');
+        
+        // 只更新當前卡片的內容，不重新載入整個頁面
+        await refreshCurrentItemCard(itemId);
+    } catch (error) {
+        console.error('更新步驟狀態失敗:', error);
+        showToast('❌ 更新失敗', 'error');
+    }
+}
+
+// ==================== 刷新當前項目卡片 ====================
+async function refreshCurrentItemCard(itemId) {
+    try {
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
+
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
+
+        const record = recordsSnapshot.empty ? null : recordsSnapshot.docs[0].data();
+        const checklistStatus = record?.checklistStatus || {};
+        const remarks = record?.remarks || {};
+
+        let totalSteps = item.checklist.length;
+        let passedSteps = 0;
+        
+        item.checklist.forEach((step, index) => {
+            if (checklistStatus[index] === 'pass') {
+                passedSteps++;
+            }
+        });
+
+        const completionRate = Math.round((passedSteps / totalSteps) * 100);
+        
+        // 更新進度環
+        const card = document.getElementById(`eval_item_${itemId}`);
+        if (card) {
+            const percentElement = card.querySelector('.item-progress-percent');
+            const labelElement = card.querySelector('.item-progress-label');
+            const circleElement = card.querySelector('.item-progress-ring-circle');
+            
+            if (percentElement) percentElement.textContent = `${completionRate}%`;
+            if (labelElement) labelElement.textContent = `${passedSteps}/${totalSteps}`;
+            
+            if (circleElement) {
+                const circumference = 2 * Math.PI * 50;
+                const offset = circumference - (completionRate / 100) * circumference;
+                circleElement.setAttribute('stroke-dashoffset', offset);
+            }
+
+            // 更新評核進度區域
+            const scoreItems = card.querySelectorAll('.score-item-value');
+            if (scoreItems.length >= 3) {
+                scoreItems[1].textContent = passedSteps;
+                scoreItems[1].className = `score-item-value ${completionRate === 100 ? 'pass' : 'fail'}`;
+                scoreItems[2].textContent = `${completionRate}%`;
+                scoreItems[2].className = `score-item-value ${completionRate === 100 ? 'pass' : 'fail'}`;
+            }
+
+            // 更新每個步驟的狀態
+            item.checklist.forEach((step, index) => {
+                const status = checklistStatus[index] || 'pending';
+                const checklistItems = card.querySelectorAll('.checklist-item');
                 
-                // 重新載入當前評核頁面（不返回）
-                showCategoryEvaluation(currentCategoryId);
-            } catch (error) {
-                console.error('更新步驟狀態失敗:', error);
-                showToast('❌ 更新失敗', 'error');
+                if (checklistItems[index]) {
+                    checklistItems[index].className = `checklist-item ${step.critical ? 'critical' : ''} ${status === 'pass' ? 'completed' : status === 'fail' ? 'failed' : ''}`;
+                    
+                    const statusTextDiv = checklistItems[index].querySelector('div[style*="margin: 8px"]');
+                    if (statusTextDiv) {
+                        if (status === 'pass') {
+                            statusTextDiv.textContent = '✅ 合格';
+                        } else if (status === 'fail') {
+                            statusTextDiv.textContent = '❌ 不合格';
+                        } else {
+                            statusTextDiv.textContent = '⏳ 待評核';
+                        }
+                    }
+                }
+            });
+
+            // 更新整體狀態
+            const allCriticalPassed = item.checklist.every((step, index) => {
+                if (!step.critical) return true;
+                return checklistStatus[index] === 'pass';
+            });
+
+            let overallStatus = '';
+            let overallClass = '';
+            
+            if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
+                overallStatus = '✅ 已完成';
+                overallClass = 'completed';
+                card.classList.add('completed');
+            } else {
+                card.classList.remove('completed');
+                if (!allCriticalPassed) {
+                    overallStatus = '⚠️ 尚有 Critical 步驟未通過';
+                } else if (completionRate < 100) {
+                    overallStatus = `⚠️ 完成率 ${completionRate}%`;
+                } else {
+                    overallStatus = '⏳ 待完成';
+                }
+            }
+
+            const overallStatusElement = card.querySelector('.score-info .score-item-value[style*="font-size: 1.1em"]');
+            if (overallStatusElement) {
+                overallStatusElement.textContent = overallStatus;
+                overallStatusElement.className = `score-item-value ${overallClass}`;
             }
         }
+    } catch (error) {
+        console.error('刷新卡片失敗:', error);
+    }
+}
 
         // ==================== 儲存備註 ====================
         async function saveRemark(itemId, stepIndex) {
