@@ -1887,12 +1887,9 @@ async function showCategoryDetail(categoryId) {
             let checklistHtml = '';
             
             if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
-let stepCounter = 0;
-
 const stepsHtml = item.checklist.map((step, index) => {
     // Check if this is a subtitle
     if (step.isSubtitle) {
-        stepCounter = 0; // Reset counter
         return `
             <div style="margin: 20px 0 10px 0;">
                 <span class="step-subtitle">${step.step}</span>
@@ -1900,13 +1897,12 @@ const stepsHtml = item.checklist.map((step, index) => {
         `;
     }
     
-    stepCounter++;
     const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
     
     return `
         <div class="checklist-item ${step.critical ? 'critical' : ''}">
-            <div class="checklist-step-name">
-                <span class="step-number">Step ${stepCounter}:</span>
+                            <div class="checklist-step-name">
+                                <span class="step-number">Step ${index + 1}:</span>
                                 ${step.step} ${criticalBadge}
                             </div>
                             <div class="checklist-step-actions">
@@ -2197,14 +2193,11 @@ function toggleItemCard(itemId) {
                     <label>📝 項目名稱</label>
                     <input type="text" id="newItemName" placeholder="請輸入培訓項目名稱">
                 </div>
- <div class="input-group">
-    <label>📝 項目類型</label>
-    <select id="itemType" onchange="toggleItemTypeInputs()">
-        <option value="evaluation">📋 評核步驟 Checklist</option>
-        <option value="training">📖 訓練記錄</option>
-    </select>
-</div>
-<div id="checklistInputGroup">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
+                    <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
+                </div>
+<div id="checklistInputGroup" style="margin-top: 15px;">
     <div class="input-group">
         <label>📋 Checklist 步驟</label>
         <div id="checklistStepsContainer">
@@ -2258,18 +2251,6 @@ function toggleItemCard(itemId) {
             document.getElementById('checklistInputGroup').style.display = checked ? 'block' : 'none';
         }
 
-        // ==================== 切換項目類型輸入 ====================
-function toggleItemTypeInputs() {
-    const itemType = document.getElementById('itemType').value;
-    const checklistGroup = document.getElementById('checklistInputGroup');
-    
-    if (itemType === 'evaluation' || itemType === 'training') {
-        checklistGroup.style.display = 'block';
-    } else {
-        checklistGroup.style.display = 'none';
-    }
-}
-        
         // ==================== 切換截止日期設定 ====================
         function toggleDeadlineSettings() {
             const checked = document.getElementById('hasDeadlineCheck').checked;
@@ -2293,12 +2274,9 @@ function addNewSubtitle() {
 function renderChecklistSteps() {
     const container = document.getElementById('checklistStepsContainer');
     
-    let stepCounter = 0; // Counter for actual steps (not subtitles)
-    
     const stepsHtml = checklistSteps.map((step, index) => {
         // Check if this is a subtitle
         if (step.isSubtitle) {
-            stepCounter = 0; // Reset step counter after subtitle
             return `
                 <div class="step-edit-item subtitle" style="margin-bottom: 12px;">
                     <div class="step-edit-header">
@@ -2313,11 +2291,10 @@ function renderChecklistSteps() {
             `;
         } else {
             // Normal step
-            stepCounter++;
             return `
                 <div class="step-edit-item ${step.critical ? 'critical' : ''}" style="margin-bottom: 12px;">
                     <div class="step-edit-header">
-                        <span class="step-number">Step ${stepCounter}:</span>
+                        <span class="step-number">Step ${index + 1}:</span>
                         <input type="text" data-index="${index}" value="${step.step}" 
                                placeholder="輸入步驟內容" 
                                style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;"
@@ -2356,31 +2333,32 @@ function renderChecklistSteps() {
 
         // ==================== 創建培訓項目 ====================
         async function createTrainingItem() {
-      const name = document.getElementById('newItemName').value.trim();
-const itemType = document.getElementById('itemType').value; // 'evaluation' or 'training'
-const hasDeadline = document.getElementById('hasDeadlineCheck').checked;
-const isImportant = document.getElementById('isImportantCheck').checked;
+            const name = document.getElementById('newItemName').value.trim();
+            const hasChecklist = document.getElementById('hasChecklistCheck').checked;
+            const hasDeadline = document.getElementById('hasDeadlineCheck').checked;
+            const isImportant = document.getElementById('isImportantCheck').checked;
 
             if (!name) {
                 showToast('❌ 請輸入項目名稱', 'error');
                 return;
             }
 
-  let itemData = {
-    categoryId: currentCategoryId,
-    name: name,
-    itemType: itemType, // 'evaluation' or 'training'
-    hasDeadline: hasDeadline,
-    isImportant: isImportant,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-};
+            let itemData = {
+                categoryId: currentCategoryId,
+                name: name,
+                hasChecklist: hasChecklist,
+                hasDeadline: hasDeadline,
+                isImportant: isImportant,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
 
-// Both types use checklist structure, just different UI
-if (checklistSteps.length === 0 || checklistSteps.some(s => !s.isSubtitle && !s.step.trim())) {
-    showToast('❌ 請至少新增一個步驟並填寫內容', 'error');
-    return;
-}
-itemData.checklist = checklistSteps;
+            if (hasChecklist) {
+                if (checklistSteps.length === 0 || checklistSteps.some(s => !s.step.trim())) {
+                    showToast('❌ 請至少新增一個步驟並填寫內容', 'error');
+                    return;
+                }
+                itemData.checklist = checklistSteps;
+            }
 
             if (hasDeadline) {
                 const deadlineValue = parseInt(document.getElementById('deadlineValue').value) || 1;
@@ -2671,19 +2649,7 @@ itemData.checklist = checklistSteps;
                         const item = doc.data();
                         const record = records[doc.id];
                         
-if (item.checklist && record) {
-    if (item.itemType === 'training') {
-        // For training records, check if all steps are completed
-        const allStepsCompleted = item.checklist.every((step, index) => {
-            if (step.isSubtitle) return true;
-            return record.checklistStatus && record.checklistStatus[index] === 'completed';
-        });
-        
-        if (allStepsCompleted && record.status === 'completed') {
-            completedCount++;
-        }
-    } else {
-        // For evaluation checklist (existing logic)
+                        if (item.hasChecklist && record) {
                             const allCriticalPassed = item.checklist.every((step, index) => {
                                 if (!step.critical) return true;
                                 return record.checklistStatus && record.checklistStatus[index] === 'pass';
@@ -2818,19 +2784,7 @@ if (item.checklist && record) {
                     const record = records[item.docId];
                     let isCompleted = false;
 
-if (item.checklist && record) {
-    if (item.itemType === 'training') {
-        // For training records, check if all steps are completed
-        const allStepsCompleted = item.checklist.every((step, index) => {
-            if (step.isSubtitle) return true;
-            return record.checklistStatus && record.checklistStatus[index] === 'completed';
-        });
-        
-        if (allStepsCompleted && record.status === 'completed') {
-            completedCount++;
-        }
-    } else {
-        // For evaluation checklist (existing logic)
+                    if (item.hasChecklist && record) {
                         const allCriticalPassed = item.checklist.every((step, index) => {
                             if (!step.critical) return true;
                             return record.checklistStatus && record.checklistStatus[index] === 'pass';
@@ -2935,9 +2889,8 @@ async function showCategoryEvaluation(categoryId) {
         items.forEach(item => {
             const record = records[item.docId];
 
- if (item.checklist && item.checklist.length > 0) {
-    const checklistStatus = record?.checklistStatus || {};
-    const completionDates = record?.completionDates || {};
+            if (item.hasChecklist && item.checklist) {
+                const checklistStatus = record?.checklistStatus || {};
                 const remarks = record?.remarks || {};
                 
                 // 計算完成率（百分比）
@@ -2970,21 +2923,17 @@ async function showCategoryEvaluation(categoryId) {
                     badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
                 }
 
-   let stepCounter = 0;
-
-const checklistHtml = item.checklist.map((step, index) => {
-    // Check if this is a subtitle
+                const checklistHtml = item.checklist.map((step, index) => {
+                        // Check if this is a subtitle
     if (step.isSubtitle) {
-        stepCounter = 0; // Reset counter
         return `
             <div style="margin: 20px 0 10px 0;">
                 <span class="step-subtitle">${step.step}</span>
             </div>
         `;
     }
-    
-    stepCounter++;
-    const status = checklistStatus[index] || 'pending';
+                    
+                    const status = checklistStatus[index] || 'pending';
                     const remark = remarks[index] || '';
                     let statusClass = '';
                     let statusText = '';
@@ -3001,31 +2950,20 @@ const checklistHtml = item.checklist.map((step, index) => {
 
                     const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
 
-          return `
-    <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
-        <div class="checklist-step-header">
-            <div class="checklist-step-name">
-                <span class="step-number">Step ${stepCounter}:</span>
+                    return `
+                        <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
+                            <div class="checklist-step-header">
+                                <div class="checklist-step-name">
+                                    <span class="step-number">Step ${index + 1}:</span>
                                     ${step.step} ${criticalBadge}
                                 </div>
-${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? 
-    item.itemType === 'training' ? `
-        <div class="checklist-step-actions">
-            <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); markTrainingStepComplete('${item.docId}', ${index})">
-                ${status === 'completed' ? '✅ 已完成' : '☑️ 標記完成'}
-            </button>
-            ${status === 'completed' ? `
-                <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
-            ` : ''}
-        </div>
-    ` : `
-        <div class="checklist-step-actions">
-            <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
-            <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
-            <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
-        </div>
-    `
-: ''}
+                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                                    <div class="checklist-step-actions">
+                                        <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
+                                        <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
+                                        <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
+                                    </div>
+                                ` : ''}
                             </div>
                             <div style="margin: 8px 0; color: #666;">${statusText}</div>
                             ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
@@ -3206,62 +3144,6 @@ async function updateChecklistStepStatus(itemId, stepIndex, status) {
     }
 }
 
-        // ==================== 標記訓練步驟完成 ====================
-async function markTrainingStepComplete(itemId, stepIndex) {
-    try {
-        const recordsSnapshot = await db.collection('trainingRecords')
-            .where('userId', '==', currentStaffId)
-            .where('itemId', '==', itemId)
-            .limit(1)
-            .get();
-
-        let checklistStatus = {};
-        let completionDates = {};
-        let remarks = {};
-
-        if (!recordsSnapshot.empty) {
-            const record = recordsSnapshot.docs[0].data();
-            checklistStatus = record.checklistStatus || {};
-            completionDates = record.completionDates || {};
-            remarks = record.remarks || {};
-        }
-
-        checklistStatus[stepIndex] = 'completed';
-        
-        // Add completion date
-        const today = new Date();
-        const dateStr = today.toLocaleDateString('zh-TW', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit' 
-        });
-        completionDates[stepIndex] = dateStr;
-
-        const recordData = {
-            userId: currentStaffId,
-            itemId: itemId,
-            checklistStatus: checklistStatus,
-            completionDates: completionDates,
-            remarks: remarks,
-            status: 'pending',
-            evaluatedBy: currentUser.docId,
-            evaluatedAt: new Date().toISOString()
-        };
-
-        if (recordsSnapshot.empty) {
-            await db.collection('trainingRecords').add(recordData);
-        } else {
-            await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
-        }
-
-        showToast('✅ 訓練步驟已標記完成', 'success');
-        await refreshCurrentItemCard(itemId);
-    } catch (error) {
-        console.error('標記完成失敗:', error);
-        showToast('❌ 操作失敗', 'error');
-    }
-}
-        
 // ==================== 刷新當前項目卡片 ====================
 async function refreshCurrentItemCard(itemId) {
     try {
@@ -3324,27 +3206,13 @@ async function refreshCurrentItemCard(itemId) {
                     
                     const statusTextDiv = checklistItems[index].querySelector('div[style*="margin: 8px"]');
                     if (statusTextDiv) {
-                        if (item.itemType === 'training') {
-    // Training record mode
-    if (status === 'completed') {
-        statusClass = 'completed';
-        const completionDate = completionDates[index] || '';
-        statusText = completionDate ? `✅ 已完成 (${completionDate})` : '✅ 已完成';
-    } else {
-        statusText = '⏳ 待完成';
-    }
-} else {
-    // Evaluation mode
-    if (status === 'pass') {
-        statusClass = 'completed';
-        statusText = '✅ 合格';
-    } else if (status === 'fail') {
-        statusClass = 'failed';
-        statusText = '❌ 不合格';
-    } else {
-        statusText = '⏳ 待評核';
-    }
-}
+                        if (status === 'pass') {
+                            statusTextDiv.textContent = '✅ 合格';
+                        } else if (status === 'fail') {
+                            statusTextDiv.textContent = '❌ 不合格';
+                        } else {
+                            statusTextDiv.textContent = '⏳ 待評核';
+                        }
                     }
                 }
             });
