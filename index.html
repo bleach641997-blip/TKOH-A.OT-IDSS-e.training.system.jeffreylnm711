@@ -1970,27 +1970,27 @@ function toggleItemCard(itemId) {
                         <label>📝 項目名稱</label>
                         <input type="text" id="editItemName" value="${item.name}" placeholder="請輸入項目名稱">
                     </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="editHasDeadline" ${item.hasDeadline ? 'checked' : ''} onchange="toggleEditDeadlineSettings()">
-                        <label for="editHasDeadline">⏰ 設定截止日期</label>
-                    </div>
-                    <div id="editDeadlineSettings" class="deadline-settings" style="display: ${item.hasDeadline ? 'block' : 'none'};">
-                        <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
-                        <div class="deadline-inputs">
-                            <div class="input-group" style="margin: 0;">
-                                <label>數值</label>
-                                <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
-                            </div>
-                            <div class="input-group" style="margin: 0;">
-                                <label>單位</label>
-                                <select id="editDeadlineUnit">
-                                    <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
-                                    <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
-                                    <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+<div class="checkbox-group">
+    <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
+    <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
+</div>
+<div id="deadlineSettings" class="deadline-settings" style="display: none;">
+    <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
+    <div style="margin-top: 10px;">
+        <div class="checkbox-group">
+            <input type="checkbox" id="deadline3months" checked>
+            <label for="deadline3months">3 個月</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="deadline6months">
+            <label for="deadline6months">6 個月</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="deadline12months">
+            <label for="deadline12months">12 個月</label>
+        </div>
+    </div>
+</div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="editIsImportant" ${item.isImportant ? 'checked' : ''}>
                         <label for="editIsImportant">⭐ 加入重要評核時間表</label>
@@ -2177,7 +2177,10 @@ function toggleItemCard(itemId) {
                         <div id="checklistStepsContainer">
                             <!-- 動態生成 -->
                         </div>
-                        <button class="btn btn-success btn-small" style="margin-top: 10px;" onclick="addNewChecklistStep()">➕ 新增步驟</button>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button class="btn btn-success btn-small" onclick="addNewChecklistStep()">➕ 新增步驟</button>
+    <button class="btn btn-info btn-small" onclick="addNewSubtitle()">📑 新增章節標題</button>
+</div>
                     </div>
                 </div>
                 <div class="checkbox-group">
@@ -2216,6 +2219,18 @@ function toggleItemCard(itemId) {
             addNewChecklistStep();
         }
 
+        // ==================== 新增 Checklist 步驟 ====================
+function addNewChecklistStep() {
+    checklistSteps.push({ step: '', critical: false });
+    renderChecklistSteps();
+}
+
+// ==================== 新增章節標題 ====================
+function addNewSubtitle() {
+    checklistSteps.push({ isSubtitle: true, text: '' });
+    renderChecklistSteps();
+}
+        
         // ==================== 切換 Checklist 輸入 ====================
         function toggleChecklistInput() {
             const checked = document.getElementById('hasChecklistCheck').checked;
@@ -2238,8 +2253,47 @@ function toggleItemCard(itemId) {
         function renderChecklistSteps() {
             const container = document.getElementById('checklistStepsContainer');
             
-            const stepsHtml = checklistSteps.map((step, index) => `
+ // ==================== 渲染 Checklist 步驟 ====================
+function renderChecklistSteps() {
+    const container = document.getElementById('checklistStepsContainer');
+    
+    const stepsHtml = checklistSteps.map((step, index) => {
+        if (step.isSubtitle) {
+            return `
+                <div class="step-edit-item" style="margin-bottom: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="step-edit-header">
+                        <span class="step-number" style="color: white;">Section:</span>
+                        <input type="text" data-index="${index}" value="${step.text}" 
+                               placeholder="輸入章節標題" 
+                               style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;"
+                               onchange="updateChecklistStep(${index}, this.value)">
+                        <button class="btn btn-danger btn-small" onclick="removeChecklistStep(${index})">🗑️</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
                 <div class="step-edit-item ${step.critical ? 'critical' : ''}" style="margin-bottom: 12px;">
+                    <div class="step-edit-header">
+                        <span class="step-number">Step ${index + 1}:</span>
+                        <input type="text" data-index="${index}" value="${step.step}" 
+                               placeholder="輸入步驟內容" 
+                               style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;"
+                               onchange="updateChecklistStep(${index}, this.value)">
+                        <button class="btn btn-danger btn-small" onclick="removeChecklistStep(${index})">🗑️</button>
+                    </div>
+                    <div class="checkbox-group" style="margin-top: 8px; margin-left: 80px;">
+                        <input type="checkbox" id="critical_${index}" ${step.critical ? 'checked' : ''} 
+                               onchange="toggleCritical(${index})">
+                        <label for="critical_${index}">⚠️ Critical（必需合格才能通過培訓）</label>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+
+    container.innerHTML = stepsHtml;
+}
                     <div class="step-edit-header">
                         <span class="step-number">Step ${index + 1}:</span>
                         <input type="text" data-index="${index}" value="${step.step}" 
@@ -2259,10 +2313,14 @@ function toggleItemCard(itemId) {
             container.innerHTML = stepsHtml;
         }
 
-        // ==================== 更新 Checklist 步驟 ====================
-        function updateChecklistStep(index, value) {
-            checklistSteps[index].step = value;
-        }
+  // ==================== 更新 Checklist 步驟 ====================
+function updateChecklistStep(index, value) {
+    if (checklistSteps[index].isSubtitle) {
+        checklistSteps[index].text = value;
+    } else {
+        checklistSteps[index].step = value;
+    }
+}
 
         // ==================== 切換 Critical 狀態 ====================
         function toggleCritical(index) {
@@ -2305,12 +2363,25 @@ function toggleItemCard(itemId) {
                 itemData.checklist = checklistSteps;
             }
 
-            if (hasDeadline) {
-                const deadlineValue = parseInt(document.getElementById('deadlineValue').value) || 1;
-                const deadlineUnit = document.getElementById('deadlineUnit').value;
-                itemData.deadlineValue = deadlineValue;
-                itemData.deadlineUnit = deadlineUnit;
-            }
+if (hasDeadline) {
+    const deadlines = [];
+    if (document.getElementById('deadline3months').checked) {
+        deadlines.push({ value: 3, unit: 'months', label: '3個月' });
+    }
+    if (document.getElementById('deadline6months').checked) {
+        deadlines.push({ value: 6, unit: 'months', label: '6個月' });
+    }
+    if (document.getElementById('deadline12months').checked) {
+        deadlines.push({ value: 12, unit: 'months', label: '12個月' });
+    }
+    
+    if (deadlines.length > 0) {
+        itemData.deadlines = deadlines;
+        // Keep old format for backward compatibility
+        itemData.deadlineValue = deadlines[0].value;
+        itemData.deadlineUnit = deadlines[0].unit;
+    }
+}
 
             try {
                 const itemsSnapshot = await db.collection('trainingItems')
@@ -2860,9 +2931,14 @@ async function showCategoryEvaluation(categoryId) {
 
                 let badges = '';
                 
-                if (item.hasDeadline) {
-                    badges += `<span class="badge badge-warning">⏰ ${item.deadlineValue} ${item.deadlineUnit === 'days' ? '日' : item.deadlineUnit === 'weeks' ? '周' : '月'}</span>`;
-                }
+if (item.hasDeadline) {
+    if (item.deadlines && item.deadlines.length > 0) {
+        const deadlineLabels = item.deadlines.map(d => d.label).join(', ');
+        badges += `<span class="badge badge-warning">⏰ ${deadlineLabels}</span>`;
+    } else {
+        badges += `<span class="badge badge-warning">⏰ ${item.deadlineValue} ${item.deadlineUnit === 'days' ? '日' : item.deadlineUnit === 'weeks' ? '周' : '月'}</span>`;
+    }
+}
                 
                 if (item.isImportant) {
                     badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
