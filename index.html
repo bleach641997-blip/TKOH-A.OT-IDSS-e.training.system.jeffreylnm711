@@ -1408,7 +1408,40 @@
             '🔍', '🔎', '📡', '📻', '📺', '📹', '📷', '📸', '🎬', '🎤',
             '🔥', '💧', '🌊', '❄️', '☀️', '🌙'
         ];
-
+// ==================== 評核範本資料 ====================
+const ASSESSMENT_TEMPLATES = {
+    'pca2_cleaning': {
+        name: 'PCA II - 清潔與消毒方法',
+        steps: [
+            { step: 'Demonstrate knowledge of decontamination, disinfection and sterilization.', critical: true },
+            { step: 'Ensure completeness of instruments before and after cleaning', critical: false },
+            { step: 'Properly input SITS Check-in', critical: true },
+            // ... add all steps from the document
+        ]
+    },
+    'pca2_inspection': {
+        name: 'PCA II - 檢查、組裝與包裝',
+        steps: [
+            { step: 'Ensure visual check for cleanliness', critical: false },
+            // ... add all steps
+        ]
+    },
+    'pca2_sterilization': {
+        name: 'PCA II - 儀器滅菌',
+        steps: [
+            { step: 'Demonstrate knowledge of sterilization definition, principles, types of sterilizer including steam sterilization and low temperature sterilization', critical: true },
+            // ... add all steps
+        ]
+    },
+    'pca2_handling': {
+        name: 'PCA II - 無菌儀器處理、儲存與發放',
+        steps: [
+            { step: 'Demonstrate knowledge in handling, storage and issuance of sterile instruments', critical: true },
+            // ... add all steps
+        ]
+    }
+};
+        
         // ==================== 初始化系統 ====================
         async function initializeSystem() {
             if (systemInitialized) return;
@@ -2167,10 +2200,26 @@ function toggleItemCard(itemId) {
                     <label>📝 項目名稱</label>
                     <input type="text" id="newItemName" placeholder="請輸入培訓項目名稱">
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
-                    <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
-                </div>
+<div class="checkbox-group">
+    <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
+    <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
+</div>
+<div class="checkbox-group">
+    <input type="checkbox" id="useTemplateCheck" onchange="toggleTemplateSelection()">
+    <label for="useTemplateCheck">📋 從評核範本匯入步驟</label>
+</div>
+<div id="templateSelection" style="display: none; margin-top: 15px;">
+    <div class="input-group">
+        <label>選擇範本</label>
+        <select id="templateSelect" onchange="loadTemplateSteps()">
+            <option value="">-- 請選擇範本 --</option>
+            <option value="pca2_cleaning">PCA II - 清潔與消毒方法</option>
+            <option value="pca2_inspection">PCA II - 檢查、組裝與包裝</option>
+            <option value="pca2_sterilization">PCA II - 儀器滅菌</option>
+            <option value="pca2_handling">PCA II - 無菌儀器處理、儲存與發放</option>
+        </select>
+    </div>
+</div>
                 <div id="checklistInputGroup" style="margin-top: 15px;">
                     <div class="input-group">
                         <label>📋 Checklist 步驟</label>
@@ -2227,6 +2276,45 @@ function toggleItemCard(itemId) {
             const checked = document.getElementById('hasDeadlineCheck').checked;
             document.getElementById('deadlineSettings').style.display = checked ? 'block' : 'none';
         }
+
+        // ==================== 切換範本選擇 ====================
+function toggleTemplateSelection() {
+    const checked = document.getElementById('useTemplateCheck').checked;
+    const templateDiv = document.getElementById('templateSelection');
+    const manualCheckbox = document.getElementById('hasChecklistCheck');
+    
+    if (checked) {
+        templateDiv.style.display = 'block';
+        manualCheckbox.checked = true;
+        manualCheckbox.disabled = true;
+        document.getElementById('checklistInputGroup').style.display = 'none';
+    } else {
+        templateDiv.style.display = 'none';
+        manualCheckbox.disabled = false;
+        document.getElementById('templateSelect').value = '';
+        toggleChecklistInput();
+    }
+}
+
+// ==================== 載入範本步驟 ====================
+function loadTemplateSteps() {
+    const templateId = document.getElementById('templateSelect').value;
+    
+    if (!templateId) {
+        checklistSteps = [];
+        return;
+    }
+    
+    const template = ASSESSMENT_TEMPLATES[templateId];
+    if (template) {
+        checklistSteps = JSON.parse(JSON.stringify(template.steps)); // Deep copy
+        showToast(`✅ 已載入範本：${template.name}`, 'success');
+        
+        // Show preview
+        document.getElementById('checklistInputGroup').style.display = 'block';
+        renderChecklistSteps();
+    }
+}
 
         // ==================== 新增 Checklist 步驟 ====================
         function addNewChecklistStep() {
