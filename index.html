@@ -911,9 +911,26 @@
             border-left: 3px solid #667eea;
         }
 
-        .step-edit-item.critical {
-            border-left-color: #ff4757;
-        }
+.step-edit-item.critical {
+    border-left-color: #ff4757;
+}
+
+/* ADD THESE 3 NEW RULES BELOW ↓ */
+.step-subtitle {
+    background: #667eea;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.95em;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+.step-edit-item.subtitle {
+    border-left-color: #667eea;
+    background: #f0f4ff;
+}
 
         .step-edit-header {
             display: flex;
@@ -1870,11 +1887,20 @@ async function showCategoryDetail(categoryId) {
             let checklistHtml = '';
             
             if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
-                const stepsHtml = item.checklist.map((step, index) => {
-                    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
-                    
-                    return `
-                        <div class="checklist-item ${step.critical ? 'critical' : ''}">
+const stepsHtml = item.checklist.map((step, index) => {
+    // Check if this is a subtitle
+    if (step.isSubtitle) {
+        return `
+            <div style="margin: 20px 0 10px 0;">
+                <span class="step-subtitle">${step.step}</span>
+            </div>
+        `;
+    }
+    
+    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
+    
+    return `
+        <div class="checklist-item ${step.critical ? 'critical' : ''}">
                             <div class="checklist-step-name">
                                 <span class="step-number">Step ${index + 1}:</span>
                                 ${step.step} ${criticalBadge}
@@ -2171,15 +2197,18 @@ function toggleItemCard(itemId) {
                     <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
                     <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
                 </div>
-                <div id="checklistInputGroup" style="margin-top: 15px;">
-                    <div class="input-group">
-                        <label>📋 Checklist 步驟</label>
-                        <div id="checklistStepsContainer">
-                            <!-- 動態生成 -->
-                        </div>
-                        <button class="btn btn-success btn-small" style="margin-top: 10px;" onclick="addNewChecklistStep()">➕ 新增步驟</button>
-                    </div>
-                </div>
+<div id="checklistInputGroup" style="margin-top: 15px;">
+    <div class="input-group">
+        <label>📋 Checklist 步驟</label>
+        <div id="checklistStepsContainer">
+            <!-- 動態生成 -->
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="btn btn-success btn-small" onclick="addNewChecklistStep()">➕ 新增步驟</button>
+            <button class="btn btn-info btn-small" onclick="addNewSubtitle()">📑 新增章節標題</button>
+        </div>
+    </div>
+</div>
                 <div class="checkbox-group">
                     <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
                     <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
@@ -2228,17 +2257,41 @@ function toggleItemCard(itemId) {
             document.getElementById('deadlineSettings').style.display = checked ? 'block' : 'none';
         }
 
-        // ==================== 新增 Checklist 步驟 ====================
-        function addNewChecklistStep() {
-            checklistSteps.push({ step: '', critical: false });
-            renderChecklistSteps();
-        }
+// ==================== 新增 Checklist 步驟 ====================
+function addNewChecklistStep() {
+    checklistSteps.push({ step: '', critical: false });
+    renderChecklistSteps();
+}
 
-        // ==================== 渲染 Checklist 步驟 ====================
-        function renderChecklistSteps() {
-            const container = document.getElementById('checklistStepsContainer');
-            
-            const stepsHtml = checklistSteps.map((step, index) => `
+// ADD THIS NEW FUNCTION BELOW ↓
+// ==================== 新增章節標題 ====================
+function addNewSubtitle() {
+    checklistSteps.push({ isSubtitle: true, step: '' });
+    renderChecklistSteps();
+}
+
+// ==================== 渲染 Checklist 步驟 ====================
+function renderChecklistSteps() {
+    const container = document.getElementById('checklistStepsContainer');
+    
+    const stepsHtml = checklistSteps.map((step, index) => {
+        // Check if this is a subtitle
+        if (step.isSubtitle) {
+            return `
+                <div class="step-edit-item subtitle" style="margin-bottom: 12px;">
+                    <div class="step-edit-header">
+                        <span class="step-number" style="color: #667eea;">📑 章節:</span>
+                        <input type="text" data-index="${index}" value="${step.step}" 
+                               placeholder="輸入章節標題" 
+                               style="flex: 1; padding: 8px; border: 2px solid #667eea; border-radius: 6px; font-weight: bold;"
+                               onchange="updateChecklistStep(${index}, this.value)">
+                        <button class="btn btn-danger btn-small" onclick="removeChecklistStep(${index})">🗑️</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Normal step
+            return `
                 <div class="step-edit-item ${step.critical ? 'critical' : ''}" style="margin-bottom: 12px;">
                     <div class="step-edit-header">
                         <span class="step-number">Step ${index + 1}:</span>
@@ -2254,10 +2307,12 @@ function toggleItemCard(itemId) {
                         <label for="critical_${index}">⚠️ Critical（必需合格才能通過培訓）</label>
                     </div>
                 </div>
-            `).join('');
-
-            container.innerHTML = stepsHtml;
+            `;
         }
+    }).join('');
+
+    container.innerHTML = stepsHtml;
+}
 
         // ==================== 更新 Checklist 步驟 ====================
         function updateChecklistStep(index, value) {
@@ -2869,6 +2924,15 @@ async function showCategoryEvaluation(categoryId) {
                 }
 
                 const checklistHtml = item.checklist.map((step, index) => {
+                        // Check if this is a subtitle
+    if (step.isSubtitle) {
+        return `
+            <div style="margin: 20px 0 10px 0;">
+                <span class="step-subtitle">${step.step}</span>
+            </div>
+        `;
+    }
+                    
                     const status = checklistStatus[index] || 'pending';
                     const remark = remarks[index] || '';
                     let statusClass = '';
