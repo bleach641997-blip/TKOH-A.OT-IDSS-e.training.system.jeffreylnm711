@@ -2934,6 +2934,8 @@ async function showCategoryEvaluation(categoryId) {
                     badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
                 }
 
+let stepCounter = 0; // Add this BEFORE the map
+
 const checklistHtml = item.checklist.map((step, index) => {
     // Check if this is a subtitle
     if (step.isSubtitle) {
@@ -2944,8 +2946,9 @@ const checklistHtml = item.checklist.map((step, index) => {
         `;
     }
     
-    // Count actual steps only
-    const stepNumber = item.checklist.slice(0, index).filter(s => !s.isSubtitle).length + 1;
+    // Count actual steps only - use counter instead of calculation
+    stepCounter++;
+    const stepNumber = stepCounter;
     
     const status = checklistStatus[index] || 'pending';
     const remark = remarks[index] || '';
