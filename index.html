@@ -3304,7 +3304,7 @@ const checklistHtml = item.checklist.map((step, index) => {
                     overallStatus = '✅ 已完成';
                     overallClass = 'completed';
                 } else if (!allCriticalPassed) {
-                    overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未通過</span>';
+                    overallStatus = '⚠️ 尚有 Critical 步驟未通過';
                     overallClass = '';
                 } else if (completionRate < 100) {
                     overallStatus = `⚠️ 完成率 ${completionRate}%`;
