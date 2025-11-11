@@ -1936,8 +1936,8 @@ async function showCategoryDetail(categoryId) {
             }
 
             return `
- <div class="item-card ${item.hasChecklist ? '' : 'completed'}" id="item_${item.docId}">
-                    <button class="back-button" onclick="event.stopPropagation(); toggleItemCard('${item.docId}')">🔙 收起</button>
+ <div class="item-card ${item.hasChecklist ? '' : 'completed'}" id="item_${item.docId}" onclick="toggleItemCard('${item.docId}')">
+                    <button class="back-button" onclick="event.stopPropagation(); collapseItemCard('${item.docId}')">🔙 收起</button>
                     
                     <div class="item-card-header">
                         <div class="item-card-title-section">
@@ -1987,15 +1987,22 @@ function toggleItemCard(itemId) {
     const card = document.getElementById(`item_${itemId}`);
     const allCards = document.querySelectorAll('.item-card');
     
+    // 如果卡片已經展開，不做任何事（只能用收起按鈕收起）
     if (card.classList.contains('expanded')) {
-        // 收起當前卡片
-        card.classList.remove('expanded');
-    } else {
-        // 先收起所有卡片
-        allCards.forEach(c => c.classList.remove('expanded'));
-        // 展開當前卡片
-        card.classList.add('expanded');
+        return;
     }
+    
+    // 先收起所有卡片
+    allCards.forEach(c => c.classList.remove('expanded'));
+    // 展開當前卡片
+    card.classList.add('expanded');
+}
+}
+
+        // ==================== 收起項目卡片 ====================
+function collapseItemCard(itemId) {
+    const card = document.getElementById(`item_${itemId}`);
+    card.classList.remove('expanded');
 }
         
         // ==================== 編輯項目設定 ====================
@@ -3025,8 +3032,8 @@ overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未
                 }
 
                 itemsHtml.push(`
-  <div class="item-card ${overallClass}" id="eval_item_${item.docId}">
-                        <button class="back-button" onclick="event.stopPropagation(); toggleEvalItemCard('${item.docId}')">🔙 收起</button>
+ <div class="item-card ${overallClass}" id="eval_item_${item.docId}" onclick="toggleEvalItemCard('${item.docId}')">
+                        <button class="back-button" onclick="event.stopPropagation(); collapseEvalItemCard('${item.docId}')">🔙 收起</button>
                         
                         <div class="item-card-header">
                             <div class="item-card-title-section">
@@ -3105,17 +3112,24 @@ function toggleEvalItemCard(itemId) {
     const card = document.getElementById(`eval_item_${itemId}`);
     const allCards = document.querySelectorAll('#evaluationContent .item-card');
     
+    // 如果卡片已經展開，不做任何事（只能用收起按鈕收起）
     if (card.classList.contains('expanded')) {
-        // 收起當前卡片
-        card.classList.remove('expanded');
-    } else {
-        // 先收起所有卡片
-        allCards.forEach(c => c.classList.remove('expanded'));
-        // 展開當前卡片
-        card.classList.add('expanded');
+        return;
     }
+    
+    // 先收起所有卡片
+    allCards.forEach(c => c.classList.remove('expanded'));
+    // 展開當前卡片
+    card.classList.add('expanded');
+}
 }
 
+        // ==================== 收起評核項目卡片 ====================
+function collapseEvalItemCard(itemId) {
+    const card = document.getElementById(`eval_item_${itemId}`);
+    card.classList.remove('expanded');
+}
+        
 // ==================== 更新 Checklist 步驟狀態（不自動返回）====================
 async function updateChecklistStepStatus(itemId, stepIndex, status) {
     try {
