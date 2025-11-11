@@ -1897,21 +1897,23 @@ const stepsHtml = item.checklist.map((step, index) => {
         `;
     }
     
+    // Count actual steps only (excluding subtitles)
+    const stepNumber = item.checklist.slice(0, index).filter(s => !s.isSubtitle).length + 1;
     const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
     
     return `
         <div class="checklist-item ${step.critical ? 'critical' : ''}">
-                            <div class="checklist-step-name">
-                                <span class="step-number">Step ${index + 1}:</span>
-                                ${step.step} ${criticalBadge}
-                            </div>
-                            <div class="checklist-step-actions">
-                                <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); editChecklistStep('${item.docId}', ${index})">✏️ 編輯</button>
-                                <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); deleteChecklistStep('${item.docId}', ${index})">🗑️ 刪除</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+            <div class="checklist-step-name">
+                <span class="step-number">Step ${stepNumber}:</span>
+                ${step.step} ${criticalBadge}
+            </div>
+            <div class="checklist-step-actions">
+                <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); editChecklistStep('${item.docId}', ${index})">✏️ 編輯</button>
+                <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); deleteChecklistStep('${item.docId}', ${index})">🗑️ 刪除</button>
+            </div>
+        </div>
+    `;
+}).join('');
 
                 checklistHtml = `
                     <div class="checklist-container">
@@ -2274,6 +2276,8 @@ function addNewSubtitle() {
 function renderChecklistSteps() {
     const container = document.getElementById('checklistStepsContainer');
     
+    let stepCounter = 0; // Add counter for actual steps only
+    
     const stepsHtml = checklistSteps.map((step, index) => {
         // Check if this is a subtitle
         if (step.isSubtitle) {
@@ -2290,11 +2294,12 @@ function renderChecklistSteps() {
                 </div>
             `;
         } else {
-            // Normal step
+            // Normal step - increment counter
+            stepCounter++;
             return `
                 <div class="step-edit-item ${step.critical ? 'critical' : ''}" style="margin-bottom: 12px;">
                     <div class="step-edit-header">
-                        <span class="step-number">Step ${index + 1}:</span>
+                        <span class="step-number">Step ${stepCounter}:</span>
                         <input type="text" data-index="${index}" value="${step.step}" 
                                placeholder="輸入步驟內容" 
                                style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;"
@@ -2923,8 +2928,8 @@ async function showCategoryEvaluation(categoryId) {
                     badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
                 }
 
-                const checklistHtml = item.checklist.map((step, index) => {
-                        // Check if this is a subtitle
+const checklistHtml = item.checklist.map((step, index) => {
+    // Check if this is a subtitle
     if (step.isSubtitle) {
         return `
             <div style="margin: 20px 0 10px 0;">
@@ -2932,58 +2937,61 @@ async function showCategoryEvaluation(categoryId) {
             </div>
         `;
     }
-                    
-                    const status = checklistStatus[index] || 'pending';
-                    const remark = remarks[index] || '';
-                    let statusClass = '';
-                    let statusText = '';
+    
+    // Count actual steps only
+    const stepNumber = item.checklist.slice(0, index).filter(s => !s.isSubtitle).length + 1;
+    
+    const status = checklistStatus[index] || 'pending';
+    const remark = remarks[index] || '';
+    let statusClass = '';
+    let statusText = '';
 
-                    if (status === 'pass') {
-                        statusClass = 'completed';
-                        statusText = '✅ 合格';
-                    } else if (status === 'fail') {
-                        statusClass = 'failed';
-                        statusText = '❌ 不合格';
-                    } else {
-                        statusText = '⏳ 待評核';
-                    }
+    if (status === 'pass') {
+        statusClass = 'completed';
+        statusText = '✅ 合格';
+    } else if (status === 'fail') {
+        statusClass = 'failed';
+        statusText = '❌ 不合格';
+    } else {
+        statusText = '⏳ 待評核';
+    }
 
-                    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
+    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
 
-                    return `
-                        <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
-                            <div class="checklist-step-header">
-                                <div class="checklist-step-name">
-                                    <span class="step-number">Step ${index + 1}:</span>
-                                    ${step.step} ${criticalBadge}
-                                </div>
-                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                    <div class="checklist-step-actions">
-                                        <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
-                                        <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
-                                        <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            <div style="margin: 8px 0; color: #666;">${statusText}</div>
-                            ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                <div class="step-remarks">
-                                    <label>💬 評核意見/備註:</label>
-                                    <textarea 
-                                        id="remark_${item.docId}_${index}" 
-                                        placeholder="請輸入評核意見或備註..."
-                                        onchange="saveRemark('${item.docId}', ${index})"
-                                    >${remark}</textarea>
-                                </div>
-                            ` : remark ? `
-                                <div class="step-remarks">
-                                    <label>💬 評核意見:</label>
-                                    <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-top: 5px;">${remark}</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                }).join('');
+    return `
+        <div class="checklist-item ${statusClass} ${step.critical ? 'critical' : ''}">
+            <div class="checklist-step-header">
+                <div class="checklist-step-name">
+                    <span class="step-number">Step ${stepNumber}:</span>
+                    ${step.step} ${criticalBadge}
+                </div>
+                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                    <div class="checklist-step-actions">
+                        <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
+                        <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
+                        <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
+                    </div>
+                ` : ''}
+            </div>
+            <div style="margin: 8px 0; color: #666;">${statusText}</div>
+            ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                <div class="step-remarks">
+                    <label>💬 評核意見/備註:</label>
+                    <textarea 
+                        id="remark_${item.docId}_${index}" 
+                        placeholder="請輸入評核意見或備註..."
+                        onchange="saveRemark('${item.docId}', ${index})"
+                    >${remark}</textarea>
+                </div>
+            ` : remark ? `
+                <div class="step-remarks">
+                    <label>💬 評核意見:</label>
+                    <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-top: 5px;">${remark}</div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}).join('');
 
                 let overallStatus = '';
                 let overallClass = '';
