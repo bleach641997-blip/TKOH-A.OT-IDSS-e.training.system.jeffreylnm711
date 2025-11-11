@@ -3395,15 +3395,16 @@ function toggleEvalItemCard(itemId) {
     const card = document.getElementById(`eval_item_${itemId}`);
     const allCards = document.querySelectorAll('#evaluationContent .item-card');
     
+    // ⭐ 如果已經展開，就不做任何事（移除收起功能）
     if (card.classList.contains('expanded')) {
-        // 收起當前卡片
-        card.classList.remove('expanded');
-    } else {
-        // 先收起所有卡片
-        allCards.forEach(c => c.classList.remove('expanded'));
-        // 展開當前卡片
-        card.classList.add('expanded');
+        return; // 什麼都不做，只能用按鈕收起
     }
+    
+    // 先收起所有卡片
+    allCards.forEach(c => c.classList.remove('expanded'));
+    // 展開當前卡片
+    card.classList.add('expanded');
+}
 }
 
 // ==================== 更新 Checklist 步驟狀態（不自動返回）====================
