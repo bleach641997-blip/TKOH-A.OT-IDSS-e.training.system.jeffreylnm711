@@ -1936,7 +1936,7 @@ async function showCategoryDetail(categoryId) {
             }
 
             return `
-<div class="item-card ${item.hasChecklist ? '' : 'completed'}" id="item_${item.docId}">
+                <div class="item-card ${item.hasChecklist ? '' : 'completed'}" id="item_${item.docId}" onclick="toggleItemCard('${item.docId}')">
                     <button class="back-button" onclick="event.stopPropagation(); toggleItemCard('${item.docId}')">🔙 收起</button>
                     
                     <div class="item-card-header">
@@ -3025,7 +3025,7 @@ overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未
                 }
 
                 itemsHtml.push(`
- <div class="item-card ${overallClass}" id="eval_item_${itemId}">
+                    <div class="item-card ${overallClass}" id="eval_item_${item.docId}" onclick="toggleEvalItemCard('${item.docId}')">
                         <button class="back-button" onclick="event.stopPropagation(); toggleEvalItemCard('${item.docId}')">🔙 收起</button>
                         
                         <div class="item-card-header">
