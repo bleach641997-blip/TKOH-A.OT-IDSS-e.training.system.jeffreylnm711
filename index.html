@@ -286,6 +286,11 @@
             animation: pulse 2s infinite;
         }
 
+.critical-warning {
+    color: #ff4757 !important;
+    font-weight: bold;
+}
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
@@ -3009,7 +3014,7 @@ const checklistHtml = item.checklist.map((step, index) => {
                     overallStatus = '✅ 已完成';
                     overallClass = 'completed';
                 } else if (!allCriticalPassed) {
-                    overallStatus = '⚠️ 尚有 Critical 步驟未通過';
+overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未通過</span>';
                     overallClass = '';
                 } else if (completionRate < 100) {
                     overallStatus = `⚠️ 完成率 ${completionRate}%`;
@@ -3258,7 +3263,7 @@ item.checklist.forEach((step, index) => {
             } else {
                 card.classList.remove('completed');
                 if (!allCriticalPassed) {
-                    overallStatus = '⚠️ 尚有 Critical 步驟未通過';
+overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未通過</span>';
                 } else if (completionRate < 100) {
                     overallStatus = `⚠️ 完成率 ${completionRate}%`;
                 } else {
@@ -3322,37 +3327,78 @@ item.checklist.forEach((step, index) => {
             }
         }
 
-        // ==================== 標記項目完成 ====================
-        async function markItemComplete(itemId) {
-            try {
-                const recordsSnapshot = await db.collection('trainingRecords')
-                    .where('userId', '==', currentStaffId)
-                    .where('itemId', '==', itemId)
-                    .limit(1)
-                    .get();
-
-                const recordData = {
-                    status: 'completed',
-                    evaluatedBy: currentUser.docId,
-                    evaluatedAt: new Date().toISOString()
-                };
-
-                if (recordsSnapshot.empty) {
-                    recordData.userId = currentStaffId;
-                    recordData.itemId = itemId;
-                    await db.collection('trainingRecords').add(recordData);
-                } else {
-                    await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
+// ==================== 標記項目完成 ====================
+async function markItemComplete(itemId) {
+    try {
+        // 先檢查是否有 Critical 步驟未通過
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
+        
+        if (item.hasChecklist) {
+            const recordsSnapshot = await db.collection('trainingRecords')
+                .where('userId', '==', currentStaffId)
+                .where('itemId', '==', itemId)
+                .limit(1)
+                .get();
+            
+            if (!recordsSnapshot.empty) {
+                const record = recordsSnapshot.docs[0].data();
+                const checklistStatus = record.checklistStatus || {};
+                
+                // 檢查是否有 Critical 步驟不合格
+                const hasCriticalFailed = item.checklist.some((step, index) => {
+                    return step.critical && checklistStatus[index] === 'fail';
+                });
+                
+                if (hasCriticalFailed) {
+                    showToast('❌ 有 Critical 步驟不合格，無法標記完成', 'error');
+                    return;
                 }
-
-                showToast('✅ 項目已標記完成', 'success');
-                showCategoryEvaluation(currentCategoryId);
-            } catch (error) {
-                console.error('標記完成失敗:', error);
-                showToast('❌ 操作失敗', 'error');
+                
+                // 檢查是否所有 Critical 步驟都通過
+                const allCriticalPassed = item.checklist.every((step, index) => {
+                    if (!step.critical) return true;
+                    return checklistStatus[index] === 'pass';
+                });
+                
+                if (!allCriticalPassed) {
+                    showToast('❌ 尚有 Critical 步驟未評核，無法標記完成', 'error');
+                    return;
+                }
+            } else {
+                showToast('❌ 請先完成評核，才能標記完成', 'error');
+                return;
             }
         }
+        
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
 
+        const recordData = {
+            status: 'completed',
+            evaluatedBy: currentUser.docId,
+            evaluatedAt: new Date().toISOString()
+        };
+
+        if (recordsSnapshot.empty) {
+            recordData.userId = currentStaffId;
+            recordData.itemId = itemId;
+            await db.collection('trainingRecords').add(recordData);
+        } else {
+            await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
+        }
+
+        showToast('✅ 項目已標記完成', 'success');
+        showCategoryEvaluation(currentCategoryId);
+    } catch (error) {
+        console.error('標記完成失敗:', error);
+        showToast('❌ 操作失敗', 'error');
+    }
+} 
+        
         // ==================== 標記項目未完成（重設）====================
         async function markItemIncomplete(itemId) {
             try {
