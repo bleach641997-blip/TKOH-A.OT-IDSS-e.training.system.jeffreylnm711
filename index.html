@@ -1839,7 +1839,7 @@
             }
         }
 
- // ==================== 顯示分類詳情（管理模式）====================
+// ==================== 顯示分類詳情（管理模式）====================
 async function showCategoryDetail(categoryId) {
     currentCategoryId = categoryId;
     showPage('categoryDetailPage');
@@ -1877,9 +1877,11 @@ async function showCategoryDetail(categoryId) {
                 badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
             }
 
-            // 計算完成率（這裡先顯示步驟數，管理模式下不計算實際完成率）
-            const totalSteps = item.checklist ? item.checklist.length : 0;
-            const percentage = item.hasChecklist ? 100 : 0; // 管理模式下顯示100%（表示已設定）
+            // ⭐ ADD THIS LINE - Calculate actual steps (excluding subtitles)
+            const actualStepCount = item.checklist ? item.checklist.filter(s => !s.isSubtitle).length : 0;
+            const totalSteps = actualStepCount; // Use actualStepCount instead of item.checklist.length
+            
+            const percentage = item.hasChecklist ? 100 : 0;
             
             const circumference = 2 * Math.PI * 50;
             const offset = circumference - (percentage / 100) * circumference;
@@ -1887,37 +1889,41 @@ async function showCategoryDetail(categoryId) {
             let checklistHtml = '';
             
             if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
-const stepsHtml = item.checklist.map((step, index) => {
-    // Check if this is a subtitle
-    if (step.isSubtitle) {
-        return `
-            <div style="margin: 20px 0 10px 0;">
-                <span class="step-subtitle">${step.step}</span>
-            </div>
-        `;
-    }
-    
-    // Count actual steps only (excluding subtitles)
-    const stepNumber = item.checklist.slice(0, index).filter(s => !s.isSubtitle).length + 1;
-    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
-    
-    return `
-        <div class="checklist-item ${step.critical ? 'critical' : ''}">
-            <div class="checklist-step-name">
-                <span class="step-number">Step ${stepNumber}:</span>
-                ${step.step} ${criticalBadge}
-            </div>
-            <div class="checklist-step-actions">
-                <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); editChecklistStep('${item.docId}', ${index})">✏️ 編輯</button>
-                <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); deleteChecklistStep('${item.docId}', ${index})">🗑️ 刪除</button>
-            </div>
-        </div>
-    `;
-}).join('');
+                // ⭐ UPDATE THIS SECTION - Use stepCounter for proper numbering
+                let stepCounter = 0; // Add counter
+                
+                const stepsHtml = item.checklist.map((step, index) => {
+                    // Check if this is a subtitle
+                    if (step.isSubtitle) {
+                        return `
+                            <div style="margin: 20px 0 10px 0;">
+                                <span class="step-subtitle">${step.step}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Increment counter for actual steps only
+                    stepCounter++;
+                    const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
+                    
+                    return `
+                        <div class="checklist-item ${step.critical ? 'critical' : ''}">
+                            <div class="checklist-step-name">
+                                <span class="step-number">Step ${stepCounter}:</span>
+                                ${step.step} ${criticalBadge}
+                            </div>
+                            <div class="checklist-step-actions">
+                                <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); editChecklistStep('${item.docId}', ${index})">✏️ 編輯</button>
+                                <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); deleteChecklistStep('${item.docId}', ${index})">🗑️ 刪除</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
 
+                // ⭐ UPDATE THIS LINE - Use actualStepCount
                 checklistHtml = `
                     <div class="checklist-container">
-                        <div class="checklist-header">📋 評核步驟 Checklist (共 ${item.checklist.length} 個步驟)</div>
+                        <div class="checklist-header">📋 評核步驟 Checklist (共 ${actualStepCount} 個步驟)</div>
                         ${stepsHtml}
                         <button class="btn btn-success btn-small" style="margin-top: 10px;" onclick="event.stopPropagation(); addChecklistStep('${item.docId}')">➕ 新增步驟</button>
                     </div>
@@ -1936,14 +1942,14 @@ const stepsHtml = item.checklist.map((step, index) => {
                         
                         <div class="item-card-progress">
                             <svg class="item-progress-ring" width="120" height="120" viewBox="0 0 120 120">
-    <circle class="item-progress-ring-bg" cx="60" cy="60" r="50" 
-        fill="none" stroke-width="10"/>
-    <circle class="item-progress-ring-circle" cx="60" cy="60" r="50" 
-        fill="none" stroke-width="10"
-        stroke-dasharray="${circumference}" 
-        stroke-dashoffset="${offset}"
-        stroke-linecap="round"/>
-</svg>
+                                <circle class="item-progress-ring-bg" cx="60" cy="60" r="50" 
+                                    fill="none" stroke-width="10"/>
+                                <circle class="item-progress-ring-circle" cx="60" cy="60" r="50" 
+                                    fill="none" stroke-width="10"
+                                    stroke-dasharray="${circumference}" 
+                                    stroke-dashoffset="${offset}"
+                                    stroke-linecap="round"/>
+                            </svg>
                             <div class="item-progress-text">
                                 <div class="item-progress-percent">${totalSteps}</div>
                                 <div class="item-progress-label">步驟</div>
