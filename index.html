@@ -3553,7 +3553,7 @@ overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未
                 }
             }
 
-            const overallStatusElement = card.querySelector('.score-info .score-item-value[style*="font-size: 1.1em"]');
+const overallStatusElement = card.querySelector('.score-info .score-item-value[style*="font-size: 1.1em"]');
             if (overallStatusElement) {
                 overallStatusElement.textContent = overallStatus;
                 overallStatusElement.className = `score-item-value ${overallClass}`;
