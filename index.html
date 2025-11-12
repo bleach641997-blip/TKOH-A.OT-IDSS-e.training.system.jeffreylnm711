@@ -41,7 +41,7 @@
 
         h1 {
             text-align: center;
-            color: #ffa502;
+            color: #ff4757;
             margin-bottom: 30px;
             font-size: 2.5em;
         }
@@ -3553,7 +3553,7 @@ item.checklist.forEach((step, index) => {
             } else {
                 card.classList.remove('completed');
                 if (!allCriticalPassed) {
-overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未通過</span>';
+overallStatus = '⚠️ 尚有 Critical 步驟未通過';
                 } else if (completionRate < 100) {
                     overallStatus = `⚠️ 完成率 ${completionRate}%`;
                 } else {
