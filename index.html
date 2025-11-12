@@ -3297,16 +3297,29 @@ const checklistHtml = item.checklist.map((step, index) => {
     `;
 }).join('');
 
-                let overallStatus = '';
-                let overallClass = '';
-                
- if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
+let overallStatus = '';
+let overallClass = '';
+
+// ⭐ 檢查是否有 Critical 步驟未評核
+const criticalSteps = item.checklist.filter(s => !s.isSubtitle && s.critical);
+const hasCriticalPending = criticalSteps.some((step) => {
+    const stepIndex = item.checklist.indexOf(step);
+    return !checklistStatus[stepIndex] || checklistStatus[stepIndex] === 'pending';
+});
+
+if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
     overallStatus = '✅ 已完成';
     overallClass = 'completed';
-} else if (!allCriticalPassed) {
+} else if (hasCriticalPending) {
+    // 🔴 有 Critical 步驟未評核 → 紅色
     overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未通過</span>';
     overallClass = '';
+} else if (!allCriticalPassed) {
+    // Critical 已評核但不合格 → 紅色
+    overallStatus = '<span class="critical-warning">❌ Critical 步驟不合格</span>';
+    overallClass = '';
 } else if (completionRate < 100) {
+    // 🟡 Critical 通過但其他未完成 → 黃色
     overallStatus = `⚠️ 完成率 ${completionRate}%`;
     overallClass = '';
 } else {
