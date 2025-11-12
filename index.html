@@ -41,7 +41,7 @@
 
         h1 {
             text-align: center;
-            color: #ff4757;
+            color: #ffa502;
             margin-bottom: 30px;
             font-size: 2.5em;
         }
@@ -3300,19 +3300,19 @@ const checklistHtml = item.checklist.map((step, index) => {
                 let overallStatus = '';
                 let overallClass = '';
                 
-                if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
-                    overallStatus = '✅ 已完成';
-                    overallClass = 'completed';
-                } else if (!allCriticalPassed) {
-                    overallStatus = '⚠️ 尚有 Critical 步驟未通過';
-                    overallClass = '';
-                } else if (completionRate < 100) {
-                    overallStatus = `⚠️ 完成率 ${completionRate}%`;
-                    overallClass = '';
-                } else {
-                    overallStatus = '⏳ 待完成';
-                    overallClass = '';
-                }
+ if (allCriticalPassed && completionRate === 100 && record?.status === 'completed') {
+    overallStatus = '✅ 已完成';
+    overallClass = 'completed';
+} else if (!allCriticalPassed) {
+    overallStatus = '<span class="critical-warning">⚠️ 尚有 Critical 步驟未通過</span>';
+    overallClass = '';
+} else if (completionRate < 100) {
+    overallStatus = `⚠️ 完成率 ${completionRate}%`;
+    overallClass = '';
+} else {
+    overallStatus = '⏳ 待完成';
+    overallClass = '';
+}
 
                 itemsHtml.push(`
                     <div class="item-card ${overallClass}" id="eval_item_${item.docId}" onclick="toggleEvalItemCard('${item.docId}')">
