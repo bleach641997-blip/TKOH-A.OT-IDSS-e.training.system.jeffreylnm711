@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -3583,10 +3583,10 @@ overallStatus = '⚠️ 尚有 Critical 步驟未通過';
             }
 
 const overallStatusElement = card.querySelector('.score-info .score-item-value[style*="font-size: 1.1em"]');
-if (overallStatusElement) {
-    overallStatusElement.innerHTML = overallStatus;  
-    overallStatusElement.className = `score-item-value ${overallClass}`;
-}
+            if (overallStatusElement) {
+                overallStatusElement.textContent = overallStatus;
+                overallStatusElement.className = `score-item-value ${overallClass}`;
+            }
         }
     } catch (error) {
         console.error('刷新卡片失敗:', error);
