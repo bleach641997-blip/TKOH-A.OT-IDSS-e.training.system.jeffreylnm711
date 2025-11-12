@@ -3508,26 +3508,34 @@ async function refreshCurrentItemCard(itemId) {
                 scoreItems[2].className = `score-item-value ${completionRate === 100 ? 'pass' : 'fail'}`;
             }
 
-            // 更新每個步驟的狀態
-            item.checklist.forEach((step, index) => {
-                const status = checklistStatus[index] || 'pending';
-                const checklistItems = card.querySelectorAll('.checklist-item');
-                
-                if (checklistItems[index]) {
-                    checklistItems[index].className = `checklist-item ${step.critical ? 'critical' : ''} ${status === 'pass' ? 'completed' : status === 'fail' ? 'failed' : ''}`;
-                    
-                    const statusTextDiv = checklistItems[index].querySelector('div[style*="margin: 8px"]');
-                    if (statusTextDiv) {
-                        if (status === 'pass') {
-                            statusTextDiv.textContent = '✅ 合格';
-                        } else if (status === 'fail') {
-                            statusTextDiv.textContent = '❌ 不合格';
-                        } else {
-                            statusTextDiv.textContent = '⏳ 待評核';
-                        }
-                    }
-                }
-            });
+// 更新每個步驟的狀態
+let checklistItemIndex = 0; // 只更新實際步驟，跳過章節標題
+item.checklist.forEach((step, index) => {
+    // 跳過章節標題
+    if (step.isSubtitle) {
+        return;
+    }
+    
+    const status = checklistStatus[index] || 'pending';
+    const checklistItems = card.querySelectorAll('.checklist-item');
+    
+    if (checklistItems[checklistItemIndex]) {
+        checklistItems[checklistItemIndex].className = `checklist-item ${step.critical ? 'critical' : ''} ${status === 'pass' ? 'completed' : status === 'fail' ? 'failed' : ''}`;
+        
+        const statusTextDiv = checklistItems[checklistItemIndex].querySelector('div[style*="margin: 8px"]');
+        if (statusTextDiv) {
+            if (status === 'pass') {
+                statusTextDiv.textContent = '✅ 合格';
+            } else if (status === 'fail') {
+                statusTextDiv.textContent = '❌ 不合格';
+            } else {
+                statusTextDiv.textContent = '⏳ 待評核';
+            }
+        }
+    }
+    
+    checklistItemIndex++; // 只在實際步驟時增加索引
+});
 
             // 更新整體狀態
             const allCriticalPassed = item.checklist.every((step, index) => {
