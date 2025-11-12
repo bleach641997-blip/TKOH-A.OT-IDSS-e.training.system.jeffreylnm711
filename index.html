@@ -3316,7 +3316,7 @@ const checklistHtml = item.checklist.map((step, index) => {
 
                 itemsHtml.push(`
                     <div class="item-card ${overallClass}" id="eval_item_${item.docId}" onclick="toggleEvalItemCard('${item.docId}')">
-                        <button class="back-button" onclick="event.stopPropagation(); toggleEvalItemCard('${item.docId}')">🔙 收起</button>
+                        <button class="back-button" onclick="event.stopPropagation(); collapseItemCard('${item.docId}')">🔙 收起</button>
                         
                         <div class="item-card-header">
                             <div class="item-card-title-section">
@@ -3406,6 +3406,14 @@ function toggleEvalItemCard(itemId) {
     card.classList.add('expanded');
 }
 
+// ==================== 收起評核項目卡片 ====================
+function collapseItemCard(itemId) {
+    const card = document.getElementById(`eval_item_${itemId}`);
+    if (card) {
+        card.classList.remove('expanded');
+    }
+}
+        
 // ==================== 更新 Checklist 步驟狀態（不自動返回）====================
 async function updateChecklistStepStatus(itemId, stepIndex, status) {
     try {
