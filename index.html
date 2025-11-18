@@ -2289,64 +2289,64 @@ function toggleItemCard(itemId) {
 }
         
         // ==================== 編輯項目設定 ====================
-        async function editItemSettings(itemId) {
-            try {
-                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
-                const item = itemDoc.data();
+async function editItemSettings(itemId) {
+    try {
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
 
- const modalBody = `
-    <div class="input-group">
-        <label>📝 項目名稱</label>
-        <input type="text" id="newItemName" placeholder="請輸入培訓項目名稱">
-    </div>
-    ${currentTrainingType === 'PCA' ? `
-    <div class="input-group">
-        <label>👥 適用級別</label>
-        <select id="pcaLevel">
-            <option value="ALL">全部 PCA (PCA1, PCA2, PCA3)</option>
-            <option value="PCA1">僅 PCA1</option>
-            <option value="PCA2">僅 PCA2</option>
-            <option value="PCA3">僅 PCA3</option>
-        </select>
-    </div>
-    ` : ''}
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="editHasDeadline" ${item.hasDeadline ? 'checked' : ''} onchange="toggleEditDeadlineSettings()">
-                        <label for="editHasDeadline">⏰ 設定截止日期</label>
+        const modalBody = `
+            <div class="input-group">
+                <label>📝 項目名稱</label>
+                <input type="text" id="editItemName" value="${item.name}" placeholder="請輸入項目名稱">
+            </div>
+            ${currentTrainingType === 'PCA' ? `
+            <div class="input-group">
+                <label>👥 適用級別</label>
+                <select id="editPcaLevel">
+                    <option value="ALL" ${(item.pcaLevel || 'ALL') === 'ALL' ? 'selected' : ''}>全部 PCA (PCA1, PCA2, PCA3)</option>
+                    <option value="PCA1" ${item.pcaLevel === 'PCA1' ? 'selected' : ''}>僅 PCA1</option>
+                    <option value="PCA2" ${item.pcaLevel === 'PCA2' ? 'selected' : ''}>僅 PCA2</option>
+                    <option value="PCA3" ${item.pcaLevel === 'PCA3' ? 'selected' : ''}>僅 PCA3</option>
+                </select>
+            </div>
+            ` : ''}
+            <div class="checkbox-group">
+                <input type="checkbox" id="editHasDeadline" ${item.hasDeadline ? 'checked' : ''} onchange="toggleEditDeadlineSettings()">
+                <label for="editHasDeadline">⏰ 設定截止日期</label>
+            </div>
+            <div id="editDeadlineSettings" class="deadline-settings" style="display: ${item.hasDeadline ? 'block' : 'none'};">
+                <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
+                <div class="deadline-inputs">
+                    <div class="input-group" style="margin: 0;">
+                        <label>數值</label>
+                        <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
                     </div>
-                    <div id="editDeadlineSettings" class="deadline-settings" style="display: ${item.hasDeadline ? 'block' : 'none'};">
-                        <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
-                        <div class="deadline-inputs">
-                            <div class="input-group" style="margin: 0;">
-                                <label>數值</label>
-                                <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
-                            </div>
-                            <div class="input-group" style="margin: 0;">
-                                <label>單位</label>
-                                <select id="editDeadlineUnit">
-                                    <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
-                                    <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
-                                    <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="input-group" style="margin: 0;">
+                        <label>單位</label>
+                        <select id="editDeadlineUnit">
+                            <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
+                            <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
+                            <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
+                        </select>
                     </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="editIsImportant" ${item.isImportant ? 'checked' : ''}>
-                        <label for="editIsImportant">⭐ 加入重要評核時間表</label>
-                    </div>
-                    <div class="modal-buttons">
-                        <button class="btn btn-success" onclick="saveItemSettings('${itemId}')">✅ 儲存</button>
-                        <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-                    </div>
-                `;
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="editIsImportant" ${item.isImportant ? 'checked' : ''}>
+                <label for="editIsImportant">⭐ 加入重要評核時間表</label>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-success" onclick="saveItemSettings('${itemId}')">✅ 儲存</button>
+                <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+            </div>
+        `;
 
-                showModal('⚙️ 編輯項目設定', modalBody);
-            } catch (error) {
-                console.error('載入項目設定失敗:', error);
-                showToast('❌ 載入失敗', 'error');
-            }
-        }
+        showModal('⚙️ 編輯項目設定', modalBody);
+    } catch (error) {
+        console.error('載入項目設定失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
+}
 
         // ==================== 切換編輯截止日期設定 ====================
         function toggleEditDeadlineSettings() {
@@ -2355,43 +2355,49 @@ function toggleItemCard(itemId) {
         }
 
         // ==================== 儲存項目設定 ====================
-        async function saveItemSettings(itemId) {
-            const name = document.getElementById('editItemName').value.trim();
-            const hasDeadline = document.getElementById('editHasDeadline').checked;
-            const isImportant = document.getElementById('editIsImportant').checked;
+  async function saveItemSettings(itemId) {
+    const name = document.getElementById('editItemName').value.trim();
+    const hasDeadline = document.getElementById('editHasDeadline').checked;
+    const isImportant = document.getElementById('editIsImportant').checked;
 
-            if (!name) {
-                showToast('❌ 請輸入項目名稱', 'error');
-                return;
-            }
+    if (!name) {
+        showToast('❌ 請輸入項目名稱', 'error');
+        return;
+    }
 
-            try {
-                const updateData = {
-                    name: name,
-                    hasDeadline: hasDeadline,
-                    isImportant: isImportant
-                };
+    try {
+        const updateData = {
+            name: name,
+            hasDeadline: hasDeadline,
+            isImportant: isImportant
+        };
 
-                if (hasDeadline) {
-                    const deadlineValue = parseInt(document.getElementById('editDeadlineValue').value) || 1;
-                    const deadlineUnit = document.getElementById('editDeadlineUnit').value;
-                    updateData.deadlineValue = deadlineValue;
-                    updateData.deadlineUnit = deadlineUnit;
-                } else {
-                    updateData.deadlineValue = null;
-                    updateData.deadlineUnit = null;
-                }
-
-                await db.collection('trainingItems').doc(itemId).update(updateData);
-
-                showToast('✅ 設定已更新', 'success');
-                closeModal();
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('更新設定失敗:', error);
-                showToast('❌ 更新失敗', 'error');
-            }
+        // ⭐ ADD THIS SECTION
+        if (currentTrainingType === 'PCA') {
+            const pcaLevel = document.getElementById('editPcaLevel').value;
+            updateData.pcaLevel = pcaLevel;
         }
+
+        if (hasDeadline) {
+            const deadlineValue = parseInt(document.getElementById('editDeadlineValue').value) || 1;
+            const deadlineUnit = document.getElementById('editDeadlineUnit').value;
+            updateData.deadlineValue = deadlineValue;
+            updateData.deadlineUnit = deadlineUnit;
+        } else {
+            updateData.deadlineValue = null;
+            updateData.deadlineUnit = null;
+        }
+
+        await db.collection('trainingItems').doc(itemId).update(updateData);
+
+        showToast('✅ 設定已更新', 'success');
+        closeModal();
+        showCategoryDetail(currentCategoryId);
+    } catch (error) {
+        console.error('更新設定失敗:', error);
+        showToast('❌ 更新失敗', 'error');
+    }
+}
 
         // ==================== 返回 Dashboard ====================
         function backToDashboard() {
@@ -2986,39 +2992,37 @@ let totalCount = items.length; // Use filtered items array
 items.forEach(itemObj => {
     const item = itemObj;
     const record = records[itemObj.docId];
-                        const item = doc.data();
-                        const record = records[doc.id];
-                        
-                        if (item.hasChecklist && record) {
-                            const allCriticalPassed = item.checklist.every((step, index) => {
-                                if (!step.critical) return true;
-                                return record.checklistStatus && record.checklistStatus[index] === 'pass';
-                            });
-                            
-                            // 計算完成率（百分比）
-                            let passedSteps = 0;
-                            item.checklist.forEach((step, index) => {
-                                if (record.checklistStatus && record.checklistStatus[index] === 'pass') {
-                                    passedSteps++;
-                                }
-                            });
-                            
-                            const completionRate = Math.round((passedSteps / item.checklist.length) * 100);
-                            
-                            // 只有當所有 Critical 步驟通過且完成率 100% 才算完成
-                            if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
-                                completedCount++;
-                            }
-                        } else if (!item.hasChecklist && record && record.status === 'completed') {
-                            completedCount++;
-                        }
-                    });
+    
+    if (item.hasChecklist && record) {
+        const allCriticalPassed = item.checklist.every((step, index) => {
+            if (!step.critical) return true;
+            return record.checklistStatus && record.checklistStatus[index] === 'pass';
+        });
+        
+        // 計算完成率（百分比）
+        let passedSteps = 0;
+        item.checklist.forEach((step, index) => {
+            if (record.checklistStatus && record.checklistStatus[index] === 'pass') {
+                passedSteps++;
+            }
+        });
+        
+        const completionRate = Math.round((passedSteps / item.checklist.length) * 100);
+        
+        // 只有當所有 Critical 步驟通過且完成率 100% 才算完成
+        if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
+            completedCount++;
+        }
+    } else if (!item.hasChecklist && record && record.status === 'completed') {
+        completedCount++;
+    }
+});
 
-                    const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-                    const isCompleted = percentage === 100;
+const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+const isCompleted = percentage === 100;
 
-                    const circumference = 2 * Math.PI * 60;
-                    const offset = circumference - (percentage / 100) * circumference;
+const circumference = 2 * Math.PI * 60;
+const offset = circumference - (percentage / 100) * circumference;
 
                     progressHtml.push(`
                         <div class="training-card ${isCompleted ? 'completed' : 'in-progress'}" 
