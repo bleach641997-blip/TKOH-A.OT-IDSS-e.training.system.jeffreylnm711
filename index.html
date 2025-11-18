@@ -3225,13 +3225,26 @@ async function showCategoryEvaluation(categoryId) {
 
         document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
 
+        // ⭐ 先取得員工資料以獲取 level
+        const staffDoc = await db.collection('accounts').doc(currentStaffId).get();
+        const staff = staffDoc.data();
+
         const itemsSnapshot = await db.collection('trainingItems')
             .where('categoryId', '==', categoryId)
             .get();
 
         const items = [];
         itemsSnapshot.forEach(doc => {
-            items.push({ docId: doc.id, ...doc.data() });
+            const item = doc.data();
+            
+            // ⭐ 過濾 PCA 級別項目
+            if (category.trainingType === 'PCA' && item.pcaLevel && item.pcaLevel !== 'ALL') {
+                if (item.pcaLevel !== staff.level) {
+                    return; // 跳過不符合級別的項目
+                }
+            }
+            
+            items.push({ docId: doc.id, ...item });
         });
         items.sort((a, b) => (a.order || 0) - (b.order || 0));
 
