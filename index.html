@@ -2506,65 +2506,76 @@ async function editItemSettings(itemId) {
             }
         }
 
-        // ==================== 顯示新增項目視窗 ====================
-        function showAddItemModal() {
-            const modalBody = `
-                <div class="input-group">
-                    <label>📝 項目名稱</label>
-                    <input type="text" id="newItemName" placeholder="請輸入培訓項目名稱">
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
-                    <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
-                </div>
-<div id="checklistInputGroup" style="margin-top: 15px;">
-    <div class="input-group">
-        <label>📋 Checklist 步驟</label>
-        <div id="checklistStepsContainer">
-            <!-- 動態生成 -->
+// ==================== 顯示新增項目視窗 ====================
+function showAddItemModal() {
+    const modalBody = `
+        <div class="input-group">
+            <label>📝 項目名稱</label>
+            <input type="text" id="newItemName" placeholder="請輸入培訓項目名稱">
         </div>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button class="btn btn-success btn-small" onclick="addNewChecklistStep()">➕ 新增步驟</button>
-            <button class="btn btn-info btn-small" onclick="addNewSubtitle()">📑 新增章節標題</button>
+        ${currentTrainingType === 'PCA' ? `
+        <div class="input-group">
+            <label>👥 適用級別</label>
+            <select id="newPcaLevel">
+                <option value="ALL">全部 PCA (PCA1, PCA2, PCA3)</option>
+                <option value="PCA1">僅 PCA1</option>
+                <option value="PCA2">僅 PCA2</option>
+                <option value="PCA3">僅 PCA3</option>
+            </select>
         </div>
-    </div>
-</div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
-                    <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
+        ` : ''}
+        <div class="checkbox-group">
+            <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
+            <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
+        </div>
+        <div id="checklistInputGroup" style="margin-top: 15px;">
+            <div class="input-group">
+                <label>📋 Checklist 步驟</label>
+                <div id="checklistStepsContainer">
+                    <!-- 動態生成 -->
                 </div>
-                <div id="deadlineSettings" class="deadline-settings" style="display: none;">
-                    <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
-                    <div class="deadline-inputs">
-                        <div class="input-group" style="margin: 0;">
-                            <label>數值</label>
-                            <input type="number" id="deadlineValue" value="1" min="1" placeholder="請輸入數值">
-                        </div>
-                        <div class="input-group" style="margin: 0;">
-                            <label>單位</label>
-                            <select id="deadlineUnit">
-                                <option value="days">日</option>
-                                <option value="weeks">周</option>
-                                <option value="months">月</option>
-                            </select>
-                        </div>
-                    </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-success btn-small" onclick="addNewChecklistStep()">➕ 新增步驟</button>
+                    <button class="btn btn-info btn-small" onclick="addNewSubtitle()">📑 新增章節標題</button>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="isImportantCheck">
-                    <label for="isImportantCheck">⭐ 加入重要評核時間表</label>
+            </div>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
+            <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
+        </div>
+        <div id="deadlineSettings" class="deadline-settings" style="display: none;">
+            <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
+            <div class="deadline-inputs">
+                <div class="input-group" style="margin: 0;">
+                    <label>數值</label>
+                    <input type="number" id="deadlineValue" value="1" min="1" placeholder="請輸入數值">
                 </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-success" onclick="createTrainingItem()">✅ 新增</button>
-                    <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+                <div class="input-group" style="margin: 0;">
+                    <label>單位</label>
+                    <select id="deadlineUnit">
+                        <option value="days">日</option>
+                        <option value="weeks">周</option>
+                        <option value="months">月</option>
+                    </select>
                 </div>
-            `;
+            </div>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="isImportantCheck">
+            <label for="isImportantCheck">⭐ 加入重要評核時間表</label>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn btn-success" onclick="createTrainingItem()">✅ 新增</button>
+            <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+        </div>
+    `;
 
-            showModal('➕ 新增培訓項目', modalBody);
-            checklistSteps = [];
-            addNewChecklistStep();
-        }
-
+    showModal('➕ 新增培訓項目', modalBody);
+    checklistSteps = [];
+    addNewChecklistStep();
+}
+        
         // ==================== 切換 Checklist 輸入 ====================
         function toggleChecklistInput() {
             const checked = document.getElementById('hasChecklistCheck').checked;
@@ -2675,9 +2686,9 @@ let itemData = {
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
 };
 
-// Add PCA level if applicable
+//  ⭐ 關鍵：讀取 PCA 級別選擇
 if (currentTrainingType === 'PCA') {
-    const pcaLevel = document.getElementById('pcaLevel').value;
+    const pcaLevel = document.getElementById('newpcaLevel').value;
     itemData.pcaLevel = pcaLevel;
 }
 
