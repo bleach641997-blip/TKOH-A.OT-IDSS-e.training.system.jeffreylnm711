@@ -3097,15 +3097,29 @@ const offset = circumference - (percentage / 100) * circumference;
                         .where('isImportant', '==', true)
                         .get();
 
-                    itemsSnapshot.forEach(doc => {
-                        const item = doc.data();
-                        importantItems.push({
-                            docId: doc.id,
-                            categoryName: category.name,
-                            categoryEmoji: category.emoji,
-                            ...item
-                        });
-                    });
+ // ⭐ 先取得員工資料以獲取 level
+const staffDoc = await db.collection('accounts').doc(staffId).get();
+const staff = staffDoc.data();
+
+// ... 在 for loop 內部，找到 itemsSnapshot.forEach 這段
+
+itemsSnapshot.forEach(doc => {
+    const item = doc.data();
+    
+    // ⭐ 過濾 PCA 級別項目
+    if (category.trainingType === 'PCA' && item.pcaLevel && item.pcaLevel !== 'ALL') {
+        if (item.pcaLevel !== staff.level) {
+            return; // 跳過不符合級別的項目
+        }
+    }
+    
+    importantItems.push({
+        docId: doc.id,
+        categoryName: category.name,
+        categoryEmoji: category.emoji,
+        ...item
+    });
+});
                 }
 
                 if (importantItems.length === 0) {
