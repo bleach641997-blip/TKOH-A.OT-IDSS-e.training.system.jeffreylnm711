@@ -2251,12 +2251,12 @@ async function showCategoryDetail(categoryId) {
                             </div>
                         </div>
 
-                        <div class="item-card-actions">
+ <div class="item-card-actions">
                             ${!item.hasChecklist ? `<button class="btn btn-info btn-small" onclick="event.stopPropagation(); convertToChecklist('${item.docId}')">📋 轉換為 Checklist</button>` : ''}
+                            <button class="btn btn-success btn-small" onclick="event.stopPropagation(); copyTrainingItem('${item.docId}')">📋 複製</button>
                             <button class="btn btn-warning btn-small" onclick="event.stopPropagation(); editItemSettings('${item.docId}')">⚙️ 設定</button>
                             <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteTrainingItem('${item.docId}', '${item.name}')">🗑️ 刪除項目</button>
                         </div>
-                    </div>
 
                     <div class="item-card-content">
                         ${checklistHtml}
@@ -2838,6 +2838,62 @@ function renderChecklistSteps() {
             } catch (error) {
                 console.error('刪除培訓項目失敗:', error);
                 showToast('❌ 刪除培訓項目失敗', 'error');
+            }
+        }
+
+        // ==================== 刪除培訓項目 ====================
+        async function deleteTrainingItem(docId, name) {
+            if (!confirm(`❓ 確定要刪除培訓項目「${name}」嗎？`)) {
+                return;
+            }
+
+            try {
+                await db.collection('trainingItems').doc(docId).delete();
+                showToast('✅ 培訓項目已刪除', 'success');
+                showCategoryDetail(currentCategoryId);
+            } catch (error) {
+                console.error('刪除培訓項目失敗:', error);
+                showToast('❌ 刪除培訓項目失敗', 'error');
+            }
+        }
+
+        // ==================== 複製培訓項目 ====================
+        async function copyTrainingItem(itemId) {
+            if (!confirm('❓ 確定要複製此培訓項目嗎？')) {
+                return;
+            }
+
+            try {
+                showToast('📋 正在複製項目...', 'warning');
+                
+                const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+                const sourceItem = itemDoc.data();
+                
+                const newItemData = {
+                    ...sourceItem,
+                    name: sourceItem.name + ' (副本)',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                const itemsSnapshot = await db.collection('trainingItems')
+                    .where('categoryId', '==', currentCategoryId)
+                    .get();
+                
+                let maxOrder = 0;
+                itemsSnapshot.forEach(doc => {
+                    const order = doc.data().order || 0;
+                    if (order > maxOrder) maxOrder = order;
+                });
+                
+                newItemData.order = maxOrder + 1;
+                
+                await db.collection('trainingItems').add(newItemData);
+                
+                showToast('✅ 項目已複製', 'success');
+                showCategoryDetail(currentCategoryId);
+            } catch (error) {
+                console.error('複製項目失敗:', error);
+                showToast('❌ 複製失敗', 'error');
             }
         }
 
