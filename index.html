@@ -2688,7 +2688,7 @@ let itemData = {
 
 //  ⭐ 關鍵：讀取 PCA 級別選擇
 if (currentTrainingType === 'PCA') {
-    const pcaLevel = document.getElementById('newpcaLevel').value;
+    const pcaLevel = document.getElementById('newPcaLevel').value;
     itemData.pcaLevel = pcaLevel;
 }
 
@@ -3004,21 +3004,24 @@ items.forEach(itemObj => {
     const item = itemObj;
     const record = records[itemObj.docId];
     
-    if (item.hasChecklist && record) {
-        const allCriticalPassed = item.checklist.every((step, index) => {
-            if (!step.critical) return true;
-            return record.checklistStatus && record.checklistStatus[index] === 'pass';
-        });
-        
-        // 計算完成率（百分比）
-        let passedSteps = 0;
-        item.checklist.forEach((step, index) => {
-            if (record.checklistStatus && record.checklistStatus[index] === 'pass') {
-                passedSteps++;
-            }
-        });
-        
-        const completionRate = Math.round((passedSteps / item.checklist.length) * 100);
+  if (item.hasChecklist && record) {
+    // ⭐ 排除章節標題
+    const allCriticalPassed = item.checklist.every((step, index) => {
+        if (step.isSubtitle || !step.critical) return true;
+        return record.checklistStatus && record.checklistStatus[index] === 'pass';
+    });
+    
+    // 計算完成率（百分比）- 只計算實際步驟
+    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
+    let passedSteps = 0;
+    
+    item.checklist.forEach((step, index) => {
+        if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
+            passedSteps++;
+        }
+    });
+    
+    const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
         
         // 只有當所有 Critical 步驟通過且完成率 100% 才算完成
         if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
@@ -3139,20 +3142,23 @@ const offset = circumference - (percentage / 100) * circumference;
                     const record = records[item.docId];
                     let isCompleted = false;
 
-                    if (item.hasChecklist && record) {
-                        const allCriticalPassed = item.checklist.every((step, index) => {
-                            if (!step.critical) return true;
-                            return record.checklistStatus && record.checklistStatus[index] === 'pass';
-                        });
-                        
-                        let passedSteps = 0;
-                        item.checklist.forEach((step, index) => {
-                            if (record.checklistStatus && record.checklistStatus[index] === 'pass') {
-                                passedSteps++;
-                            }
-                        });
-                        
-                        const completionRate = Math.round((passedSteps / item.checklist.length) * 100);
+  if (item.hasChecklist && record) {
+    // ⭐ 排除章節標題
+    const allCriticalPassed = item.checklist.every((step, index) => {
+        if (step.isSubtitle || !step.critical) return true;
+        return record.checklistStatus && record.checklistStatus[index] === 'pass';
+    });
+    
+    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
+    let passedSteps = 0;
+    
+    item.checklist.forEach((step, index) => {
+        if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
+            passedSteps++;
+        }
+    });
+    
+    const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
                         isCompleted = allCriticalPassed && completionRate === 100 && record.status === 'completed';
                     } else if (record) {
                         isCompleted = record.status === 'completed';
@@ -3542,14 +3548,14 @@ async function refreshCurrentItemCard(itemId) {
         const checklistStatus = record?.checklistStatus || {};
         const remarks = record?.remarks || {};
 
-        let totalSteps = item.checklist.length;
-        let passedSteps = 0;
-        
-        item.checklist.forEach((step, index) => {
-            if (checklistStatus[index] === 'pass') {
-                passedSteps++;
-            }
-        });
+let totalSteps = item.checklist.filter(s => !s.isSubtitle).length;
+let passedSteps = 0;
+
+item.checklist.forEach((step, index) => {
+    if (!step.isSubtitle && checklistStatus[index] === 'pass') {
+        passedSteps++;
+    }
+});
 
         const completionRate = Math.round((passedSteps / totalSteps) * 100);
         
@@ -3705,21 +3711,18 @@ async function markItemComplete(itemId) {
                 const record = recordsSnapshot.docs[0].data();
                 const checklistStatus = record.checklistStatus || {};
                 
-                // 檢查是否有 Critical 步驟不合格
-                const hasCriticalFailed = item.checklist.some((step, index) => {
-                    return step.critical && checklistStatus[index] === 'fail';
-                });
-                
-                if (hasCriticalFailed) {
-                    showToast('❌ 有 Critical 步驟不合格，無法標記完成', 'error');
-                    return;
-                }
-                
-                // 檢查是否所有 Critical 步驟都通過
-                const allCriticalPassed = item.checklist.every((step, index) => {
-                    if (!step.critical) return true;
-                    return checklistStatus[index] === 'pass';
-                });
+    // 檢查是否有 Critical 步驟不合格（排除章節標題）
+const hasCriticalFailed = item.checklist.some((step, index) => {
+    return !step.isSubtitle && step.critical && checklistStatus[index] === 'fail';
+});
+
+// ...
+
+// 檢查是否所有 Critical 步驟都通過（排除章節標題）
+const allCriticalPassed = item.checklist.every((step, index) => {
+    if (step.isSubtitle || !step.critical) return true;
+    return checklistStatus[index] === 'pass';
+});
                 
                 if (!allCriticalPassed) {
                     showToast('❌ 尚有 Critical 步驟未評核，無法標記完成', 'error');
