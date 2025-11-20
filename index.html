@@ -2310,27 +2310,71 @@ async function editItemSettings(itemId) {
                 </select>
             </div>
             ` : ''}
-            <div class="checkbox-group">
-                <input type="checkbox" id="editHasDeadline" ${item.hasDeadline ? 'checked' : ''} onchange="toggleEditDeadlineSettings()">
-                <label for="editHasDeadline">⏰ 設定截止日期</label>
+<div class="checkbox-group">
+    <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
+    <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
+</div>
+<div id="deadlineSettings" class="deadline-settings" style="display: none;">
+    <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
+    
+    <!-- ⭐ 新增重複評核選項 -->
+    <div class="checkbox-group" style="margin-bottom: 15px;">
+        <input type="checkbox" id="isRecurringCheck" onchange="toggleRecurringSettings()">
+        <label for="isRecurringCheck">🔄 設定為重複評核</label>
+    </div>
+    
+    <!-- ⭐ 單次評核設定 (原有的) -->
+    <div id="singleDeadlineSettings">
+        <div class="deadline-inputs">
+            <div class="input-group" style="margin: 0;">
+                <label>數值</label>
+                <input type="number" id="deadlineValue" value="1" min="1" placeholder="請輸入數值">
             </div>
-            <div id="editDeadlineSettings" class="deadline-settings" style="display: ${item.hasDeadline ? 'block' : 'none'};">
-                <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
-                <div class="deadline-inputs">
-                    <div class="input-group" style="margin: 0;">
-                        <label>數值</label>
-                        <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
-                    </div>
-                    <div class="input-group" style="margin: 0;">
-                        <label>單位</label>
-                        <select id="editDeadlineUnit">
-                            <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
-                            <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
-                            <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
-                        </select>
-                    </div>
-                </div>
+            <div class="input-group" style="margin: 0;">
+                <label>單位</label>
+                <select id="deadlineUnit">
+                    <option value="days">日</option>
+                    <option value="weeks">周</option>
+                    <option value="months">月</option>
+                </select>
             </div>
+        </div>
+    </div>
+    
+    <!-- ⭐ 重複評核設定 (新增) -->
+    <div id="recurringSettings" style="display: none;">
+        <label>📅 重複週期（請選擇所有需要完成的時間點）</label>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
+            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                <input type="checkbox" value="3" class="recurring-period" style="margin-right: 5px;">
+                3 個月
+            </label>
+            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                <input type="checkbox" value="6" class="recurring-period" style="margin-right: 5px;">
+                6 個月
+            </label>
+            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                <input type="checkbox" value="9" class="recurring-period" style="margin-right: 5px;">
+                9 個月
+            </label>
+            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                <input type="checkbox" value="12" class="recurring-period" style="margin-right: 5px;">
+                12 個月
+            </label>
+            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                <input type="checkbox" value="18" class="recurring-period" style="margin-right: 5px;">
+                18 個月
+            </label>
+            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                <input type="checkbox" value="24" class="recurring-period" style="margin-right: 5px;">
+                24 個月
+            </label>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 0.9em;">
+            <strong>💡 提示：</strong>系統會自動為每個週期建立獨立的評核記錄
+        </div>
+    </div>
+</div>
             <div class="checkbox-group">
                 <input type="checkbox" id="editIsImportant" ${item.isImportant ? 'checked' : ''}>
                 <label for="editIsImportant">⭐ 加入重要評核時間表</label>
@@ -2588,6 +2632,13 @@ function showAddItemModal() {
             document.getElementById('deadlineSettings').style.display = checked ? 'block' : 'none';
         }
 
+        // ==================== 切換重複評核設定 ====================
+function toggleRecurringSettings() {
+    const isRecurring = document.getElementById('isRecurringCheck').checked;
+    document.getElementById('singleDeadlineSettings').style.display = isRecurring ? 'none' : 'block';
+    document.getElementById('recurringSettings').style.display = isRecurring ? 'block' : 'none';
+}
+        
 // ==================== 新增 Checklist 步驟 ====================
 function addNewChecklistStep() {
     checklistSteps.push({ step: '', critical: false });
@@ -2700,36 +2751,89 @@ if (currentTrainingType === 'PCA') {
                 itemData.checklist = checklistSteps;
             }
 
-            if (hasDeadline) {
-                const deadlineValue = parseInt(document.getElementById('deadlineValue').value) || 1;
-                const deadlineUnit = document.getElementById('deadlineUnit').value;
-                itemData.deadlineValue = deadlineValue;
-                itemData.deadlineUnit = deadlineUnit;
-            }
+// ⭐ 檢查是否為重複評核
+const isRecurring = document.getElementById('hasDeadlineCheck').checked && 
+                    document.getElementById('isRecurringCheck').checked;
 
-            try {
-                const itemsSnapshot = await db.collection('trainingItems')
-                    .where('categoryId', '==', currentCategoryId)
-                    .get();
+if (hasDeadline && isRecurring) {
+    // 🔄 重複評核：建立多個項目
+    const recurringPeriods = Array.from(document.querySelectorAll('.recurring-period:checked'))
+        .map(cb => parseInt(cb.value))
+        .sort((a, b) => a - b);
+    
+    if (recurringPeriods.length === 0) {
+        showToast('❌ 請至少選擇一個重複週期！', 'error');
+        return;
+    }
+    
+    try {
+        const itemsSnapshot = await db.collection('trainingItems')
+            .where('categoryId', '==', currentCategoryId)
+            .get();
 
-                let maxOrder = 0;
-                itemsSnapshot.forEach(doc => {
-                    const order = doc.data().order || 0;
-                    if (order > maxOrder) maxOrder = order;
-                });
+        let maxOrder = 0;
+        itemsSnapshot.forEach(doc => {
+            const order = doc.data().order || 0;
+            if (order > maxOrder) maxOrder = order;
+        });
 
-                itemData.order = maxOrder + 1;
-
-                await db.collection('trainingItems').add(itemData);
-
-                showToast('✅ 培訓項目新增成功', 'success');
-                closeModal();
-                showCategoryDetail(currentCategoryId);
-            } catch (error) {
-                console.error('新增培訓項目失敗:', error);
-                showToast('❌ 新增培訓項目失敗', 'error');
-            }
+        // 為每個週期建立獨立項目
+        for (let i = 0; i < recurringPeriods.length; i++) {
+            const months = recurringPeriods[i];
+            const recurringItemData = {
+                ...itemData,
+                name: `${name} (${months}個月)`,
+                deadlineValue: months,
+                deadlineUnit: 'months',
+                recurringSequence: i + 1,
+                recurringTotal: recurringPeriods.length,
+                originalName: name,
+                order: maxOrder + i + 1
+            };
+            
+            await db.collection('trainingItems').add(recurringItemData);
         }
+
+        showToast(`✅ 成功新增 ${recurringPeriods.length} 個重複評核！`, 'success');
+        closeModal();
+        showCategoryDetail(currentCategoryId);
+    } catch (error) {
+        console.error('新增重複評核失敗:', error);
+        showToast('❌ 新增重複評核失敗', 'error');
+    }
+    
+} else {
+    // ⏰ 單次評核：原有邏輯
+    if (hasDeadline) {
+        const deadlineValue = parseInt(document.getElementById('deadlineValue').value) || 1;
+        const deadlineUnit = document.getElementById('deadlineUnit').value;
+        itemData.deadlineValue = deadlineValue;
+        itemData.deadlineUnit = deadlineUnit;
+    }
+
+    try {
+        const itemsSnapshot = await db.collection('trainingItems')
+            .where('categoryId', '==', currentCategoryId)
+            .get();
+
+        let maxOrder = 0;
+        itemsSnapshot.forEach(doc => {
+            const order = doc.data().order || 0;
+            if (order > maxOrder) maxOrder = order;
+        });
+
+        itemData.order = maxOrder + 1;
+
+        await db.collection('trainingItems').add(itemData);
+
+        showToast('✅ 培訓項目新增成功', 'success');
+        closeModal();
+        showCategoryDetail(currentCategoryId);
+    } catch (error) {
+        console.error('新增培訓項目失敗:', error);
+        showToast('❌ 新增培訓項目失敗', 'error');
+    }
+}
 
         // ==================== 轉換為 Checklist ====================
         async function convertToChecklist(itemId) {
