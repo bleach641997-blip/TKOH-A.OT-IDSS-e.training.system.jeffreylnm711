@@ -2288,7 +2288,7 @@ function toggleItemCard(itemId) {
     }
 }
         
-   // ==================== 編輯項目設定 ====================
+// ==================== 編輯項目設定 ====================
 async function editItemSettings(itemId) {
     try {
         const itemDoc = await db.collection('trainingItems').doc(itemId).get();
@@ -2316,18 +2316,65 @@ async function editItemSettings(itemId) {
             </div>
             <div id="editDeadlineSettings" class="deadline-settings" style="display: ${item.hasDeadline ? 'block' : 'none'};">
                 <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
-                <div class="deadline-inputs">
-                    <div class="input-group" style="margin: 0;">
-                        <label>數值</label>
-                        <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
+                
+                <!-- ⭐ 重複評核選項 -->
+                <div class="checkbox-group" style="margin-bottom: 15px;">
+                    <input type="checkbox" id="editIsRecurringCheck" ${item.recurringSequence ? 'checked' : ''} onchange="toggleEditRecurringSettings()">
+                    <label for="editIsRecurringCheck">🔄 設定為重複評核</label>
+                </div>
+                
+                <!-- ⭐ 單次評核設定 -->
+                <div id="editSingleDeadlineSettings" style="display: ${item.recurringSequence ? 'none' : 'block'};">
+                    <div class="deadline-inputs">
+                        <div class="input-group" style="margin: 0;">
+                            <label>數值</label>
+                            <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
+                        </div>
+                        <div class="input-group" style="margin: 0;">
+                            <label>單位</label>
+                            <select id="editDeadlineUnit">
+                                <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
+                                <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
+                                <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="input-group" style="margin: 0;">
-                        <label>單位</label>
-                        <select id="editDeadlineUnit">
-                            <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
-                            <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
-                            <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
-                        </select>
+                </div>
+                
+                <!-- ⭐ 重複評核設定 -->
+                <div id="editRecurringSettings" style="display: ${item.recurringSequence ? 'block' : 'none'};">
+                    <label>📅 重複週期（請選擇所有需要完成的時間點）</label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
+                        <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                            <input type="checkbox" value="3" class="edit-recurring-period" style="margin-right: 5px;">
+                            3 個月
+                        </label>
+                        <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                            <input type="checkbox" value="6" class="edit-recurring-period" style="margin-right: 5px;">
+                            6 個月
+                        </label>
+                        <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                            <input type="checkbox" value="9" class="edit-recurring-period" style="margin-right: 5px;">
+                            9 個月
+                        </label>
+                        <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                            <input type="checkbox" value="12" class="edit-recurring-period" style="margin-right: 5px;">
+                            12 個月
+                        </label>
+                        <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                            <input type="checkbox" value="18" class="edit-recurring-period" style="margin-right: 5px;">
+                            18 個月
+                        </label>
+                        <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                            <input type="checkbox" value="24" class="edit-recurring-period" style="margin-right: 5px;">
+                            24 個月
+                        </label>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 0.9em;">
+                        <strong>💡 提示：</strong>系統會自動為每個週期建立獨立的評核記錄
+                    </div>
+                    <div style="margin-top: 10px; padding: 10px; background: #ffe6e6; border-radius: 8px; font-size: 0.9em; color: #d32f2f;">
+                        <strong>⚠️ 注意：</strong>此項目已是重複評核的一部分，修改會影響所有相關項目
                     </div>
                 </div>
             </div>
@@ -2353,9 +2400,16 @@ function toggleEditDeadlineSettings() {
     const checked = document.getElementById('editHasDeadline').checked;
     document.getElementById('editDeadlineSettings').style.display = checked ? 'block' : 'none';
 }
+
+// ==================== 切換編輯重複評核設定 ====================
+function toggleEditRecurringSettings() {
+    const isRecurring = document.getElementById('editIsRecurringCheck').checked;
+    document.getElementById('editSingleDeadlineSettings').style.display = isRecurring ? 'none' : 'block';
+    document.getElementById('editRecurringSettings').style.display = isRecurring ? 'block' : 'none';
+}
         
-        // ==================== 儲存項目設定 ====================
-  async function saveItemSettings(itemId) {
+// ==================== 儲存項目設定 ====================
+async function saveItemSettings(itemId) {
     const name = document.getElementById('editItemName').value.trim();
     const hasDeadline = document.getElementById('editHasDeadline').checked;
     const isImportant = document.getElementById('editIsImportant').checked;
@@ -2372,13 +2426,21 @@ function toggleEditDeadlineSettings() {
             isImportant: isImportant
         };
 
-        // ⭐ ADD THIS SECTION
         if (currentTrainingType === 'PCA') {
             const pcaLevel = document.getElementById('editPcaLevel').value;
             updateData.pcaLevel = pcaLevel;
         }
 
-        if (hasDeadline) {
+        // ⭐ 檢查是否為重複評核
+        const isRecurring = hasDeadline && document.getElementById('editIsRecurringCheck').checked;
+
+        if (hasDeadline && isRecurring) {
+            // 🔄 重複評核模式 - 顯示警告
+            showToast('⚠️ 重複評核項目修改功能開發中', 'warning');
+            // TODO: 實作重複評核項目的批量更新邏輯
+            return;
+        } else if (hasDeadline) {
+            // ⏰ 單次評核模式
             const deadlineValue = parseInt(document.getElementById('editDeadlineValue').value) || 1;
             const deadlineUnit = document.getElementById('editDeadlineUnit').value;
             updateData.deadlineValue = deadlineValue;
