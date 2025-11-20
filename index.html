@@ -3210,8 +3210,22 @@ importantItems.forEach(item => {
     `);
 });
 
-                document.getElementById('timelineItems').innerHTML = timelineHtml.join('');
-                document.getElementById('importantTimeline').style.display = 'block';
+// ⭐ 檢查是否有未完成的項目
+if (timelineHtml.length === 0) {
+    // 沒有未完成的重要評核 - 顯示灰色狀態
+    document.getElementById('timelineItems').innerHTML = `
+        <div style="text-align: center; padding: 30px; background: #f0f0f0; border-radius: 12px; color: #999;">
+            <div style="font-size: 3em; margin-bottom: 10px;">✅</div>
+            <div style="font-size: 1.2em; font-weight: bold;">暫沒有未完成的重要評核</div>
+            <div style="margin-top: 10px; font-size: 0.9em;">所有重要評核已完成</div>
+        </div>
+    `;
+} else {
+    // 有未完成的項目 - 正常顯示
+    document.getElementById('timelineItems').innerHTML = timelineHtml.join('');
+}
+
+document.getElementById('importantTimeline').style.display = 'block';
             } catch (error) {
                 console.error('載入重要評核時間表失敗:', error);
             }
