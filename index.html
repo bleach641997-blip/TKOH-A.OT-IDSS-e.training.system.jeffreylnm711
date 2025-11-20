@@ -3277,19 +3277,20 @@ async function showCategoryEvaluation(categoryId) {
         items.forEach(item => {
             const record = records[item.docId];
 
-            if (item.hasChecklist && item.checklist) {
-                const checklistStatus = record?.checklistStatus || {};
-                const remarks = record?.remarks || {};
-                
-                // 計算完成率（百分比）
-                let totalSteps = item.checklist.length;
-                let passedSteps = 0;
-                
-                item.checklist.forEach((step, index) => {
-                    if (checklistStatus[index] === 'pass') {
-                        passedSteps++;
-                    }
-                });
+if (item.hasChecklist && item.checklist) {
+    const checklistStatus = record?.checklistStatus || {};
+    const remarks = record?.remarks || {};
+    
+    // ⭐ 計算完成率（百分比）- 排除章節標題
+    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
+    let totalSteps = actualSteps.length;  // ✅ 只計算實際步驟
+    let passedSteps = 0;
+    
+    item.checklist.forEach((step, index) => {
+        if (!step.isSubtitle && checklistStatus[index] === 'pass') {  // ✅ 也要排除章節標題
+            passedSteps++;
+        }
+    });
 
                 const completionRate = Math.round((passedSteps / totalSteps) * 100);
                 
