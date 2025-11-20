@@ -2288,7 +2288,7 @@ function toggleItemCard(itemId) {
     }
 }
         
-        // ==================== 編輯項目設定 ====================
+   // ==================== 編輯項目設定 ====================
 async function editItemSettings(itemId) {
     try {
         const itemDoc = await db.collection('trainingItems').doc(itemId).get();
@@ -2310,71 +2310,27 @@ async function editItemSettings(itemId) {
                 </select>
             </div>
             ` : ''}
-<div class="checkbox-group">
-    <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
-    <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
-</div>
-<div id="deadlineSettings" class="deadline-settings" style="display: none;">
-    <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
-    
-    <!-- ⭐ 新增重複評核選項 -->
-    <div class="checkbox-group" style="margin-bottom: 15px;">
-        <input type="checkbox" id="isRecurringCheck" onchange="toggleRecurringSettings()">
-        <label for="isRecurringCheck">🔄 設定為重複評核</label>
-    </div>
-    
-    <!-- ⭐ 單次評核設定 (原有的) -->
-    <div id="singleDeadlineSettings">
-        <div class="deadline-inputs">
-            <div class="input-group" style="margin: 0;">
-                <label>數值</label>
-                <input type="number" id="deadlineValue" value="1" min="1" placeholder="請輸入數值">
+            <div class="checkbox-group">
+                <input type="checkbox" id="editHasDeadline" ${item.hasDeadline ? 'checked' : ''} onchange="toggleEditDeadlineSettings()">
+                <label for="editHasDeadline">⏰ 設定截止日期</label>
             </div>
-            <div class="input-group" style="margin: 0;">
-                <label>單位</label>
-                <select id="deadlineUnit">
-                    <option value="days">日</option>
-                    <option value="weeks">周</option>
-                    <option value="months">月</option>
-                </select>
+            <div id="editDeadlineSettings" class="deadline-settings" style="display: ${item.hasDeadline ? 'block' : 'none'};">
+                <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
+                <div class="deadline-inputs">
+                    <div class="input-group" style="margin: 0;">
+                        <label>數值</label>
+                        <input type="number" id="editDeadlineValue" value="${item.deadlineValue || 1}" min="1" placeholder="請輸入數值">
+                    </div>
+                    <div class="input-group" style="margin: 0;">
+                        <label>單位</label>
+                        <select id="editDeadlineUnit">
+                            <option value="days" ${item.deadlineUnit === 'days' ? 'selected' : ''}>日</option>
+                            <option value="weeks" ${item.deadlineUnit === 'weeks' ? 'selected' : ''}>周</option>
+                            <option value="months" ${item.deadlineUnit === 'months' ? 'selected' : ''}>月</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- ⭐ 重複評核設定 (新增) -->
-    <div id="recurringSettings" style="display: none;">
-        <label>📅 重複週期（請選擇所有需要完成的時間點）</label>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
-            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
-                <input type="checkbox" value="3" class="recurring-period" style="margin-right: 5px;">
-                3 個月
-            </label>
-            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
-                <input type="checkbox" value="6" class="recurring-period" style="margin-right: 5px;">
-                6 個月
-            </label>
-            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
-                <input type="checkbox" value="9" class="recurring-period" style="margin-right: 5px;">
-                9 個月
-            </label>
-            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
-                <input type="checkbox" value="12" class="recurring-period" style="margin-right: 5px;">
-                12 個月
-            </label>
-            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
-                <input type="checkbox" value="18" class="recurring-period" style="margin-right: 5px;">
-                18 個月
-            </label>
-            <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
-                <input type="checkbox" value="24" class="recurring-period" style="margin-right: 5px;">
-                24 個月
-            </label>
-        </div>
-        <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 0.9em;">
-            <strong>💡 提示：</strong>系統會自動為每個週期建立獨立的評核記錄
-        </div>
-    </div>
-</div>
             <div class="checkbox-group">
                 <input type="checkbox" id="editIsImportant" ${item.isImportant ? 'checked' : ''}>
                 <label for="editIsImportant">⭐ 加入重要評核時間表</label>
@@ -2392,12 +2348,12 @@ async function editItemSettings(itemId) {
     }
 }
 
-        // ==================== 切換編輯截止日期設定 ====================
-        function toggleEditDeadlineSettings() {
-            const checked = document.getElementById('editHasDeadline').checked;
-            document.getElementById('editDeadlineSettings').style.display = checked ? 'block' : 'none';
-        }
-
+// ==================== 切換編輯截止日期設定 ====================
+function toggleEditDeadlineSettings() {
+    const checked = document.getElementById('editHasDeadline').checked;
+    document.getElementById('editDeadlineSettings').style.display = checked ? 'block' : 'none';
+}
+        
         // ==================== 儲存項目設定 ====================
   async function saveItemSettings(itemId) {
     const name = document.getElementById('editItemName').value.trim();
