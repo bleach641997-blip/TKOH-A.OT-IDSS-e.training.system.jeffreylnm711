@@ -2432,22 +2432,48 @@ async function saveItemSettings(itemId) {
         }
 
         // ⭐ 檢查是否為重複評核
-        const isRecurring = hasDeadline && document.getElementById('editIsRecurringCheck').checked;
+        const isRecurring = hasDeadline && document.getElementById('editIsRecurringCheck') && document.getElementById('editIsRecurringCheck').checked;
 
         if (hasDeadline && isRecurring) {
-            // 🔄 重複評核模式 - 顯示警告
-            showToast('⚠️ 重複評核項目修改功能開發中', 'warning');
-            // TODO: 實作重複評核項目的批量更新邏輯
+            // 🔄 重複評核模式
+            const recurringPeriods = Array.from(document.querySelectorAll('.edit-recurring-period:checked'))
+                .map(cb => parseInt(cb.value))
+                .sort((a, b) => a - b);
+            
+            if (recurringPeriods.length === 0) {
+                showToast('❌ 請至少選擇一個重複週期！', 'error');
+                return;
+            }
+            
+            // ⚠️ 取得目前項目的資料以檢查是否已是重複評核的一部分
+            const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+            const currentItem = itemDoc.data();
+            
+            if (currentItem.recurringSequence) {
+                showToast('⚠️ 此項目已是重複評核的一部分，請刪除後重新建立', 'warning');
+                return;
+            }
+            
+            // TODO: 實作轉換為重複評核的邏輯
+            showToast('⚠️ 將現有項目轉換為重複評核功能開發中，請建立新項目', 'warning');
             return;
+            
         } else if (hasDeadline) {
             // ⏰ 單次評核模式
             const deadlineValue = parseInt(document.getElementById('editDeadlineValue').value) || 1;
             const deadlineUnit = document.getElementById('editDeadlineUnit').value;
             updateData.deadlineValue = deadlineValue;
             updateData.deadlineUnit = deadlineUnit;
+            // ⭐ 清除重複評核標記
+            updateData.recurringSequence = firebase.firestore.FieldValue.delete();
+            updateData.recurringTotal = firebase.firestore.FieldValue.delete();
+            updateData.originalName = firebase.firestore.FieldValue.delete();
         } else {
             updateData.deadlineValue = null;
             updateData.deadlineUnit = null;
+            updateData.recurringSequence = firebase.firestore.FieldValue.delete();
+            updateData.recurringTotal = firebase.firestore.FieldValue.delete();
+            updateData.originalName = firebase.firestore.FieldValue.delete();
         }
 
         await db.collection('trainingItems').doc(itemId).update(updateData);
@@ -2608,18 +2634,62 @@ function showAddItemModal() {
         </div>
         <div id="deadlineSettings" class="deadline-settings" style="display: none;">
             <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
-            <div class="deadline-inputs">
-                <div class="input-group" style="margin: 0;">
-                    <label>數值</label>
-                    <input type="number" id="deadlineValue" value="1" min="1" placeholder="請輸入數值">
+            
+            <!-- ⭐ 新增：重複評核選項 -->
+            <div class="checkbox-group" style="margin-bottom: 15px;">
+                <input type="checkbox" id="isRecurringCheck" onchange="toggleRecurringSettings()">
+                <label for="isRecurringCheck">🔄 設定為重複評核</label>
+            </div>
+            
+            <!-- ⭐ 單次評核設定 -->
+            <div id="singleDeadlineSettings">
+                <div class="deadline-inputs">
+                    <div class="input-group" style="margin: 0;">
+                        <label>數值</label>
+                        <input type="number" id="deadlineValue" value="1" min="1" placeholder="請輸入數值">
+                    </div>
+                    <div class="input-group" style="margin: 0;">
+                        <label>單位</label>
+                        <select id="deadlineUnit">
+                            <option value="days">日</option>
+                            <option value="weeks">周</option>
+                            <option value="months">月</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="input-group" style="margin: 0;">
-                    <label>單位</label>
-                    <select id="deadlineUnit">
-                        <option value="days">日</option>
-                        <option value="weeks">周</option>
-                        <option value="months">月</option>
-                    </select>
+            </div>
+            
+            <!-- ⭐ 重複評核設定 -->
+            <div id="recurringSettings" style="display: none;">
+                <label>📅 重複週期（請選擇所有需要完成的時間點）</label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
+                    <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <input type="checkbox" value="3" class="recurring-period" style="margin-right: 5px;">
+                        3 個月
+                    </label>
+                    <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <input type="checkbox" value="6" class="recurring-period" style="margin-right: 5px;">
+                        6 個月
+                    </label>
+                    <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <input type="checkbox" value="9" class="recurring-period" style="margin-right: 5px;">
+                        9 個月
+                    </label>
+                    <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <input type="checkbox" value="12" class="recurring-period" style="margin-right: 5px;">
+                        12 個月
+                    </label>
+                    <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <input type="checkbox" value="18" class="recurring-period" style="margin-right: 5px;">
+                        18 個月
+                    </label>
+                    <label style="padding: 10px; background: #f0f0f0; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <input type="checkbox" value="24" class="recurring-period" style="margin-right: 5px;">
+                        24 個月
+                    </label>
+                </div>
+                <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 0.9em;">
+                    <strong>💡 提示：</strong>系統會自動為每個週期建立獨立的評核記錄
                 </div>
             </div>
         </div>
