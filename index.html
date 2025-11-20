@@ -3141,71 +3141,74 @@ itemsSnapshot.forEach(doc => {
                 const now = new Date();
                 const timelineHtml = [];
 
-                importantItems.forEach(item => {
-                    let deadline = null;
-                    let daysRemaining = null;
-                    let statusClass = '';
-                    let statusText = '';
+importantItems.forEach(item => {
+    let deadline = null;
+    let daysRemaining = null;
+    let statusClass = '';
+    let statusText = '';
 
-                    if (item.hasDeadline) {
-                        deadline = calculateDeadline(joinDate, item.deadlineValue, item.deadlineUnit);
-                        const diffTime = deadline - now;
-                        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    }
+    if (item.hasDeadline) {
+        deadline = calculateDeadline(joinDate, item.deadlineValue, item.deadlineUnit);
+        const diffTime = deadline - now;
+        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
 
-                    const record = records[item.docId];
-                    let isCompleted = false;
+    const record = records[item.docId];
+    let isCompleted = false;
 
-  if (item.hasChecklist && record) {
-    // ⭐ 排除章節標題
-    const allCriticalPassed = item.checklist.every((step, index) => {
-        if (step.isSubtitle || !step.critical) return true;
-        return record.checklistStatus && record.checklistStatus[index] === 'pass';
-    });
-    
-    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
-    let passedSteps = 0;
-    
-    item.checklist.forEach((step, index) => {
-        if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
-            passedSteps++;
-        }
-    });
-    
-    const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
-                        isCompleted = allCriticalPassed && completionRate === 100 && record.status === 'completed';
-                    } else if (record) {
-                        isCompleted = record.status === 'completed';
-                    }
+    if (item.hasChecklist && record) {
+        // ⭐ 排除章節標題
+        const allCriticalPassed = item.checklist.every((step, index) => {
+            if (step.isSubtitle || !step.critical) return true;
+            return record.checklistStatus && record.checklistStatus[index] === 'pass';
+        });
+        
+        const actualSteps = item.checklist.filter(s => !s.isSubtitle);
+        let passedSteps = 0;
+        
+        item.checklist.forEach((step, index) => {
+            if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
+                passedSteps++;
+            }
+        });
+        
+        const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
+        isCompleted = allCriticalPassed && completionRate === 100 && record.status === 'completed';
+    } else if (record) {
+        isCompleted = record.status === 'completed';
+    }
 
-                    if (isCompleted) {
-                        statusClass = 'completed';
-                        statusText = '✅ 已完成';
-                    } else if (deadline && daysRemaining < 0) {
-                        statusClass = 'overdue';
-                        statusText = `⚠️ 已逾期 ${Math.abs(daysRemaining)} 天`;
-                    } else if (deadline && daysRemaining <= 7) {
-                        statusClass = 'overdue';
-                        statusText = `⏰ 剩餘 ${daysRemaining} 天`;
-                    } else if (deadline) {
-                        statusText = `⏰ 剩餘 ${daysRemaining} 天`;
-                    } else {
-                        statusText = '⏳ 待完成';
-                    }
+    // ⭐⭐⭐ 關鍵修改：如果已完成，直接跳過此項目
+    if (isCompleted) {
+        return; // 不顯示已完成的項目
+    }
 
-                    timelineHtml.push(`
-                        <div class="timeline-item ${statusClass}" onclick="quickEvaluate('${item.categoryName}', '${item.docId}')">
-                            <div class="timeline-item-info">
-                                <div class="timeline-item-name">${item.categoryEmoji} ${item.name}</div>
-                                <div class="timeline-item-details">
-                                    📂 ${item.categoryName}
-                                    ${deadline ? ` | 📅 截止日期: ${deadline.toLocaleDateString('zh-TW')}` : ''}
-                                </div>
-                            </div>
-                            <div class="timeline-item-status">${statusText}</div>
-                        </div>
-                    `);
-                });
+    // 只有未完成的項目才會顯示
+    if (deadline && daysRemaining < 0) {
+        statusClass = 'overdue';
+        statusText = `⚠️ 已逾期 ${Math.abs(daysRemaining)} 天`;
+    } else if (deadline && daysRemaining <= 7) {
+        statusClass = 'overdue';
+        statusText = `⏰ 剩餘 ${daysRemaining} 天`;
+    } else if (deadline) {
+        statusText = `⏰ 剩餘 ${daysRemaining} 天`;
+    } else {
+        statusText = '⏳ 待完成';
+    }
+
+    timelineHtml.push(`
+        <div class="timeline-item ${statusClass}" onclick="quickEvaluate('${item.categoryName}', '${item.docId}')">
+            <div class="timeline-item-info">
+                <div class="timeline-item-name">${item.categoryEmoji} ${item.name}</div>
+                <div class="timeline-item-details">
+                    📂 ${item.categoryName}
+                    ${deadline ? ` | 📅 截止日期: ${deadline.toLocaleDateString('zh-TW')}` : ''}
+                </div>
+            </div>
+            <div class="timeline-item-status">${statusText}</div>
+        </div>
+    `);
+});
 
                 document.getElementById('timelineItems').innerHTML = timelineHtml.join('');
                 document.getElementById('importantTimeline').style.display = 'block';
