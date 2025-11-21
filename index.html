@@ -2216,18 +2216,57 @@ if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
             await loadAccounts();
         }
 
-        // ==================== 載入帳戶列表 ====================
-        async function loadAccounts() {
-            try {
-                const accountsSnapshot = await db.collection('accounts').get();
+// ==================== 載入帳戶列表 ====================
+async function loadAccounts() {
+    try {
+        const accountsSnapshot = await db.collection('accounts').get();
+        
+        // ⭐ 定義職級排序順序
+        const levelOrder = { 'WM': 1, 'APN': 2, 'RN': 3, 'PCA1': 4, 'PCA2': 5, 'PCA3': 6, 'OTA': 7 };
+        
+        // ⭐ 收集所有帳戶並過濾掉 admin
+        const accounts = [];
+        accountsSnapshot.forEach(doc => {
+            const account = doc.data();
+            if (account.role !== 'admin') {
+                accounts.push({ docId: doc.id, ...account });
+            }
+        });
+        
+        // ⭐ 按職級排序
+        accounts.sort((a, b) => {
+            const orderA = levelOrder[a.level] || 999;
+            const orderB = levelOrder[b.level] || 999;
+            return orderA - orderB;
+        });
+        
+        // ⭐ 按職級分組
+        const groupedAccounts = {};
+        accounts.forEach(account => {
+            if (!groupedAccounts[account.level]) {
+                groupedAccounts[account.level] = [];
+            }
+            groupedAccounts[account.level].push(account);
+        });
+        
+        const accountListHtml = [];
+        
+        // ⭐ 按順序顯示每個職級
+        ['WM', 'APN', 'RN', 'PCA1', 'PCA2', 'PCA3', 'OTA'].forEach(level => {
+            if (groupedAccounts[level] && groupedAccounts[level].length > 0) {
+                // 職級標題
+                accountListHtml.push(`
+                    <div style="background: rgba(255, 165, 2, 0.1); padding: 12px 20px; 
+                                border-radius: 10px; margin: 20px 0 10px 0; 
+                                border-left: 4px solid #ffa502;">
+                        <h3 style="color: #ffa502; margin: 0; font-size: 1.2em;">
+                            📋 ${level} (${groupedAccounts[level].length} 位)
+                        </h3>
+                    </div>
+                `);
                 
-                const accountListHtml = [];
-
-                accountsSnapshot.forEach(doc => {
-                    const account = doc.data();
-                    
-                    if (account.role === 'admin') return;
-
+                // 該職級的帳戶列表
+                groupedAccounts[level].forEach(account => {
                     const roleBadge = account.role === 'supervisor' 
                         ? '<span class="badge badge-supervisor">👔 主管</span>'
                         : '<span class="badge badge-staff">👤 員工</span>';
@@ -2243,22 +2282,24 @@ if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
                                 </div>
                             </div>
                             <div class="account-actions">
-                                <button class="btn btn-danger btn-small" onclick="deleteAccount('${doc.id}', '${account.name}')">🗑️ 刪除</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteAccount('${account.docId}', '${account.name}')">🗑️ 刪除</button>
                             </div>
                         </div>
                     `);
                 });
-
-                if (accountListHtml.length === 0) {
-                    accountListHtml.push('<p class="no-data-message">📭 尚無其他帳戶</p>');
-                }
-
-                document.getElementById('accountList').innerHTML = accountListHtml.join('');
-            } catch (error) {
-                console.error('載入帳戶失敗:', error);
-                showToast('❌ 載入帳戶失敗', 'error');
             }
+        });
+
+        if (accountListHtml.length === 0) {
+            accountListHtml.push('<p class="no-data-message">📭 尚無其他帳戶</p>');
         }
+
+        document.getElementById('accountList').innerHTML = accountListHtml.join('');
+    } catch (error) {
+        console.error('載入帳戶失敗:', error);
+        showToast('❌ 載入帳戶失敗', 'error');
+    }
+}
 
         // ==================== 顯示新增帳戶視窗 ====================
         function showAddAccountModal() {
