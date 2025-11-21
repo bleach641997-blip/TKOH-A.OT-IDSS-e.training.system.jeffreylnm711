@@ -1852,7 +1852,7 @@
 <div id="auditMainPage" class="page">
     <!-- Dashboard Header -->
     <div class="audit-dashboard-header">
-        <div class="audit-dashboard-title">📋 質量監測系統</div>
+        <div class="audit-dashboard-title">📋 質量監測系統(開發中)</div>
         <div class="audit-dashboard-subtitle">Decontamination Area Quality Monitoring Dashboard</div>
     </div>
 
@@ -1976,15 +1976,16 @@
     </div>
 </div>
 
-        <!-- 審核詳情頁面 -->
-        <div id="auditDetailPage" class="page">
-            <div class="top-bar">
-                <h2 id="auditDetailTitle">審核詳情</h2>
-                <div>
-                    <button class="btn btn-info btn-small" onclick="exportAuditToPDF()">📄 匯出 PDF</button>
-                    <button class="btn btn-secondary btn-small" onclick="showPage('auditHistoryPage')">🔙 返回</button>
-                </div>
-            </div>
+<!-- 審核詳情頁面 -->
+<div id="auditDetailPage" class="page">
+    <div class="top-bar">
+        <h2 id="auditDetailTitle">審核詳情</h2>
+        <div>
+            <button class="btn btn-danger btn-small" onclick="deleteCurrentAudit()">🗑️ 刪除</button>
+            <button class="btn btn-info btn-small" onclick="exportAuditToPDF()">📄 匯出 PDF</button>
+            <button class="btn btn-secondary btn-small" onclick="showPage('auditHistoryPage')">🔙 返回</button>
+        </div>
+    </div>
             <div id="auditDetailContent">
                 <!-- 動態生成審核詳情 -->
             </div>
@@ -5100,20 +5101,29 @@ async function viewAuditHistory() {
                 ? '<span class="badge badge-warning">📝 草稿</span>' 
                 : '<span class="badge badge-success">✅ 已提交</span>';
 
-            historyHtml += `
-                <div class="audit-history-card-modern ${passClass} ${draftClass}" onclick="viewAuditDetail('${doc.id}')">
-                    <div class="audit-card-header">
-                        <div>
-                            <div class="audit-card-date">📅 ${record.date}</div>
-                            <div class="audit-card-location">📍 ${locationName} ${statusBadge}</div>
-                        </div>
-                        <div class="audit-card-score">
-                            <div class="audit-score-big ${record.isPassed ? 'pass' : 'fail'}">
-                                ${record.passRate}%
-                            </div>
-                            <div class="audit-score-label">合格率</div>
-                        </div>
+historyHtml += `
+    <div class="audit-history-card-modern ${passClass} ${draftClass}">
+        <div class="audit-card-header">
+            <div onclick="viewAuditDetail('${doc.id}')" style="flex: 1; cursor: pointer;">
+                <div class="audit-card-date">📅 ${record.date}</div>
+                <div class="audit-card-location">📍 ${locationName} ${statusBadge}</div>
+            </div>
+            <div onclick="viewAuditDetail('${doc.id}')" style="cursor: pointer;">
+                <div class="audit-card-score">
+                    <div class="audit-score-big ${record.isPassed ? 'pass' : 'fail'}">
+                        ${record.passRate}%
                     </div>
+                    <div class="audit-score-label">合格率</div>
+                </div>
+            </div>
+            <div style="margin-left: 15px;">
+                <button class="btn btn-danger btn-small" 
+                        onclick="event.stopPropagation(); deleteAuditRecord('${doc.id}', '${record.date}', '${locationName}')"
+                        style="padding: 10px 16px;">
+                    🗑️ 刪除
+                </button>
+            </div>
+        </div>
 
                     <div class="audit-card-details">
                         <div class="audit-detail-item">
@@ -5134,15 +5144,14 @@ async function viewAuditHistory() {
                         </div>
                     </div>
 
-                    <div style="margin-top: 15px; color: #64748b; font-size: 0.9em;">
-                        👤 ${record.staff}
-                        ${record.isPassed ? 
-                            '<span style="color: #10b981; margin-left: 15px;">● 審核通過</span>' : 
-                            '<span style="color: #ef4444; margin-left: 15px;">● 審核未通過</span>'}
-                    </div>
-                </div>
-            `;
-        });
+  <div onclick="viewAuditDetail('${doc.id}')" style="margin-top: 15px; color: #64748b; font-size: 0.9em; cursor: pointer;">
+            👤 ${record.staff}
+            ${record.isPassed ? 
+                '<span style="color: #10b981; margin-left: 15px;">● 審核通過</span>' : 
+                '<span style="color: #ef4444; margin-left: 15px;">● 審核未通過</span>'}
+        </div>
+    </div>
+`;
 
         document.getElementById('auditHistoryContent').innerHTML = historyHtml;
     } catch (error) {
@@ -5331,6 +5340,58 @@ async function exportAuditToPDF() {
     }
 }
 
+        // ==================== 刪除審核記錄 ====================
+async function deleteAuditRecord(auditId, date, location) {
+    if (!confirm(`❓ 確定要刪除此審核記錄嗎？\n\n📅 日期: ${date}\n📍 地點: ${location}\n\n⚠️ 此操作無法復原！`)) {
+        return;
+    }
+
+    try {
+        await db.collection('auditRecords').doc(auditId).delete();
+        
+        showToast('✅ 審核記錄已刪除', 'success');
+        
+        // 重新載入當前頁面
+        const currentPageId = document.querySelector('.page.active').id;
+        
+        if (currentPageId === 'auditHistoryPage') {
+            viewAuditHistory();
+        } else if (currentPageId === 'auditMainPage') {
+            loadAuditStats();
+        }
+    } catch (error) {
+        console.error('刪除審核記錄失敗:', error);
+        showToast('❌ 刪除失敗', 'error');
+    }
+}
+
+        // ==================== 從詳情頁刪除當前審核 ====================
+async function deleteCurrentAudit() {
+    if (!window.currentViewingAuditId) {
+        showToast('❌ 無法取得審核記錄', 'error');
+        return;
+    }
+
+    try {
+        const doc = await db.collection('auditRecords').doc(window.currentViewingAuditId).get();
+        const record = doc.data();
+        const locationName = record.location === '2F_DA' ? '2/F DA' : 'LG/F DA';
+        
+        if (!confirm(`❓ 確定要刪除此審核記錄嗎？\n\n📅 日期: ${record.date}\n📍 地點: ${locationName}\n\n⚠️ 此操作無法復原！`)) {
+            return;
+        }
+
+        await db.collection('auditRecords').doc(window.currentViewingAuditId).delete();
+        
+        showToast('✅ 審核記錄已刪除', 'success');
+        showPage('auditHistoryPage');
+        viewAuditHistory();
+    } catch (error) {
+        console.error('刪除審核記錄失敗:', error);
+        showToast('❌ 刪除失敗', 'error');
+    }
+}
+        
         // ==================== 載入審核統計數據 ====================
 async function loadAuditStats() {
     try {
@@ -5405,25 +5466,31 @@ async function loadAuditStats() {
                 const locationName = record.location === '2F_DA' ? '2/F DA' : 'LG/F DA';
                 const passClass = record.isPassed ? 'pass' : 'fail';
                 
-                recentHtml += `
-                    <div class="audit-history-card-modern ${record.isPassed ? 'passed' : 'failed'}" 
-                         onclick="viewAuditDetail('${record.id}')"
-                         style="margin-bottom: 15px;">
-                        <div class="audit-card-header">
-                            <div>
-                                <div class="audit-card-date" style="font-size: 1.1em;">📅 ${record.date}</div>
-                                <div class="audit-card-location">📍 ${locationName}</div>
-                            </div>
-                            <div class="audit-card-score">
-                                <div class="audit-score-big ${passClass}" style="font-size: 2em;">
-                                    ${record.passRate}%
-                                </div>
-                            </div>
-                        </div>
+recentHtml += `
+    <div class="audit-history-card-modern ${record.isPassed ? 'passed' : 'failed'}" 
+         style="margin-bottom: 15px;">
+        <div class="audit-card-header">
+            <div onclick="viewAuditDetail('${record.id}')" style="flex: 1; cursor: pointer;">
+                <div class="audit-card-date" style="font-size: 1.1em;">📅 ${record.date}</div>
+                <div class="audit-card-location">📍 ${locationName}</div>
+            </div>
+            <div onclick="viewAuditDetail('${record.id}')" style="cursor: pointer;">
+                <div class="audit-card-score">
+                    <div class="audit-score-big ${passClass}" style="font-size: 2em;">
+                        ${record.passRate}%
                     </div>
-                `;
-            });
-        }
+                </div>
+            </div>
+            <div style="margin-left: 10px;">
+                <button class="btn btn-danger btn-small" 
+                        onclick="event.stopPropagation(); deleteAuditRecord('${record.id}', '${record.date}', '${locationName}')"
+                        style="padding: 8px 14px; font-size: 0.85em;">
+                    🗑️
+                </button>
+            </div>
+        </div>
+    </div>
+`;
 
         document.getElementById('recentAuditsPreview').innerHTML = recentHtml;
     } catch (error) {
