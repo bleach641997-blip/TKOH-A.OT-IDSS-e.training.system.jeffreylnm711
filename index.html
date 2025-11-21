@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TKOH OT/IDSS 培訓系統</title>
+    <title>TKOH A&OT Training & Quality Monitoring System </title>
     <style>
         
         * {
@@ -2175,7 +2175,8 @@
                 `);
             }
 
-            if (currentUser.role === 'admin') {
+// ⭐ 開放給 admin 和 supervisor
+if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
     menuHtml.push(`
         <div class="menu-card" onclick="showPage('auditMainPage')">
             <div class="emoji">📋</div>
