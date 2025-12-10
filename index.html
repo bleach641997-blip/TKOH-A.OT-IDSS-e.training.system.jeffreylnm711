@@ -2832,18 +2832,18 @@ async function showTrainingPlanManagement(categoryId, category) {
 
     document.getElementById('categoryDetailContent').innerHTML = levelSelectorHtml;
 
-    ['PCA1', 'PCA2', 'PCA3'].forEach(async (level) => {
-        const snapshot = await db.collection('trainingPlanCourses')
-            .where('categoryId', '==', categoryId)
-            .where('level', '==', level)
-            .get();
-        
-        const count = snapshot.size || PCA_TRAINING_PLAN_TEMPLATE[level].length;
-        const countElement = document.getElementById(`${level.toLowerCase()}Count`);
-        if (countElement) {
-            countElement.textContent = `${count} 個課程`;
-        }
-    });
+['PCA1', 'PCA2', 'PCA3'].forEach(async (level) => {
+    const snapshot = await db.collection('trainingPlanCourses')
+        .where('categoryId', '==', categoryId)
+        .where('level', '==', level)
+        .get();
+    
+    const count = snapshot.size; // ✅ 只顯示實際數量
+    const countElement = document.getElementById(`${level.toLowerCase()}Count`);
+    if (countElement) {
+        countElement.textContent = `${count} 個課程`;
+    }
+});
 }
 
 // ==================== 顯示指定級別的培訓計劃 ====================
@@ -3003,17 +3003,7 @@ function addNewCourse(categoryId, level) {
         </div>
         <div class="input-group">
             <label>📂 分類</label>
-            <select id="newCourseCategory">
-                <option value="基礎培訓">基礎培訓</option>
-                <option value="儀器知識">儀器知識</option>
-                <option value="工作流程">工作流程</option>
-                <option value="進階培訓">進階培訓</option>
-                <option value="質量管理">質量管理</option>
-                <option value="專科培訓">專科培訓</option>
-                <option value="管理培訓">管理培訓</option>
-                <option value="設備管理">設備管理</option>
-                <option value="帶教能力">帶教能力</option>
-            </select>
+            <input type="text" id="newCourseCategory" placeholder="請輸入分類（例如：基礎培訓、工作流程等）">
         </div>
         <div class="modal-buttons">
             <button class="btn btn-success" onclick="saveCourse(null, '${categoryId}', '${level}')">✅ 新增</button>
@@ -3091,17 +3081,7 @@ async function editCourse(courseId, categoryId, level) {
             </div>
             <div class="input-group">
                 <label>📂 分類</label>
-                <select id="newCourseCategory">
-                    <option value="基礎培訓" ${course.category === '基礎培訓' ? 'selected' : ''}>基礎培訓</option>
-                    <option value="儀器知識" ${course.category === '儀器知識' ? 'selected' : ''}>儀器知識</option>
-                    <option value="工作流程" ${course.category === '工作流程' ? 'selected' : ''}>工作流程</option>
-                    <option value="進階培訓" ${course.category === '進階培訓' ? 'selected' : ''}>進階培訓</option>
-                    <option value="質量管理" ${course.category === '質量管理' ? 'selected' : ''}>質量管理</option>
-                    <option value="專科培訓" ${course.category === '專科培訓' ? 'selected' : ''}>專科培訓</option>
-                    <option value="管理培訓" ${course.category === '管理培訓' ? 'selected' : ''}>管理培訓</option>
-                    <option value="設備管理" ${course.category === '設備管理' ? 'selected' : ''}>設備管理</option>
-                    <option value="帶教能力" ${course.category === '帶教能力' ? 'selected' : ''}>帶教能力</option>
-                </select>
+                <input type="text" id="newCourseCategory" value="${course.category || ''}" placeholder="請輸入分類">
             </div>
             <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 0.9em;">
                 💡 <strong>提示：</strong>儲存後將自動記錄今天的日期及你的名字作為完成記錄
