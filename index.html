@@ -2571,16 +2571,21 @@ async function ensureTrainingPlanCategory() {
         // ==================== 載入培訓分類 Dashboard ====================
         async function loadCategoryDashboard() {
             try {
-                const categoriesSnapshot = await db.collection('trainingCategories')
-                    .where('trainingType', '==', currentTrainingType)
-                    .get();
-                
-                const categories = [];
-                categoriesSnapshot.forEach(doc => {
-                    categories.push({ docId: doc.id, ...doc.data() });
-                });
-                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+// ✅ 過濾掉培訓計劃分類
+const categoriesSnapshot = await db.collection('trainingCategories')
+    .where('trainingType', '==', staffTrainingType)
+    .get();
 
+const categories = [];
+categoriesSnapshot.forEach(doc => {
+    const categoryData = doc.data();
+    // ⭐ 排除培訓計劃分類
+    if (!categoryData.isTrainingPlan) {
+        categories.push({ docId: doc.id, ...categoryData });
+    }
+});
+categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+                
                 const dashboardHtml = [];
 
                 for (const category of categories) {
@@ -4024,12 +4029,6 @@ async function showTrainingProgress(staffId) {
             .where('trainingType', '==', staffTrainingType)
             .get();
         
-        const categories = [];
-        categoriesSnapshot.forEach(doc => {
-            categories.push({ docId: doc.id, ...doc.data() });
-        });
-        categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-
         const progressHtml = [];
 
         for (const category of categories) {
@@ -4140,7 +4139,6 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
     try {
         // 只對 PCA1/2/3 顯示
         if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
-            // ⭐ 確保移除可能存在的舊元素
             const existingOverview = document.getElementById('pcaProgressOverview');
             if (existingOverview) {
                 existingOverview.remove();
@@ -4148,7 +4146,7 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
             return;
         }
 
-        // ⭐ 關鍵修改：先移除舊的總覽（防止重複）
+        // ⭐ 先移除舊的總覽（防止重複）
         const existingOverview = document.getElementById('pcaProgressOverview');
         if (existingOverview) {
             existingOverview.remove();
@@ -4161,98 +4159,93 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
             .limit(1)
             .get();
 
-        // ⭐ 如果沒有培訓計劃，就不顯示（不自動建立）
         if (planCategorySnapshot.empty) {
             return;
         }
 
         const planCategoryId = planCategorySnapshot.docs[0].id;
 
-        // 載入各級別的進度
-        const levels = ['PCA1', 'PCA2', 'PCA3'];
-        const levelData = {};
+        // ⭐ 只載入當前員工的級別
+        const level = staffLevel; // 例如 'PCA1'
+        
+        const coursesSnapshot = await db.collection('trainingPlanCourses')
+            .where('categoryId', '==', planCategoryId)
+            .where('level', '==', level)
+            .get();
 
-        for (const level of levels) {
-            const coursesSnapshot = await db.collection('trainingPlanCourses')
-                .where('categoryId', '==', planCategoryId)
-                .where('level', '==', level)
-                .get();
+        const totalCourses = coursesSnapshot.size;
+        let completedCourses = 0;
 
-            const totalCourses = coursesSnapshot.size;
-            let completedCourses = 0;
+        coursesSnapshot.forEach(doc => {
+            const course = doc.data();
+            if (course.completedDate && course.completedBy) {
+                completedCourses++;
+            }
+        });
 
-            coursesSnapshot.forEach(doc => {
-                const course = doc.data();
-                if (course.completedDate && course.completedBy) {
-                    completedCourses++;
-                }
-            });
+        const percentage = totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0;
+        const circumference = 2 * Math.PI * 50;
+        const offset = circumference - (percentage / 100) * circumference;
+        const isCompleted = percentage === 100;
 
-            levelData[level] = {
-                total: totalCourses,
-                completed: completedCourses,
-                percentage: totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0
-            };
-        }
-
-        // 渲染進度卡片
+        // 渲染進度卡片（只顯示當前級別）
         let overviewHtml = `
             <div class="pca-progress-overview" id="pcaProgressOverview">
                 <div class="pca-progress-title">
-                    📚 PCA 培訓計劃總覽
+                    📚 ${level} 培訓計劃總覽
                 </div>
-                <div class="pca-levels-grid">
-        `;
-
-        levels.forEach(level => {
-            const data = levelData[level];
-            const circumference = 2 * Math.PI * 50;
-            const offset = circumference - (data.percentage / 100) * circumference;
-            const isCompleted = data.percentage === 100;
-            const isCurrentLevel = level === staffLevel;
-
-            overviewHtml += `
-                <div class="pca-level-card ${isCurrentLevel ? 'current-level' : ''}" 
-                     onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')"
-                     style="${isCurrentLevel ? 'border-color: #ffa502; background: linear-gradient(135deg, #fff9e6 0%, #ffedd5 100%);' : ''}">
-                    <div class="pca-level-name">
-                        ${level}
-                        ${isCurrentLevel ? '<br><span style="font-size: 0.7em; color: #ffa502;">（你的級別）</span>' : ''}
-                    </div>
-                    <div class="pca-level-progress">
-                        <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
-                            <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
-                                fill="none" stroke-width="10"/>
-                            <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
-                                fill="none" stroke-width="10"
-                                stroke-dasharray="${circumference}" 
-                                stroke-dashoffset="${offset}"
-                                stroke-linecap="round"
-                                style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
-                        </svg>
-                        <div class="progress-text">
-                            <div class="progress-percent" style="color: ${isCompleted ? '#2ed573' : '#ffa502'};">${data.percentage}%</div>
-                            <div class="progress-label">${data.completed}/${data.total}</div>
+                <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
+                                ${level} 培訓計劃
+                            </div>
+                            <div style="color: #666; margin-top: 5px;">
+                                你的培訓進度
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
+                                <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                                    <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
+                                        fill="none" stroke-width="10"/>
+                                    <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
+                                        fill="none" stroke-width="10"
+                                        stroke-dasharray="${circumference}" 
+                                        stroke-dashoffset="${offset}"
+                                        stroke-linecap="round"
+                                        style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
+                                </svg>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div style="font-size: 2em; font-weight: bold; color: ${isCompleted ? '#2ed573' : '#ffa502'};">
+                                        ${percentage}%
+                                    </div>
+                                    <div style="font-size: 0.8em; color: #666; margin-top: 3px;">
+                                        ${completedCourses}/${totalCourses}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="pca-level-stats">
-                        ${isCompleted ? '✅ 全部完成' : `⏳ ${data.total - data.completed} 個待完成`}
+                    <div style="text-align: center; padding: 15px; background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; border-radius: 10px;">
+                        ${isCompleted ? 
+                            '<span style="color: #2ed573; font-weight: bold; font-size: 1.1em;">✅ 全部完成！</span>' : 
+                            `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
+                        }
                     </div>
-                </div>
-            `;
-        });
-
-        overviewHtml += `
+                    <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
+                            onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
+                        📋 查看完整培訓計劃
+                    </button>
                 </div>
             </div>
         `;
 
-        // ⭐ 插入到重要評核時間表之前
+        // 插入到重要評核時間表之前
         const timelineElement = document.getElementById('importantTimeline');
         if (timelineElement) {
             timelineElement.insertAdjacentHTML('beforebegin', overviewHtml);
         } else {
-            // 如果沒有時間表，插入到培訓進度前面
             const progressElement = document.getElementById('trainingProgress');
             if (progressElement) {
                 progressElement.insertAdjacentHTML('beforebegin', overviewHtml);
