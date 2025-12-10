@@ -4012,147 +4012,141 @@ if (hasDeadline && isRecurring) {
             return date;
         }
 
-        // ==================== 顯示培訓進度 Dashboard ====================
-        async function showTrainingProgress(staffId) {
-            currentStaffId = staffId;
-            showPage('trainingProgressPage');
+// ==================== 顯示培訓進度 Dashboard ====================
+async function showTrainingProgress(staffId) {
+    currentStaffId = staffId;
+    showPage('trainingProgressPage');
 
-            try {
-                const staffDoc = await db.collection('accounts').doc(staffId).get();
-                const staff = staffDoc.data();
+    try {
+        const staffDoc = await db.collection('accounts').doc(staffId).get();
+        const staff = staffDoc.data();
 
-                document.getElementById('progressStaffName').textContent = `${staff.name} - 培訓進度`;
+        document.getElementById('progressStaffName').textContent = `${staff.name} - 培訓進度`;
 
-                // 根據員工職級決定要顯示哪個類型的培訓
-                const staffTrainingType = ['PCA1', 'PCA2', 'PCA3'].includes(staff.level) ? 'PCA' : 'OTA';
+        // 根據員工職級決定要顯示哪個類型的培訓
+        const staffTrainingType = ['PCA1', 'PCA2', 'PCA3'].includes(staff.level) ? 'PCA' : 'OTA';
 
- // 載入重要評核時間表
-await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
+        // 載入重要評核時間表
+        await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
 
-// ⭐ 載入 PCA 培訓進度總覽（只對 PCA1/2/3 顯示）
-await loadPCAProgressOverview(staffId, staff.level);
+        // ⭐ 載入 PCA 培訓進度總覽（只對 PCA1/2/3 顯示）
+        await loadPCAProgressOverview(staffId, staff.level);
 
-const categoriesSnapshot = await db.collection('trainingCategories')
-
-                const categoriesSnapshot = await db.collection('trainingCategories')
-                    .where('trainingType', '==', staffTrainingType)
-                    .get();
-                
-                const categories = [];
-                categoriesSnapshot.forEach(doc => {
-                    categories.push({ docId: doc.id, ...doc.data() });
-                });
-                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-                const progressHtml = [];
-
-  for (const category of categories) {
-    const itemsSnapshot = await db.collection('trainingItems')
-        .where('categoryId', '==', category.docId)
-        .get();
-
-    const items = [];
-    itemsSnapshot.forEach(doc => {
-        const item = doc.data();
-        // Filter by PCA level if applicable
-        if (staffTrainingType === 'PCA' && item.pcaLevel && item.pcaLevel !== 'ALL') {
-            if (item.pcaLevel !== staff.level) {
-                return; // Skip this item
-            }
-        }
-        items.push({ docId: doc.id, ...item });
-    });
-    items.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-    // Continue with existing logic but use 'items' array instead of creating a new one
-
-const recordsSnapshot = await db.collection('trainingRecords')
-    .where('userId', '==', staffId)
-    .get();
-
-const records = {};
-recordsSnapshot.forEach(doc => {
-    const record = doc.data();
-    records[record.itemId] = record;
-});
-
-let completedCount = 0;
-let totalCount = items.length; // Use filtered items array
-
-items.forEach(itemObj => {
-    const item = itemObj;
-    const record = records[itemObj.docId];
-    
-  if (item.hasChecklist && record) {
-    // ⭐ 排除章節標題
-    const allCriticalPassed = item.checklist.every((step, index) => {
-        if (step.isSubtitle || !step.critical) return true;
-        return record.checklistStatus && record.checklistStatus[index] === 'pass';
-    });
-    
-    // 計算完成率（百分比）- 只計算實際步驟
-    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
-    let passedSteps = 0;
-    
-    item.checklist.forEach((step, index) => {
-        if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
-            passedSteps++;
-        }
-    });
-    
-    const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
+        // ✅ 只保留這一段 categoriesSnapshot
+        const categoriesSnapshot = await db.collection('trainingCategories')
+            .where('trainingType', '==', staffTrainingType)
+            .get();
         
-        // 只有當所有 Critical 步驟通過且完成率 100% 才算完成
-        if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
-            completedCount++;
-        }
-    } else if (!item.hasChecklist && record && record.status === 'completed') {
-        completedCount++;
-    }
-});
+        const categories = [];
+        categoriesSnapshot.forEach(doc => {
+            categories.push({ docId: doc.id, ...doc.data() });
+        });
+        categories.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-const isCompleted = percentage === 100;
+        const progressHtml = [];
 
-const circumference = 2 * Math.PI * 60;
-const offset = circumference - (percentage / 100) * circumference;
+        for (const category of categories) {
+            const itemsSnapshot = await db.collection('trainingItems')
+                .where('categoryId', '==', category.docId)
+                .get();
 
-                    progressHtml.push(`
-                        <div class="training-card ${isCompleted ? 'completed' : 'in-progress'}" 
-                             onclick="showCategoryEvaluation('${category.docId}')">
-                            <div class="card-icon">${category.emoji}</div>
-                            <div class="card-title">${category.name}</div>
-                            <div class="card-progress">
-                                <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
-    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-        fill="none" stroke-width="12"/>
-    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-        fill="none" stroke-width="12"
-        stroke-dasharray="${circumference}" 
-        stroke-dashoffset="${offset}"
-        stroke-linecap="round"/>
-</svg>
-                                <div class="progress-text">
-                                    <div class="progress-percent">${percentage}%</div>
-                                    <div class="progress-label">${completedCount}/${totalCount} 項目完成</div>
-                                </div>
-                            </div>
-                            <div class="card-stats">${completedCount}/${totalCount} 項目已完成</div>
-                            ${isCompleted ? '<div class="card-success-badge">✅ 全部完成！</div>' : ''}
+            const items = [];
+            itemsSnapshot.forEach(doc => {
+                const item = doc.data();
+                // Filter by PCA level if applicable
+                if (staffTrainingType === 'PCA' && item.pcaLevel && item.pcaLevel !== 'ALL') {
+                    if (item.pcaLevel !== staff.level) {
+                        return; // Skip this item
+                    }
+                }
+                items.push({ docId: doc.id, ...item });
+            });
+            items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            const recordsSnapshot = await db.collection('trainingRecords')
+                .where('userId', '==', staffId)
+                .get();
+
+            const records = {};
+            recordsSnapshot.forEach(doc => {
+                const record = doc.data();
+                records[record.itemId] = record;
+            });
+
+            let completedCount = 0;
+            let totalCount = items.length;
+
+            items.forEach(itemObj => {
+                const item = itemObj;
+                const record = records[itemObj.docId];
+                
+                if (item.hasChecklist && record) {
+                    const allCriticalPassed = item.checklist.every((step, index) => {
+                        if (step.isSubtitle || !step.critical) return true;
+                        return record.checklistStatus && record.checklistStatus[index] === 'pass';
+                    });
+                    
+                    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
+                    let passedSteps = 0;
+                    
+                    item.checklist.forEach((step, index) => {
+                        if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
+                            passedSteps++;
+                        }
+                    });
+                    
+                    const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
+                    
+                    if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
+                        completedCount++;
+                    }
+                } else if (!item.hasChecklist && record && record.status === 'completed') {
+                    completedCount++;
+                }
+            });
+
+            const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+            const isCompleted = percentage === 100;
+
+            const circumference = 2 * Math.PI * 60;
+            const offset = circumference - (percentage / 100) * circumference;
+
+            progressHtml.push(`
+                <div class="training-card ${isCompleted ? 'completed' : 'in-progress'}" 
+                     onclick="showCategoryEvaluation('${category.docId}')">
+                    <div class="card-icon">${category.emoji}</div>
+                    <div class="card-title">${category.name}</div>
+                    <div class="card-progress">
+                        <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
+                            <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
+                                fill="none" stroke-width="12"/>
+                            <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
+                                fill="none" stroke-width="12"
+                                stroke-dasharray="${circumference}" 
+                                stroke-dashoffset="${offset}"
+                                stroke-linecap="round"/>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percent">${percentage}%</div>
+                            <div class="progress-label">${completedCount}/${totalCount} 項目完成</div>
                         </div>
-                    `);
-                }
-
-                if (progressHtml.length === 0) {
-                    progressHtml.push('<p class="no-data-message">📭 尚無培訓項目</p>');
-                }
-
-                document.getElementById('trainingProgress').innerHTML = progressHtml.join('');
-            } catch (error) {
-                console.error('載入培訓進度失敗:', error);
-                showToast('❌ 載入培訓進度失敗', 'error');
-            }
+                    </div>
+                    <div class="card-stats">${completedCount}/${totalCount} 項目已完成</div>
+                    ${isCompleted ? '<div class="card-success-badge">✅ 全部完成！</div>' : ''}
+                </div>
+            `);
         }
+
+        if (progressHtml.length === 0) {
+            progressHtml.push('<p class="no-data-message">📭 尚無培訓項目</p>');
+        }
+
+        document.getElementById('trainingProgress').innerHTML = progressHtml.join('');
+    } catch (error) {
+        console.error('載入培訓進度失敗:', error);
+        showToast('❌ 載入培訓進度失敗', 'error');
+    }
+}
 
         // ==================== 載入 PCA 培訓進度總覽 ====================
 async function loadPCAProgressOverview(staffId, staffLevel) {
