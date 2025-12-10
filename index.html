@@ -1663,6 +1663,75 @@
     color: #94a3b8;
     font-size: 1.1em;
 }
+
+        /* ==================== PCA 培訓進度總覽卡片 ==================== */
+.pca-progress-overview {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.pca-progress-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ffa502;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pca-levels-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.pca-level-card {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.pca-level-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    border-color: #ffa502;
+}
+
+.pca-level-name {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.pca-level-progress {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px;
+}
+
+.pca-level-stats {
+    color: #666;
+    font-size: 0.95em;
+    margin-top: 10px;
+}
+
+.pca-no-staff-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 1.1em;
+}
         
     </style>
 </head>
@@ -2475,33 +2544,23 @@ async function showTrainingManage() {
     await loadCategoryDashboard();
 }
 
-        // ==================== 確保培訓計劃分類存在 ====================
+// ==================== 確保培訓計劃分類存在 ====================
 async function ensureTrainingPlanCategory() {
     try {
         const existingSnapshot = await db.collection('trainingCategories')
             .where('trainingType', '==', 'PCA')
-            .where('name', '==', 'PCA I/II/III 培訓計劃')
+            .where('isTrainingPlan', '==', true)
             .limit(1)
             .get();
 
         if (existingSnapshot.empty) {
             console.log('📝 自動建立 PCA 培訓計劃分類...');
             
-            const categoriesSnapshot = await db.collection('trainingCategories')
-                .where('trainingType', '==', 'PCA')
-                .get();
-            
-            let maxOrder = 0;
-            categoriesSnapshot.forEach(doc => {
-                const order = doc.data().order || 0;
-                if (order > maxOrder) maxOrder = order;
-            });
-
             await db.collection('trainingCategories').add({
                 name: 'PCA I/II/III 培訓計劃',
                 emoji: '📅',
                 trainingType: 'PCA',
-                order: maxOrder + 1,
+                order: 0, // ⭐ 設為 0，讓它排在最前面
                 isTrainingPlan: true,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -2790,7 +2849,7 @@ async function showPlanByLevel(categoryId, level) {
 
         let courses = [];
 
-        if (coursesSnapshot.empty) {
+        if (coursesSnapshot.empty && PCA_TRAINING_PLAN_TEMPLATE[level]) {
             console.log(`📝 為 ${level} 建立預設課程...`);
             courses = PCA_TRAINING_PLAN_TEMPLATE[level];
             
@@ -2802,11 +2861,17 @@ async function showPlanByLevel(categoryId, level) {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
-        } else {
-            coursesSnapshot.forEach(doc => {
-                courses.push({ docId: doc.id, ...doc.data() });
-            });
+            
+            // 重新載入
+            coursesSnapshot = await db.collection('trainingPlanCourses')
+                .where('categoryId', '==', categoryId)
+                .where('level', '==', level)
+                .get();
         }
+
+        coursesSnapshot.forEach(doc => {
+            courses.push({ docId: doc.id, ...doc.data() });
+        });
 
         courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
 
@@ -2831,10 +2896,12 @@ async function showPlanByLevel(categoryId, level) {
                         </div>
                     </div>
                     <div>
-                        <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
-                            ➕ 新增課程
-                        </button>
-                        <button class="btn btn-secondary btn-small" onclick="showCategoryDetail('${categoryId}')">
+                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                            <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
+                                ➕ 新增課程
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-secondary btn-small" onclick="backToProgress()">
                             🔙 返回
                         </button>
                     </div>
@@ -2857,34 +2924,47 @@ async function showPlanByLevel(categoryId, level) {
                                 <th style="padding: 10px; text-align: center;">講解時限</th>
                                 <th style="padding: 10px; text-align: center;">完成日期</th>
                                 <th style="padding: 10px; text-align: center;">講解人員</th>
-                                <th style="padding: 10px; text-align: center;">操作</th>
+                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                                    <th style="padding: 10px; text-align: center;">操作</th>
+                                ` : ''}
                             </tr>
                         </thead>
                         <tbody>
             `;
 
             groupedCourses[category].forEach(course => {
+                const isCompleted = course.completedDate && course.completedBy;
+                const rowStyle = isCompleted ? 'background: #f0fff4;' : '';
+                
                 planHtml += `
-                    <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <tr style="border-bottom: 1px solid #f0f0f0; ${rowStyle}">
                         <td style="padding: 12px; font-weight: 500;">${course.courseCode}</td>
                         <td style="padding: 12px;">${course.courseName}</td>
                         <td style="padding: 12px; text-align: center;">
                             <span class="badge badge-info">${course.week}</span>
                         </td>
                         <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
-                            ${course.completedDate || '-'}
+                            ${isCompleted ? `✅ ${course.completedDate}` : '-'}
                         </td>
                         <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
-                            ${course.completedBy || '-'}
+                            ${isCompleted ? `${course.completedBy}` : '-'}
                         </td>
-                        <td style="padding: 12px; text-align: center;">
-                            <button class="btn btn-warning btn-small" onclick="editCourse('${course.docId}', '${categoryId}', '${level}')">
-                                ✏️ 編輯
-                            </button>
-<button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}', '${categoryId}', '${level}')">
-    🗑️ 刪除
-</button>
-                        </td>
+                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                            <td style="padding: 12px; text-align: center;">
+                                ${!isCompleted ? `
+                                    <button class="btn btn-success btn-small" onclick="markCourseCompleted('${course.docId}', '${categoryId}', '${level}')">
+                                        ✅ 標記完成
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-warning btn-small" onclick="editCourse('${course.docId}', '${categoryId}', '${level}')">
+                                        ✏️ 編輯
+                                    </button>
+                                `}
+                                <button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}', '${categoryId}', '${level}')">
+                                    🗑️ 刪除
+                                </button>
+                            </td>
+                        ` : ''}
                     </tr>
                 `;
             });
@@ -3052,6 +3132,26 @@ async function deleteCourse(courseId, courseName, categoryId, level) {
     }
 }
 
+ // ==================== 標記課程完成 ====================
+async function markCourseCompleted(courseId, categoryId, level) {
+    if (!confirm('❓ 確認此課程已向員工講解完畢？\n\n系統將記錄今天的日期及你的名字。')) {
+        return;
+    }
+
+    try {
+        await db.collection('trainingPlanCourses').doc(courseId).update({
+            completedDate: new Date().toLocaleDateString('zh-TW'),
+            completedBy: currentUser.name,
+            completedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast('✅ 課程已標記完成', 'success');
+        await showPlanByLevel(categoryId, level);
+    } catch (error) {
+        console.error('標記完成失敗:', error);
+        showToast('❌ 操作失敗', 'error');
+    }
+}
         
 // ==================== 切換項目卡片展開/收起 ====================
 function toggleItemCard(itemId) {
@@ -3926,8 +4026,13 @@ if (hasDeadline && isRecurring) {
                 // 根據員工職級決定要顯示哪個類型的培訓
                 const staffTrainingType = ['PCA1', 'PCA2', 'PCA3'].includes(staff.level) ? 'PCA' : 'OTA';
 
-                // 載入重要評核時間表
-                await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
+ // 載入重要評核時間表
+await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
+
+// ⭐ 載入 PCA 培訓進度總覽（只對 PCA1/2/3 顯示）
+await loadPCAProgressOverview(staffId, staff.level);
+
+const categoriesSnapshot = await db.collection('trainingCategories')
 
                 const categoriesSnapshot = await db.collection('trainingCategories')
                     .where('trainingType', '==', staffTrainingType)
@@ -4049,6 +4154,126 @@ const offset = circumference - (percentage / 100) * circumference;
             }
         }
 
+        // ==================== 載入 PCA 培訓進度總覽 ====================
+async function loadPCAProgressOverview(staffId, staffLevel) {
+    try {
+        // 只對 PCA1/2/3 顯示
+        if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
+            document.getElementById('pcaProgressOverview').style.display = 'none';
+            return;
+        }
+
+        // 取得培訓計劃分類
+        const planCategorySnapshot = await db.collection('trainingCategories')
+            .where('trainingType', '==', 'PCA')
+            .where('isTrainingPlan', '==', true)
+            .limit(1)
+            .get();
+
+        if (planCategorySnapshot.empty) {
+            document.getElementById('pcaProgressOverview').style.display = 'none';
+            return;
+        }
+
+        const planCategoryId = planCategorySnapshot.docs[0].id;
+
+        // 載入各級別的進度
+        const levels = ['PCA1', 'PCA2', 'PCA3'];
+        const levelData = {};
+
+        for (const level of levels) {
+            const coursesSnapshot = await db.collection('trainingPlanCourses')
+                .where('categoryId', '==', planCategoryId)
+                .where('level', '==', level)
+                .get();
+
+            const totalCourses = coursesSnapshot.size;
+            let completedCourses = 0;
+
+            coursesSnapshot.forEach(doc => {
+                const course = doc.data();
+                if (course.completedDate && course.completedBy) {
+                    completedCourses++;
+                }
+            });
+
+            levelData[level] = {
+                total: totalCourses,
+                completed: completedCourses,
+                percentage: totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0
+            };
+        }
+
+        // 渲染進度卡片
+        let overviewHtml = `
+            <div class="pca-progress-overview" id="pcaProgressOverview">
+                <div class="pca-progress-title">
+                    📚 PCA 培訓計劃總覽
+                </div>
+                <div class="pca-levels-grid">
+        `;
+
+        levels.forEach(level => {
+            const data = levelData[level];
+            const circumference = 2 * Math.PI * 50;
+            const offset = circumference - (data.percentage / 100) * circumference;
+            const isCompleted = data.percentage === 100;
+            const isCurrentLevel = level === staffLevel;
+
+            overviewHtml += `
+                <div class="pca-level-card ${isCurrentLevel ? 'current-level' : ''}" 
+                     onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')"
+                     style="${isCurrentLevel ? 'border-color: #ffa502; background: linear-gradient(135deg, #fff9e6 0%, #ffedd5 100%);' : ''}">
+                    <div class="pca-level-name">
+                        ${level}
+                        ${isCurrentLevel ? '<br><span style="font-size: 0.7em; color: #ffa502;">（你的級別）</span>' : ''}
+                    </div>
+                    <div class="pca-level-progress">
+                        <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                            <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
+                                fill="none" stroke-width="10"/>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
+                                fill="none" stroke-width="10"
+                                stroke-dasharray="${circumference}" 
+                                stroke-dashoffset="${offset}"
+                                stroke-linecap="round"
+                                style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percent" style="color: ${isCompleted ? '#2ed573' : '#ffa502'};">${data.percentage}%</div>
+                            <div class="progress-label">${data.completed}/${data.total}</div>
+                        </div>
+                    </div>
+                    <div class="pca-level-stats">
+                        ${isCompleted ? '✅ 全部完成' : `⏳ ${data.total - data.completed} 個待完成`}
+                    </div>
+                </div>
+            `;
+        });
+
+        overviewHtml += `
+                </div>
+            </div>
+        `;
+
+        // 插入到重要評核時間表之前
+        const timelineElement = document.getElementById('importantTimeline');
+        if (timelineElement) {
+            timelineElement.insertAdjacentHTML('beforebegin', overviewHtml);
+        }
+
+    } catch (error) {
+        console.error('載入 PCA 培訓進度總覽失敗:', error);
+    }
+}
+
+// ==================== 查看 PCA 培訓計劃 ====================
+async function viewPCATrainingPlan(categoryId, level) {
+    currentCategoryId = categoryId;
+    await showPlanByLevel(categoryId, level);
+    showPage('categoryDetailPage');
+}
+        
         // ==================== 載入重要評核時間表 ====================
         async function loadImportantTimeline(staffId, joinDate, trainingType) {
             try {
