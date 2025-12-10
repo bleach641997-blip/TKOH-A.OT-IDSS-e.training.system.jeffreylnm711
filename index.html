@@ -1819,9 +1819,6 @@
                 <div class="dashboard-subtitle">培訓管理系統</div>
             </div>
  <div style="text-align: right; margin-bottom: 20px;">
-<button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
-    ${currentTrainingType === 'PCA' ? '<button class="btn btn-info" onclick="managePCATrainingPlan()">📅 管理 PCA 培訓計劃</button>' : ''}
-    <button class="btn btn-secondary" onclick="showPage('selectTrainingTypePage')">🔙 返回選擇</button>
 </div>
             <div class="training-dashboard" id="categoryDashboard">
                 <!-- 動態生成培訓分類卡片 -->
@@ -2548,23 +2545,25 @@ async function showTrainingManage() {
 // ==================== 確保培訓計劃分類存在 ====================
 async function ensureTrainingPlanCategory() {
     try {
+        // 檢查培訓計劃分類是否存在
         const planSnapshot = await db.collection('trainingCategories')
             .where('trainingType', '==', 'PCA')
             .where('isTrainingPlan', '==', true)
             .limit(1)
             .get();
         
+        // 只有在分類不存在時才創建，不創建課程
         if (planSnapshot.empty) {
-            // 只創建分類，不創建課程
             await db.collection('trainingCategories').add({
                 name: 'PCA I/II/III 培訓計劃',
                 trainingType: 'PCA',
                 isTrainingPlan: true,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+            console.log('✅ 已創建培訓計劃分類');
         }
     } catch (error) {
-        console.error('確保培訓計劃分類存在失敗:', error);
+        console.error('❌ 確保培訓計劃分類存在失敗:', error);
     }
 }
         
@@ -2856,29 +2855,26 @@ async function showPlanByLevel(categoryId, level) {
 
         let courses = [];
 
-        if (coursesSnapshot.empty && PCA_TRAINING_PLAN_TEMPLATE[level]) {
-            console.log(`📝 為 ${level} 建立預設課程...`);
-            courses = PCA_TRAINING_PLAN_TEMPLATE[level];
-            
-            for (const course of courses) {
-                await db.collection('trainingPlanCourses').add({
-                    categoryId: categoryId,
-                    level: level,
-                    ...course,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
-            
-            // 重新載入
-            coursesSnapshot = await db.collection('trainingPlanCourses')
-                .where('categoryId', '==', categoryId)
-                .where('level', '==', level)
-                .get();
-        }
-
+        // ⭐ 刪除自動建立課程的邏輯，只載入現有課程
         coursesSnapshot.forEach(doc => {
             courses.push({ docId: doc.id, ...doc.data() });
         });
+
+        // ⭐ 如果沒有課程，顯示提示訊息
+        if (courses.length === 0) {
+            document.getElementById('planLevelContent').innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
+                    <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
+                        此級別尚無課程
+                    </div>
+                    <button class="btn btn-success" onclick="addNewCourse('${categoryId}', '${level}')">
+                        ➕ 新增第一個課程
+                    </button>
+                </div>
+            `;
+            return;
+        }
 
         courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
 
