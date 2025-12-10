@@ -2568,74 +2568,74 @@ async function ensureTrainingPlanCategory() {
     }
 }
         
-        // ==================== 載入培訓分類 Dashboard ====================
-        async function loadCategoryDashboard() {
-            try {
-// ✅ 過濾掉培訓計劃分類
-const categoriesSnapshot = await db.collection('trainingCategories')
-    .where('trainingType', '==', staffTrainingType)
-    .get();
-
-const categories = [];
-categoriesSnapshot.forEach(doc => {
-    const categoryData = doc.data();
-    // ⭐ 排除培訓計劃分類
-    if (!categoryData.isTrainingPlan) {
-        categories.push({ docId: doc.id, ...categoryData });
-    }
-});
-categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-                
-                const dashboardHtml = [];
-
-                for (const category of categories) {
-                    const itemsSnapshot = await db.collection('trainingItems')
-                        .where('categoryId', '==', category.docId)
-                        .get();
-
-                    const totalItems = itemsSnapshot.size;
-                    const percentage = 100;
-
-                    const circumference = 2 * Math.PI * 60;
-                    const offset = circumference - (percentage / 100) * circumference;
-
-                    dashboardHtml.push(`
-                        <div class="training-card" onclick="showCategoryDetail('${category.docId}')">
-                            <div class="card-icon">${category.emoji}</div>
-                            <div class="card-title">${category.name}</div>
-                            <div class="card-progress">
-                                <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
-    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-        fill="none" stroke-width="12"/>
-    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-        fill="none" stroke-width="12"
-        stroke-dasharray="${circumference}" 
-        stroke-dashoffset="${offset}"
-        stroke-linecap="round"/>
-</svg>
-                                <div class="progress-text">
-                                    <div class="progress-percent">${totalItems}</div>
-                                    <div class="progress-label">個項目</div>
-                                </div>
-                            </div>
-                            <div class="card-stats">${totalItems} 項培訓項目</div>
-                            <div class="card-actions">
-                                <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除</button>
-                            </div>
-                        </div>
-                    `);
-                }
-
-                if (dashboardHtml.length === 0) {
-                    dashboardHtml.push('<div class="no-data-message">📭 尚無培訓分類，請新增分類開始使用</div>');
-                }
-
-                document.getElementById('categoryDashboard').innerHTML = dashboardHtml.join('');
-            } catch (error) {
-                console.error('載入培訓Dashboard失敗:', error);
-                showToast('❌ 載入失敗', 'error');
+// ==================== 載入培訓分類 Dashboard ====================
+async function loadCategoryDashboard() {
+    try {
+        // ✅ 使用正確的變數名稱
+        const categoriesSnapshot = await db.collection('trainingCategories')
+            .where('trainingType', '==', currentTrainingType)
+            .get();
+        
+        const categories = [];
+        categoriesSnapshot.forEach(doc => {
+            const categoryData = doc.data();
+            // ⭐ 排除培訓計劃分類
+            if (!categoryData.isTrainingPlan) {
+                categories.push({ docId: doc.id, ...categoryData });
             }
+        });
+        categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        const dashboardHtml = [];
+
+        for (const category of categories) {
+            const itemsSnapshot = await db.collection('trainingItems')
+                .where('categoryId', '==', category.docId)
+                .get();
+
+            const totalItems = itemsSnapshot.size;
+            const percentage = 100;
+
+            const circumference = 2 * Math.PI * 60;
+            const offset = circumference - (percentage / 100) * circumference;
+
+            dashboardHtml.push(`
+                <div class="training-card" onclick="showCategoryDetail('${category.docId}')">
+                    <div class="card-icon">${category.emoji}</div>
+                    <div class="card-title">${category.name}</div>
+                    <div class="card-progress">
+                        <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
+                            <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
+                                fill="none" stroke-width="12"/>
+                            <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
+                                fill="none" stroke-width="12"
+                                stroke-dasharray="${circumference}" 
+                                stroke-dashoffset="${offset}"
+                                stroke-linecap="round"/>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percent">${totalItems}</div>
+                            <div class="progress-label">個項目</div>
+                        </div>
+                    </div>
+                    <div class="card-stats">${totalItems} 項培訓項目</div>
+                    <div class="card-actions">
+                        <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除</button>
+                    </div>
+                </div>
+            `);
         }
+
+        if (dashboardHtml.length === 0) {
+            dashboardHtml.push('<div class="no-data-message">📭 尚無培訓分類，請新增分類開始使用</div>');
+        }
+
+        document.getElementById('categoryDashboard').innerHTML = dashboardHtml.join('');
+    } catch (error) {
+        console.error('載入培訓Dashboard失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
+}
 
 // ==================== 顯示分類詳情（管理模式）====================
 async function showCategoryDetail(categoryId) {
@@ -4024,10 +4024,20 @@ async function showTrainingProgress(staffId) {
         // ⭐ 載入 PCA 培訓進度總覽（只對 PCA1/2/3 顯示）
         await loadPCAProgressOverview(staffId, staff.level);
 
-        // ✅ 只保留這一段 categoriesSnapshot
+        // ✅ 載入培訓分類並過濾
         const categoriesSnapshot = await db.collection('trainingCategories')
             .where('trainingType', '==', staffTrainingType)
             .get();
+        
+        const categories = [];
+        categoriesSnapshot.forEach(doc => {
+            const categoryData = doc.data();
+            // ⭐ 排除培訓計劃分類
+            if (!categoryData.isTrainingPlan) {
+                categories.push({ docId: doc.id, ...categoryData });
+            }
+        });
+        categories.sort((a, b) => (a.order || 0) - (b.order || 0));
         
         const progressHtml = [];
 
