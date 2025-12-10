@@ -2025,22 +2025,22 @@
 // ==================== PCA 培訓計劃範本 ====================
 const PCA_TRAINING_PLAN_TEMPLATE = {
     "PCA1": [
-        { courseCode: "1.1", courseName: "方向及介紹", week: "WK1", hours: 1, category: "基礎培訓" },
-        { courseCode: "1.2", courseName: "分工及工作流程簡介", week: "WK1", hours: 1, category: "基礎培訓" },
-        { courseCode: "2.1", courseName: "滅菌部門介紹", week: "WK1", hours: 2, category: "基礎培訓" },
-        { courseCode: "2.2", courseName: "手部衛生訓練", week: "WK1", hours: 1, category: "基礎培訓" },
-        { courseCode: "3.1", courseName: "儀器認識及用途", week: "WK2", hours: 4, category: "儀器知識" },
-        { courseCode: "4.1", courseName: "去污區工作流程", week: "WK4", hours: 4, category: "工作流程" }
+        { courseCode: "1.1", courseName: "方向及介紹", week: "WK1", category: "基礎培訓" },
+        { courseCode: "1.2", courseName: "分工及工作流程簡介", week: "WK1", category: "基礎培訓" },
+        { courseCode: "2.1", courseName: "滅菌部門介紹", week: "WK1", category: "基礎培訓" },
+        { courseCode: "2.2", courseName: "手部衛生訓練", week: "WK1", category: "基礎培訓" },
+        { courseCode: "3.1", courseName: "儀器認識及用途", week: "WK2", category: "儀器知識" },
+        { courseCode: "4.1", courseName: "去污區工作流程", week: "WK4", category: "工作流程" }
     ],
     "PCA2": [
-        { courseCode: "1.1", courseName: "滅菌設備操作 - Autoclave", week: "WK6", hours: 6, category: "進階培訓" },
-        { courseCode: "1.2", courseName: "滅菌設備操作 - ETO", week: "WK7", hours: 4, category: "進階培訓" },
-        { courseCode: "2.1", courseName: "質量控制程序", week: "WK9", hours: 4, category: "質量管理" }
+        { courseCode: "1.1", courseName: "滅菌設備操作 - Autoclave", week: "WK6", category: "進階培訓" },
+        { courseCode: "1.2", courseName: "滅菌設備操作 - ETO", week: "WK7", category: "進階培訓" },
+        { courseCode: "2.1", courseName: "質量控制程序", week: "WK9", category: "質量管理" }
     ],
     "PCA3": [
-        { courseCode: "1.1", courseName: "部門日常管理", week: "WK13", hours: 4, category: "管理培訓" },
-        { courseCode: "1.2", courseName: "人員調配及排更", week: "WK14", hours: 3, category: "管理培訓" },
-        { courseCode: "3.1", courseName: "培訓新人", week: "WK17-20", hours: 16, category: "帶教能力" }
+        { courseCode: "1.1", courseName: "部門日常管理", week: "WK13", category: "管理培訓" },
+        { courseCode: "1.2", courseName: "人員調配及排更", week: "WK14", category: "管理培訓" },
+        { courseCode: "3.1", courseName: "培訓新人", week: "WK17-20", category: "帶教能力" }
     ]
 };
         
@@ -2855,7 +2855,8 @@ async function showPlanByLevel(categoryId, level) {
                                 <th style="padding: 10px; text-align: left;">章節</th>
                                 <th style="padding: 10px; text-align: left;">內容</th>
                                 <th style="padding: 10px; text-align: center;">講解時限</th>
-                                <th style="padding: 10px; text-align: center;">時數</th>
+                                <th style="padding: 10px; text-align: center;">完成日期</th>
+                                <th style="padding: 10px; text-align: center;">講解人員</th>
                                 <th style="padding: 10px; text-align: center;">操作</th>
                             </tr>
                         </thead>
@@ -2870,9 +2871,14 @@ async function showPlanByLevel(categoryId, level) {
                         <td style="padding: 12px; text-align: center;">
                             <span class="badge badge-info">${course.week}</span>
                         </td>
-                        <td style="padding: 12px; text-align: center;">${course.hours}h</td>
+                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
+                            ${course.completedDate || '-'}
+                        </td>
+                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
+                            ${course.completedBy || '-'}
+                        </td>
                         <td style="padding: 12px; text-align: center;">
-                            <button class="btn btn-warning btn-small" onclick="editCourse('${course.docId || ''}', '${categoryId}', '${level}')">
+                            <button class="btn btn-warning btn-small" onclick="editCourse('${course.docId}', '${categoryId}', '${level}')">
                                 ✏️ 編輯
                             </button>
                             <button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}')">
@@ -2911,10 +2917,6 @@ function addNewCourse(categoryId, level) {
             <input type="text" id="newCourseWeek" placeholder="例如: WK1 或 WK2-3">
         </div>
         <div class="input-group">
-            <label>⏱️ 時數</label>
-            <input type="number" id="newCourseHours" placeholder="請輸入時數" min="0.5" step="0.5">
-        </div>
-        <div class="input-group">
             <label>📂 分類</label>
             <select id="newCourseCategory">
                 <option value="基礎培訓">基礎培訓</option>
@@ -2936,26 +2938,29 @@ function addNewCourse(categoryId, level) {
 
     showModal('➕ 新增課程', modalBody);
 }
-
+        
 // ==================== 儲存課程 ====================
 async function saveCourse(courseId, categoryId, level) {
     const courseData = {
         courseCode: document.getElementById('newCourseCode').value.trim(),
         courseName: document.getElementById('newCourseName').value.trim(),
         week: document.getElementById('newCourseWeek').value.trim(),
-        hours: parseFloat(document.getElementById('newCourseHours').value) || 0,
         category: document.getElementById('newCourseCategory').value,
         categoryId: categoryId,
         level: level
     };
 
-    if (!courseData.courseCode || !courseData.courseName || !courseData.week || !courseData.hours) {
+    if (!courseData.courseCode || !courseData.courseName || !courseData.week) {
         showToast('❌ 請填寫所有欄位', 'error');
         return;
     }
 
     try {
         if (courseId) {
+            // ⭐ 編輯模式：自動記錄完成日期和講解人員
+            courseData.completedDate = new Date().toLocaleDateString('zh-TW');
+            courseData.completedBy = currentUser.name;
+            
             await db.collection('trainingPlanCourses').doc(courseId).update(courseData);
             showToast('✅ 課程已更新', 'success');
         } else {
@@ -2973,6 +2978,76 @@ async function saveCourse(courseId, categoryId, level) {
         showToast('❌ 儲存失敗', 'error');
     }
 }
+
+ // ==================== 編輯課程 ====================
+async function editCourse(courseId, categoryId, level) {
+    try {
+        const doc = await db.collection('trainingPlanCourses').doc(courseId).get();
+        const course = doc.data();
+
+        const modalBody = `
+            <div class="input-group">
+                <label>📝 課程編號</label>
+                <input type="text" id="newCourseCode" value="${course.courseCode}" placeholder="例如: 1.1">
+            </div>
+            <div class="input-group">
+                <label>📚 課程名稱</label>
+                <input type="text" id="newCourseName" value="${course.courseName}" placeholder="請輸入課程名稱">
+            </div>
+            <div class="input-group">
+                <label>📅 週次</label>
+                <input type="text" id="newCourseWeek" value="${course.week}" placeholder="例如: WK1 或 WK2-3">
+            </div>
+            <div class="input-group">
+                <label>📂 分類</label>
+                <select id="newCourseCategory">
+                    <option value="基礎培訓" ${course.category === '基礎培訓' ? 'selected' : ''}>基礎培訓</option>
+                    <option value="儀器知識" ${course.category === '儀器知識' ? 'selected' : ''}>儀器知識</option>
+                    <option value="工作流程" ${course.category === '工作流程' ? 'selected' : ''}>工作流程</option>
+                    <option value="進階培訓" ${course.category === '進階培訓' ? 'selected' : ''}>進階培訓</option>
+                    <option value="質量管理" ${course.category === '質量管理' ? 'selected' : ''}>質量管理</option>
+                    <option value="專科培訓" ${course.category === '專科培訓' ? 'selected' : ''}>專科培訓</option>
+                    <option value="管理培訓" ${course.category === '管理培訓' ? 'selected' : ''}>管理培訓</option>
+                    <option value="設備管理" ${course.category === '設備管理' ? 'selected' : ''}>設備管理</option>
+                    <option value="帶教能力" ${course.category === '帶教能力' ? 'selected' : ''}>帶教能力</option>
+                </select>
+            </div>
+            <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 0.9em;">
+                💡 <strong>提示：</strong>儲存後將自動記錄今天的日期及你的名字作為完成記錄
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-success" onclick="saveCourse('${courseId}', '${categoryId}', '${level}')">✅ 儲存</button>
+                <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+            </div>
+        `;
+
+        showModal('✏️ 編輯課程', modalBody);
+    } catch (error) {
+        console.error('載入課程失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
+}
+
+// ==================== 刪除課程 ====================
+async function deleteCourse(courseId, courseName) {
+    if (!confirm(`❓ 確定要刪除課程「${courseName}」嗎？`)) {
+        return;
+    }
+
+    try {
+        await db.collection('trainingPlanCourses').doc(courseId).delete();
+        showToast('✅ 課程已刪除', 'success');
+        
+        // 刷新當前頁面
+        const currentUrl = window.location.href;
+        if (currentUrl.includes('planLevelContent')) {
+            location.reload();
+        }
+    } catch (error) {
+        console.error('刪除課程失敗:', error);
+        showToast('❌ 刪除失敗', 'error');
+    }
+} 
         
 // ==================== 切換項目卡片展開/收起 ====================
 function toggleItemCard(itemId) {
