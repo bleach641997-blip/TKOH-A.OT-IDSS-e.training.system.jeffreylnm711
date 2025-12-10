@@ -2881,9 +2881,9 @@ async function showPlanByLevel(categoryId, level) {
                             <button class="btn btn-warning btn-small" onclick="editCourse('${course.docId}', '${categoryId}', '${level}')">
                                 ✏️ 編輯
                             </button>
-                            <button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}')">
-                                🗑️ 刪除
-                            </button>
+<button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}', '${categoryId}', '${level}')">
+    🗑️ 刪除
+</button>
                         </td>
                     </tr>
                 `;
@@ -2979,24 +2979,30 @@ async function saveCourse(courseId, categoryId, level) {
     }
 }
 
- // ==================== 編輯課程 ====================
+// ==================== 編輯課程 ====================
 async function editCourse(courseId, categoryId, level) {
     try {
         const doc = await db.collection('trainingPlanCourses').doc(courseId).get();
+        
+        if (!doc.exists) {
+            showToast('❌ 找不到此課程', 'error');
+            return;
+        }
+        
         const course = doc.data();
 
         const modalBody = `
             <div class="input-group">
                 <label>📝 課程編號</label>
-                <input type="text" id="newCourseCode" value="${course.courseCode}" placeholder="例如: 1.1">
+                <input type="text" id="newCourseCode" value="${course.courseCode || ''}" placeholder="例如: 1.1">
             </div>
             <div class="input-group">
                 <label>📚 課程名稱</label>
-                <input type="text" id="newCourseName" value="${course.courseName}" placeholder="請輸入課程名稱">
+                <input type="text" id="newCourseName" value="${course.courseName || ''}" placeholder="請輸入課程名稱">
             </div>
             <div class="input-group">
                 <label>📅 週次</label>
-                <input type="text" id="newCourseWeek" value="${course.week}" placeholder="例如: WK1 或 WK2-3">
+                <input type="text" id="newCourseWeek" value="${course.week || ''}" placeholder="例如: WK1 或 WK2-3">
             </div>
             <div class="input-group">
                 <label>📂 分類</label>
@@ -3024,12 +3030,12 @@ async function editCourse(courseId, categoryId, level) {
         showModal('✏️ 編輯課程', modalBody);
     } catch (error) {
         console.error('載入課程失敗:', error);
-        showToast('❌ 載入失敗', 'error');
+        showToast('❌ 載入課程失敗: ' + error.message, 'error');
     }
 }
 
 // ==================== 刪除課程 ====================
-async function deleteCourse(courseId, courseName) {
+async function deleteCourse(courseId, courseName, categoryId, level) {
     if (!confirm(`❓ 確定要刪除課程「${courseName}」嗎？`)) {
         return;
     }
@@ -3038,16 +3044,14 @@ async function deleteCourse(courseId, courseName) {
         await db.collection('trainingPlanCourses').doc(courseId).delete();
         showToast('✅ 課程已刪除', 'success');
         
-        // 刷新當前頁面
-        const currentUrl = window.location.href;
-        if (currentUrl.includes('planLevelContent')) {
-            location.reload();
-        }
+        // ⭐ 立即重新載入當前級別的課程列表
+        await showPlanByLevel(categoryId, level);
     } catch (error) {
         console.error('刪除課程失敗:', error);
         showToast('❌ 刪除失敗', 'error');
     }
-} 
+}
+
         
 // ==================== 切換項目卡片展開/收起 ====================
 function toggleItemCard(itemId) {
