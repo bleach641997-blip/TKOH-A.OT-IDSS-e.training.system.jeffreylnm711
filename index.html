@@ -1819,10 +1819,8 @@
                 <div class="dashboard-subtitle">培訓管理系統</div>
             </div>
  <div style="text-align: right; margin-bottom: 20px;">
-    <button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
-    ${currentTrainingType === 'PCA' ? `
-        <button class="btn btn-info" onclick="managePCATrainingPlan()">📅 管理 PCA 培訓計劃</button>
-    ` : ''}
+<button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
+    ${currentTrainingType === 'PCA' ? '<button class="btn btn-info" onclick="managePCATrainingPlan()">📅 管理 PCA 培訓計劃</button>' : ''}
     <button class="btn btn-secondary" onclick="showPage('selectTrainingTypePage')">🔙 返回選擇</button>
 </div>
             <div class="training-dashboard" id="categoryDashboard">
@@ -2550,29 +2548,23 @@ async function showTrainingManage() {
 // ==================== 確保培訓計劃分類存在 ====================
 async function ensureTrainingPlanCategory() {
     try {
-        const existingSnapshot = await db.collection('trainingCategories')
+        const planSnapshot = await db.collection('trainingCategories')
             .where('trainingType', '==', 'PCA')
             .where('isTrainingPlan', '==', true)
             .limit(1)
             .get();
-
-        // ⭐ 關鍵修改：只在完全不存在時才建立，且只在管理員介面執行
-        if (existingSnapshot.empty && currentUser.role === 'admin') {
-            console.log('📝 管理員首次建立 PCA 培訓計劃分類...');
-            
+        
+        if (planSnapshot.empty) {
+            // 只創建分類，不創建課程
             await db.collection('trainingCategories').add({
                 name: 'PCA I/II/III 培訓計劃',
-                emoji: '📅',
                 trainingType: 'PCA',
-                order: 0,
                 isTrainingPlan: true,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            console.log('✅ 培訓計劃分類已建立');
         }
     } catch (error) {
-        console.error('檢查培訓計劃分類失敗:', error);
+        console.error('確保培訓計劃分類存在失敗:', error);
     }
 }
         
