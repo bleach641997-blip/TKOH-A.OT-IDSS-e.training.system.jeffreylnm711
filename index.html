@@ -1818,10 +1818,13 @@
                 <div class="dashboard-title" id="trainingTypeTitle">📚 員工培訓記錄介面</div>
                 <div class="dashboard-subtitle">培訓管理系統</div>
             </div>
-            <div style="text-align: right; margin-bottom: 20px;">
-                <button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
-                <button class="btn btn-secondary" onclick="showPage('selectTrainingTypePage')">🔙 返回選擇</button>
-            </div>
+ <div style="text-align: right; margin-bottom: 20px;">
+    <button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
+    ${currentTrainingType === 'PCA' ? `
+        <button class="btn btn-info" onclick="managePCATrainingPlan()">📅 管理 PCA 培訓計劃</button>
+    ` : ''}
+    <button class="btn btn-secondary" onclick="showPage('selectTrainingTypePage')">🔙 返回選擇</button>
+</div>
             <div class="training-dashboard" id="categoryDashboard">
                 <!-- 動態生成培訓分類卡片 -->
             </div>
@@ -2553,14 +2556,15 @@ async function ensureTrainingPlanCategory() {
             .limit(1)
             .get();
 
-        if (existingSnapshot.empty) {
-            console.log('📝 自動建立 PCA 培訓計劃分類...');
+        // ⭐ 關鍵修改：只在完全不存在時才建立，且只在管理員介面執行
+        if (existingSnapshot.empty && currentUser.role === 'admin') {
+            console.log('📝 管理員首次建立 PCA 培訓計劃分類...');
             
             await db.collection('trainingCategories').add({
                 name: 'PCA I/II/III 培訓計劃',
                 emoji: '📅',
                 trainingType: 'PCA',
-                order: 0, // ⭐ 設為 0，讓它排在最前面
+                order: 0,
                 isTrainingPlan: true,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -2568,7 +2572,7 @@ async function ensureTrainingPlanCategory() {
             console.log('✅ 培訓計劃分類已建立');
         }
     } catch (error) {
-        console.error('建立培訓計劃分類失敗:', error);
+        console.error('檢查培訓計劃分類失敗:', error);
     }
 }
         
@@ -2645,14 +2649,30 @@ async function showCategoryDetail(categoryId) {
         const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
         const category = categoryDoc.data();
 
-document.getElementById('categoryDetailTitle').textContent = `${category.emoji} ${category.name}`;
+        document.getElementById('categoryDetailTitle').textContent = `${category.emoji} ${category.name}`;
 
         // ⭐ 檢查是否為培訓計劃分類
         if (category.isTrainingPlan) {
-            await showTrainingPlanManagement(categoryId, category);
+            // ⭐ 只有管理員可以看到管理介面
+            if (currentUser.role === 'admin') {
+                await showTrainingPlanManagement(categoryId, category);
+            } else {
+                // 非管理員只能查看
+                document.getElementById('addItemBtn').style.display = 'none';
+                document.getElementById('categoryDetailContent').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">🔒</div>
+                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 10px;">
+                            此為系統培訓計劃
+                        </div>
+                        <div>請從員工列表查看培訓進度</div>
+                    </div>
+                `;
+            }
             return;
         }
 
+        // ... 原有的其他分類顯示邏輯保持不變
         const itemsSnapshot = await db.collection('trainingItems')
             .where('categoryId', '==', categoryId)
             .get();
@@ -2680,9 +2700,8 @@ document.getElementById('categoryDetailTitle').textContent = `${category.emoji} 
                 badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
             }
 
-            // ⭐ ADD THIS LINE - Calculate actual steps (excluding subtitles)
             const actualStepCount = item.checklist ? item.checklist.filter(s => !s.isSubtitle).length : 0;
-            const totalSteps = actualStepCount; // Use actualStepCount instead of item.checklist.length
+            const totalSteps = actualStepCount;
             
             const percentage = item.hasChecklist ? 100 : 0;
             
@@ -2692,11 +2711,9 @@ document.getElementById('categoryDetailTitle').textContent = `${category.emoji} 
             let checklistHtml = '';
             
             if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
-                // ⭐ UPDATE THIS SECTION - Use stepCounter for proper numbering
-                let stepCounter = 0; // Add counter
+                let stepCounter = 0;
                 
                 const stepsHtml = item.checklist.map((step, index) => {
-                    // Check if this is a subtitle
                     if (step.isSubtitle) {
                         return `
                             <div style="margin: 20px 0 10px 0;">
@@ -2705,7 +2722,6 @@ document.getElementById('categoryDetailTitle').textContent = `${category.emoji} 
                         `;
                     }
                     
-                    // Increment counter for actual steps only
                     stepCounter++;
                     const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
                     
@@ -2723,7 +2739,6 @@ document.getElementById('categoryDetailTitle').textContent = `${category.emoji} 
                     `;
                 }).join('');
 
-                // ⭐ UPDATE THIS LINE - Use actualStepCount
                 checklistHtml = `
                     <div class="checklist-container">
                         <div class="checklist-header">📋 評核步驟 Checklist (共 ${actualStepCount} 個步驟)</div>
@@ -3116,19 +3131,21 @@ async function editCourse(courseId, categoryId, level) {
 
 // ==================== 刪除課程 ====================
 async function deleteCourse(courseId, courseName, categoryId, level) {
-    if (!confirm(`❓ 確定要刪除課程「${courseName}」嗎？`)) {
+    if (!confirm(`❓ 確定要刪除課程「${courseName}」嗎？\n⚠️ 此操作無法復原！`)) {
         return;
     }
 
     try {
+        // ⭐ 直接刪除，不檢查是否為範本
         await db.collection('trainingPlanCourses').doc(courseId).delete();
+        
         showToast('✅ 課程已刪除', 'success');
         
-        // ⭐ 立即重新載入當前級別的課程列表
+        // 重新載入當前級別的課程列表
         await showPlanByLevel(categoryId, level);
     } catch (error) {
         console.error('刪除課程失敗:', error);
-        showToast('❌ 刪除失敗', 'error');
+        showToast('❌ 刪除失敗: ' + error.message, 'error');
     }
 }
 
@@ -4148,13 +4165,23 @@ async function showTrainingProgress(staffId) {
     }
 }
 
-        // ==================== 載入 PCA 培訓進度總覽 ====================
+// ==================== 載入 PCA 培訓進度總覽 ====================
 async function loadPCAProgressOverview(staffId, staffLevel) {
     try {
         // 只對 PCA1/2/3 顯示
         if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
-            document.getElementById('pcaProgressOverview').style.display = 'none';
+            // ⭐ 確保移除可能存在的舊元素
+            const existingOverview = document.getElementById('pcaProgressOverview');
+            if (existingOverview) {
+                existingOverview.remove();
+            }
             return;
+        }
+
+        // ⭐ 關鍵修改：先移除舊的總覽（防止重複）
+        const existingOverview = document.getElementById('pcaProgressOverview');
+        if (existingOverview) {
+            existingOverview.remove();
         }
 
         // 取得培訓計劃分類
@@ -4164,8 +4191,8 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
             .limit(1)
             .get();
 
+        // ⭐ 如果沒有培訓計劃，就不顯示（不自動建立）
         if (planCategorySnapshot.empty) {
-            document.getElementById('pcaProgressOverview').style.display = 'none';
             return;
         }
 
@@ -4250,10 +4277,16 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
             </div>
         `;
 
-        // 插入到重要評核時間表之前
+        // ⭐ 插入到重要評核時間表之前
         const timelineElement = document.getElementById('importantTimeline');
         if (timelineElement) {
             timelineElement.insertAdjacentHTML('beforebegin', overviewHtml);
+        } else {
+            // 如果沒有時間表，插入到培訓進度前面
+            const progressElement = document.getElementById('trainingProgress');
+            if (progressElement) {
+                progressElement.insertAdjacentHTML('beforebegin', overviewHtml);
+            }
         }
 
     } catch (error) {
@@ -6061,6 +6094,32 @@ showPage = function(pageId) {
         loadAuditStats();
     }
 };
+
+        // ==================== 管理 PCA 培訓計劃（管理員專用）====================
+async function managePCATrainingPlan() {
+    try {
+        // 確保分類存在
+        await ensureTrainingPlanCategory();
+        
+        // 取得培訓計劃分類
+        const planSnapshot = await db.collection('trainingCategories')
+            .where('trainingType', '==', 'PCA')
+            .where('isTrainingPlan', '==', true)
+            .limit(1)
+            .get();
+        
+        if (!planSnapshot.empty) {
+            const categoryId = planSnapshot.docs[0].id;
+            showCategoryDetail(categoryId);
+        } else {
+            showToast('❌ 培訓計劃分類不存在', 'error');
+        }
+    } catch (error) {
+        console.error('開啟培訓計劃管理失敗:', error);
+        showToast('❌ 開啟失敗', 'error');
+    }
+}
+        
     </script>
 </body>
 </html>
