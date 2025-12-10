@@ -1819,6 +1819,9 @@
                 <div class="dashboard-subtitle">培訓管理系統</div>
             </div>
  <div style="text-align: right; margin-bottom: 20px;">
+<button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
+<button class="btn btn-info" onclick="managePCATrainingPlan()">📅 管理 PCA 培訓計劃</button>
+    <button class="btn btn-secondary" onclick="showPage('selectTrainingTypePage')">🔙 返回選擇</button>
 </div>
             <div class="training-dashboard" id="categoryDashboard">
                 <!-- 動態生成培訓分類卡片 -->
@@ -2545,25 +2548,23 @@ async function showTrainingManage() {
 // ==================== 確保培訓計劃分類存在 ====================
 async function ensureTrainingPlanCategory() {
     try {
-        // 檢查培訓計劃分類是否存在
         const planSnapshot = await db.collection('trainingCategories')
             .where('trainingType', '==', 'PCA')
             .where('isTrainingPlan', '==', true)
             .limit(1)
             .get();
         
-        // 只有在分類不存在時才創建，不創建課程
         if (planSnapshot.empty) {
+            // 只創建分類，不創建課程
             await db.collection('trainingCategories').add({
                 name: 'PCA I/II/III 培訓計劃',
                 trainingType: 'PCA',
                 isTrainingPlan: true,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log('✅ 已創建培訓計劃分類');
         }
     } catch (error) {
-        console.error('❌ 確保培訓計劃分類存在失敗:', error);
+        console.error('確保培訓計劃分類存在失敗:', error);
     }
 }
         
@@ -2877,6 +2878,7 @@ async function showPlanByLevel(categoryId, level) {
         }
 
         courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
+
 
         const groupedCourses = {};
         courses.forEach(course => {
