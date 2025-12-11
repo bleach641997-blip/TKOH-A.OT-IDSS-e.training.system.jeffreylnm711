@@ -2863,10 +2863,16 @@ async function showPlanByLevel(categoryId, level) {
             titleElement.textContent = `📚 ${level} 培訓計劃`;
         }
         
-        // ⭐ 顯示新增按鈕（管理員/主管）
+        // ⭐⭐⭐ 根據用戶角色決定顯示按鈕
         const addBtn = document.getElementById('addItemBtn');
         if (addBtn) {
-            addBtn.style.display = 'inline-block';
+            // 只有管理員可以看到新增課程按鈕
+            if (currentUser.role === 'admin') {
+                addBtn.style.display = 'inline-block';
+                addBtn.onclick = function() { addNewCourse(categoryId, level); };
+            } else {
+                addBtn.style.display = 'none';
+            }
         }
         
         // ⭐ 確保容器存在
@@ -2900,9 +2906,15 @@ async function showPlanByLevel(categoryId, level) {
                         <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
                             此級別尚無課程
                         </div>
-                        <button class="btn btn-success" onclick="addNewCourse('${categoryId}', '${level}')">
-                            ➕ 新增第一個課程
-                        </button>
+                        ${currentUser.role === 'admin' ? `
+                            <button class="btn btn-success" onclick="addNewCourse('${categoryId}', '${level}')">
+                                ➕ 新增第一個課程
+                            </button>
+                        ` : `
+                            <button class="btn btn-secondary" onclick="backToDashboard()">
+                                🔙 返回
+                            </button>
+                        `}
                     </div>
                 `;
             }
@@ -2932,12 +2944,12 @@ async function showPlanByLevel(categoryId, level) {
                         </div>
                     </div>
                     <div>
-                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+                        ${currentUser.role === 'admin' ? `
                             <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
                                 ➕ 新增課程
                             </button>
                         ` : ''}
-                        <button class="btn btn-secondary btn-small" onclick="backToProgress()">
+                        <button class="btn btn-secondary btn-small" onclick="backToDashboard()">
                             🔙 返回
                         </button>
                     </div>
@@ -2992,13 +3004,15 @@ async function showPlanByLevel(categoryId, level) {
                                         ✅ 標記完成
                                     </button>
                                 ` : `
-                                    <button class="btn btn-warning btn-small" onclick="editCourse('${course.docId}', '${categoryId}', '${level}')">
-                                        ✏️ 編輯
+                                    <button class="btn btn-warning btn-small" onclick="resetCourseCompletion('${course.docId}', '${categoryId}', '${level}')">
+                                        🔄 重設
                                     </button>
                                 `}
-                                <button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}', '${categoryId}', '${level}')">
-                                    🗑️ 刪除
-                                </button>
+                                ${currentUser.role === 'admin' ? `
+                                    <button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}', '${categoryId}', '${level}')">
+                                        🗑️ 刪除
+                                    </button>
+                                ` : ''}
                             </td>
                         ` : ''}
                     </tr>
@@ -3020,6 +3034,78 @@ async function showPlanByLevel(categoryId, level) {
     }
 }
 
+// ==================== NEW: 重設課程完成狀態（主管專用）====================
+async function resetCourseCompletion(courseId, categoryId, level) {
+    if (!confirm('❓ 確認要重設此課程的完成狀態嗎？\n\n此操作將清除完成記錄。')) {
+        return;
+    }
+
+    try {
+        await db.collection('trainingPlanCourses').doc(courseId).update({
+            completedDate: firebase.firestore.FieldValue.delete(),
+            completedBy: firebase.firestore.FieldValue.delete(),
+            completedAt: firebase.firestore.FieldValue.delete()
+        });
+
+        showToast('✅ 課程已重設', 'success');
+        await showPlanByLevel(categoryId, level);
+    } catch (error) {
+        console.error('重設課程失敗:', error);
+        showToast('❌ 操作失敗', 'error');
+    }
+}
+
+// ==================== 更新 editCourse 函數 - 只允許管理員編輯 ====================
+async function editCourse(courseId, categoryId, level) {
+    // ⭐ 權限檢查
+    if (currentUser.role !== 'admin') {
+        showToast('❌ 只有管理員可以編輯課程內容', 'error');
+        return;
+    }
+    
+    try {
+        const doc = await db.collection('trainingPlanCourses').doc(courseId).get();
+        
+        if (!doc.exists) {
+            showToast('❌ 找不到此課程', 'error');
+            return;
+        }
+        
+        const course = doc.data();
+
+        const modalBody = `
+            <div class="input-group">
+                <label>📝 課程編號</label>
+                <input type="text" id="newCourseCode" value="${course.courseCode || ''}" placeholder="例如: 1.1">
+            </div>
+            <div class="input-group">
+                <label>📚 課程名稱</label>
+                <input type="text" id="newCourseName" value="${course.courseName || ''}" placeholder="請輸入課程名稱">
+            </div>
+            <div class="input-group">
+                <label>📅 週次</label>
+                <input type="text" id="newCourseWeek" value="${course.week || ''}" placeholder="例如: WK1 或 WK2-3">
+            </div>
+            <div class="input-group">
+                <label>📂 分類</label>
+                <input type="text" id="newCourseCategory" value="${course.category || ''}" placeholder="請輸入分類">
+            </div>
+            <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 0.9em;">
+                💡 <strong>提示：</strong>儲存後將自動記錄今天的日期及你的名字作為完成記錄
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-success" onclick="saveCourse('${courseId}', '${categoryId}', '${level}')">✅ 儲存</button>
+                <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
+            </div>
+        `;
+
+        showModal('✏️ 編輯課程', modalBody);
+    } catch (error) {
+        console.error('載入課程失敗:', error);
+        showToast('❌ 載入課程失敗: ' + error.message, 'error');
+    }
+}
+        
 // ==================== 新增課程 ====================
 function addNewCourse(categoryId, level) {
     const modalBody = `
