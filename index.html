@@ -2859,19 +2859,15 @@ async function showTrainingPlanManagement(categoryId, category) {
 // ==================== 顯示指定級別的培訓計劃 ====================
 async function showPlanByLevel(categoryId, level) {
     try {
-        // ⭐ 確保頁面已切換
         showPage('categoryDetailPage');
         
-        // ⭐ 設置標題
         const titleElement = document.getElementById('categoryDetailTitle');
         if (titleElement) {
             titleElement.textContent = `📚 ${level} 培訓計劃`;
         }
         
-        // ⭐⭐⭐ 根據用戶角色決定顯示按鈕
         const addBtn = document.getElementById('addItemBtn');
         if (addBtn) {
-            // 只有管理員可以看到新增課程按鈕
             if (currentUser.role === 'admin') {
                 addBtn.style.display = 'inline-block';
                 addBtn.onclick = function() { addNewCourse(categoryId, level); };
@@ -2880,7 +2876,6 @@ async function showPlanByLevel(categoryId, level) {
             }
         }
         
-        // ⭐ 確保容器存在
         let contentContainer = document.getElementById('categoryDetailContent');
         if (!contentContainer) {
             console.error('categoryDetailContent container not found!');
@@ -2888,7 +2883,6 @@ async function showPlanByLevel(categoryId, level) {
             return;
         }
         
-        // ⭐ 創建 planLevelContent 容器
         contentContainer.innerHTML = '<div id="planLevelContent"></div>';
         
         let coursesSnapshot = await db.collection('trainingPlanCourses')
@@ -2901,7 +2895,6 @@ async function showPlanByLevel(categoryId, level) {
             courses.push({ docId: doc.id, ...doc.data() });
         });
 
-        // ⭐ 如果沒有課程，顯示提示訊息
         if (courses.length === 0) {
             const planContent = document.getElementById('planLevelContent');
             if (planContent) {
@@ -2935,33 +2928,32 @@ async function showPlanByLevel(categoryId, level) {
             groupedCourses[cat].push(course);
         });
 
+        // ✅ 正確的開始
         let planHtml = `
-// 在 showPlanByLevel 函數內，找到這段：
-planHtml += `
-    <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
-                box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; 
-                    padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
-            <div>
-                <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-                    📚 ${level} 培訓計劃
+            <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
+                        box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; 
+                            padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
+                            📚 ${level} 培訓計劃
+                        </div>
+                        <div style="color: #666; margin-top: 5px;">
+                            總計 ${courses.length} 個課程
+                        </div>
+                    </div>
+                    <div>
+                        ${currentUser.role === 'admin' && !viewingFromStaffProgress ? `
+                            <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
+                                ➕ 新增課程
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
+                            🔙 返回
+                        </button>
+                    </div>
                 </div>
-                <div style="color: #666; margin-top: 5px;">
-                    總計 ${courses.length} 個課程
-                </div>
-            </div>
-            <div>
-                ${currentUser.role === 'admin' && !viewingFromStaffProgress ? `
-                    <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
-                        ➕ 新增課程
-                    </button>
-                ` : ''}
-                <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
-                    🔙 返回
-                </button>
-            </div>
-        </div>
-`;
+        `;
 
         Object.keys(groupedCourses).forEach(category => {
             planHtml += `
@@ -3040,7 +3032,7 @@ planHtml += `
         showToast('❌ 載入失敗: ' + error.message, 'error');
     }
 }
-
+        
 // ==================== NEW: 重設課程完成狀態（主管專用）====================
 async function resetCourseCompletion(courseId, categoryId, level) {
     if (!confirm('❓ 確認要重設此課程的完成狀態嗎？\n\n此操作將清除完成記錄。')) {
