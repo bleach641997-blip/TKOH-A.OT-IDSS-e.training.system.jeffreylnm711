@@ -2854,36 +2854,62 @@ async function showTrainingPlanManagement(categoryId, category) {
 // ==================== 顯示指定級別的培訓計劃 ====================
 async function showPlanByLevel(categoryId, level) {
     try {
+        // ⭐ 確保頁面已切換
+        showPage('categoryDetailPage');
+        
+        // ⭐ 設置標題
+        const titleElement = document.getElementById('categoryDetailTitle');
+        if (titleElement) {
+            titleElement.textContent = `📚 ${level} 培訓計劃`;
+        }
+        
+        // ⭐ 顯示新增按鈕（管理員/主管）
+        const addBtn = document.getElementById('addItemBtn');
+        if (addBtn) {
+            addBtn.style.display = 'inline-block';
+        }
+        
+        // ⭐ 確保容器存在
+        let contentContainer = document.getElementById('categoryDetailContent');
+        if (!contentContainer) {
+            console.error('categoryDetailContent container not found!');
+            showToast('❌ 頁面載入錯誤', 'error');
+            return;
+        }
+        
+        // ⭐ 創建 planLevelContent 容器
+        contentContainer.innerHTML = '<div id="planLevelContent"></div>';
+        
         let coursesSnapshot = await db.collection('trainingPlanCourses')
             .where('categoryId', '==', categoryId)
             .where('level', '==', level)
             .get();
 
         let courses = [];
-
-        // ⭐ 刪除自動建立課程的邏輯，只載入現有課程
         coursesSnapshot.forEach(doc => {
             courses.push({ docId: doc.id, ...doc.data() });
         });
 
         // ⭐ 如果沒有課程，顯示提示訊息
         if (courses.length === 0) {
-            document.getElementById('planLevelContent').innerHTML = `
-                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center;">
-                    <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
-                    <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
-                        此級別尚無課程
+            const planContent = document.getElementById('planLevelContent');
+            if (planContent) {
+                planContent.innerHTML = `
+                    <div style="background: white; border-radius: 15px; padding: 40px; text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
+                        <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
+                            此級別尚無課程
+                        </div>
+                        <button class="btn btn-success" onclick="addNewCourse('${categoryId}', '${level}')">
+                            ➕ 新增第一個課程
+                        </button>
                     </div>
-                    <button class="btn btn-success" onclick="addNewCourse('${categoryId}', '${level}')">
-                        ➕ 新增第一個課程
-                    </button>
-                </div>
-            `;
+                `;
+            }
             return;
         }
 
         courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
-
 
         const groupedCourses = {};
         courses.forEach(course => {
@@ -2984,10 +3010,13 @@ async function showPlanByLevel(categoryId, level) {
 
         planHtml += `</div>`;
 
-        document.getElementById('planLevelContent').innerHTML = planHtml;
+        const planContent = document.getElementById('planLevelContent');
+        if (planContent) {
+            planContent.innerHTML = planHtml;
+        }
     } catch (error) {
         console.error('載入培訓計劃失敗:', error);
-        showToast('❌ 載入失敗', 'error');
+        showToast('❌ 載入失敗: ' + error.message, 'error');
     }
 }
 
