@@ -4147,8 +4147,17 @@ async function showTrainingProgress(staffId) {
 // ==================== 載入 PCA 培訓進度總覽 ====================
 async function loadPCAProgressOverview(staffId, staffLevel) {
     try {
-        // 只對 PCA1/2/3 顯示
+        // ⭐ 只對 PCA1/2/3 顯示
         if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
+            const existingOverview = document.getElementById('pcaProgressOverview');
+            if (existingOverview) {
+                existingOverview.remove();
+            }
+            return;
+        }
+
+        // ⭐⭐⭐ ADD THIS NEW CHECK - Hide for staff users ⭐⭐⭐
+        if (currentUser.role === 'staff') {
             const existingOverview = document.getElementById('pcaProgressOverview');
             if (existingOverview) {
                 existingOverview.remove();
