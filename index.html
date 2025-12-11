@@ -4270,14 +4270,8 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
             return;
         }
 
-        // ⭐⭐⭐ ADD THIS NEW CHECK - Hide for staff users ⭐⭐⭐
-        if (currentUser.role === 'staff') {
-            const existingOverview = document.getElementById('pcaProgressOverview');
-            if (existingOverview) {
-                existingOverview.remove();
-            }
-            return;
-        }
+        // ⭐⭐⭐ 移除這個檢查 - 允許員工查看自己的進度 ⭐⭐⭐
+        // 原本的程式碼會阻擋員工查看，現在移除了
 
         // ⭐ 先移除舊的總覽（防止重複）
         const existingOverview = document.getElementById('pcaProgressOverview');
@@ -4293,13 +4287,14 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
             .get();
 
         if (planCategorySnapshot.empty) {
+            console.log('⚠️ 找不到培訓計劃分類');
             return;
         }
 
         const planCategoryId = planCategorySnapshot.docs[0].id;
 
-        // ⭐ 只載入當前員工的級別
-        const level = staffLevel; // 例如 'PCA1'
+        // ⭐ 載入當前員工級別的課程
+        const level = staffLevel; // 例如 'PCA1', 'PCA2', 'PCA3'
         
         const coursesSnapshot = await db.collection('trainingPlanCourses')
             .where('categoryId', '==', planCategoryId)
@@ -4321,20 +4316,24 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
         const offset = circumference - (percentage / 100) * circumference;
         const isCompleted = percentage === 100;
 
-        // 渲染進度卡片（只顯示當前級別）
+        // ⭐ 渲染進度卡片（唯讀模式）
         let overviewHtml = `
-            <div class="pca-progress-overview" id="pcaProgressOverview">
-                <div class="pca-progress-title">
+            <div class="pca-progress-overview" id="pcaProgressOverview" 
+                 style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; 
+                        box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
+                <div style="font-size: 1.3em; font-weight: bold; color: #ffa502; margin-bottom: 20px;">
                     📚 ${level} 培訓計劃總覽
                 </div>
-                <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="background: white; border-radius: 15px; padding: 30px; 
+                            box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; 
+                                margin-bottom: 20px;">
                         <div>
                             <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
                                 ${level} 培訓計劃
                             </div>
                             <div style="color: #666; margin-top: 5px;">
-                                你的培訓進度
+                                ${currentUser.role === 'staff' ? '你的培訓進度' : '培訓進度'}
                             </div>
                         </div>
                         <div style="text-align: center;">
@@ -4349,8 +4348,10 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
                                         stroke-linecap="round"
                                         style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
                                 </svg>
-                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-                                    <div style="font-size: 2em; font-weight: bold; color: ${isCompleted ? '#2ed573' : '#ffa502'};">
+                                <div style="position: absolute; top: 50%; left: 50%; 
+                                            transform: translate(-50%, -50%); text-align: center;">
+                                    <div style="font-size: 2em; font-weight: bold; 
+                                                color: ${isCompleted ? '#2ed573' : '#ffa502'};">
                                         ${percentage}%
                                     </div>
                                     <div style="font-size: 0.8em; color: #666; margin-top: 3px;">
@@ -4360,7 +4361,9 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
                             </div>
                         </div>
                     </div>
-                    <div style="text-align: center; padding: 15px; background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; border-radius: 10px;">
+                    <div style="text-align: center; padding: 15px; 
+                                background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; 
+                                border-radius: 10px;">
                         ${isCompleted ? 
                             '<span style="color: #2ed573; font-weight: bold; font-size: 1.1em;">✅ 全部完成！</span>' : 
                             `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
@@ -4376,17 +4379,19 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
 
         // 插入到重要評核時間表之前
         const timelineElement = document.getElementById('importantTimeline');
-        if (timelineElement) {
+        if (timelineElement && timelineElement.parentNode) {
             timelineElement.insertAdjacentHTML('beforebegin', overviewHtml);
         } else {
             const progressElement = document.getElementById('trainingProgress');
-            if (progressElement) {
+            if (progressElement && progressElement.parentNode) {
                 progressElement.insertAdjacentHTML('beforebegin', overviewHtml);
             }
         }
 
+        console.log(`✅ ${level} 培訓計劃總覽已載入 (${completedCourses}/${totalCourses})`);
+
     } catch (error) {
-        console.error('載入 PCA 培訓進度總覽失敗:', error);
+        console.error('❌ 載入 PCA 培訓進度總覽失敗:', error);
     }
 }
 
