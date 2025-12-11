@@ -2114,16 +2114,17 @@ const PCA_TRAINING_PLAN_TEMPLATE = {
     ]
 };
         
-        // ==================== 全域變數 ====================
-        let currentUser = null;
-        let currentStaffLevel = '';
-        let currentStaffId = '';
-        let currentCategoryId = '';
-        let currentTrainingType = ''; // 'PCA' 或 'OTA'
-        let selectedEmoji = '📚';
-        let systemInitialized = false;
-        let checklistSteps = [];
-
+// ==================== 全域變數 ====================
+let currentUser = null;
+let currentStaffLevel = '';
+let currentStaffId = '';
+let currentCategoryId = '';
+let currentTrainingType = ''; // 'PCA' 或 'OTA'
+let selectedEmoji = '📚';
+let systemInitialized = false;
+let checklistSteps = [];
+let viewingFromStaffProgress = false;  // ⭐ 新增：追蹤是否從員工進度進入
+        
         // ==================== Emoji 列表 ====================
         const EMOJI_LIST = [
             '📚', '📖', '📝', '📋', '📊', '📈', '📉', '📄', '📃', '📑',
@@ -2794,7 +2795,11 @@ async function showCategoryDetail(categoryId) {
 
         // ==================== 顯示培訓計劃管理介面 ====================
 async function showTrainingPlanManagement(categoryId, category) {
-    document.getElementById('addItemBtn').style.display = 'none';
+    // ⭐ 隱藏新增項目按鈕（這是系統分類）
+    const addBtn = document.getElementById('addItemBtn');
+    if (addBtn) {
+        addBtn.style.display = 'none';
+    }
     
     const levelSelectorHtml = `
         <div style="background: white; border-radius: 15px; padding: 30px; margin-bottom: 20px; 
@@ -2931,30 +2936,32 @@ async function showPlanByLevel(categoryId, level) {
         });
 
         let planHtml = `
-            <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
-                        box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center; 
-                            padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
-                    <div>
-                        <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-                            📚 ${level} 培訓計劃
-                        </div>
-                        <div style="color: #666; margin-top: 5px;">
-                            總計 ${courses.length} 個課程
-                        </div>
-                    </div>
-                    <div>
-                        ${currentUser.role === 'admin' ? `
-                            <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
-                                ➕ 新增課程
-                            </button>
-                        ` : ''}
-                        <button class="btn btn-secondary btn-small" onclick="backToDashboard()">
-                            🔙 返回
-                        </button>
-                    </div>
+// 在 showPlanByLevel 函數內，找到這段：
+planHtml += `
+    <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
+                box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; 
+                    padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
+            <div>
+                <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
+                    📚 ${level} 培訓計劃
                 </div>
-        `;
+                <div style="color: #666; margin-top: 5px;">
+                    總計 ${courses.length} 個課程
+                </div>
+            </div>
+            <div>
+                ${currentUser.role === 'admin' && !viewingFromStaffProgress ? `
+                    <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
+                        ➕ 新增課程
+                    </button>
+                ` : ''}
+                <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
+                    🔙 返回
+                </button>
+            </div>
+        </div>
+`;
 
         Object.keys(groupedCourses).forEach(category => {
             planHtml += `
@@ -4395,12 +4402,13 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
 async function viewPCATrainingPlan(categoryId, level) {
     currentCategoryId = categoryId;
     
+    // ⭐ 標記為從員工進度進入
+    viewingFromStaffProgress = true;
+    
     // ⭐ 根據用戶角色決定顯示模式
     if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
-        // 管理員/主管 → 完整管理模式
         await showPlanByLevel(categoryId, level);
     } else {
-        // 員工 → 唯讀查看模式
         await showPlanByLevelReadOnly(categoryId, level);
     }
     
@@ -4468,7 +4476,7 @@ async function showPlanByLevelReadOnly(categoryId, level) {
                             總計 ${courses.length} 個課程
                         </div>
                     </div>
-                    <button class="btn btn-secondary btn-small" onclick="backToProgress()">
+                    <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
                         🔙 返回
                     </button>
                 </div>
@@ -6328,6 +6336,9 @@ showPage = function(pageId) {
         // ==================== 管理 PCA 培訓計劃（管理員專用）====================
 async function managePCATrainingPlan() {
     try {
+        // ⭐ 標記為從管理介面進入
+        viewingFromStaffProgress = false;
+        
         // 確保分類存在
         await ensureTrainingPlanCategory();
         
@@ -6347,6 +6358,18 @@ async function managePCATrainingPlan() {
     } catch (error) {
         console.error('開啟培訓計劃管理失敗:', error);
         showToast('❌ 開啟失敗', 'error');
+    }
+}
+
+        // ==================== 智能返回函數 ====================
+function backFromTrainingPlan() {
+    if (viewingFromStaffProgress) {
+        // ⭐ 從員工進度進入 → 返回員工進度
+        viewingFromStaffProgress = false;  // 重設標記
+        showTrainingProgress(currentStaffId);
+    } else {
+        // ⭐ 從管理介面進入 → 返回管理介面
+        showTrainingManage();
     }
 }
         
