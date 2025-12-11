@@ -4410,6 +4410,7 @@ async function viewPCATrainingPlan(categoryId, level) {
 // ==================== 員工唯讀模式：查看培訓計劃 ====================
 async function showPlanByLevelReadOnly(categoryId, level) {
     try {
+        // ⭐ 確保切換到正確的頁面
         showPage('categoryDetailPage');
         
         // ⭐ 設置標題
@@ -4420,19 +4421,22 @@ async function showPlanByLevelReadOnly(categoryId, level) {
         
         // ⭐ 隱藏新增按鈕
         const addBtn = document.getElementById('addItemBtn');
-        if (addBtn) addBtn.style.display = 'none';
+        if (addBtn) {
+            addBtn.style.display = 'none';
+        }
         
-        // ⭐ 確保容器存在
+        // ⭐ 確保容器存在並清空
         let contentContainer = document.getElementById('categoryDetailContent');
         if (!contentContainer) {
-            console.error('categoryDetailContent container not found!');
+            console.error('❌ categoryDetailContent container not found!');
             showToast('❌ 頁面載入錯誤', 'error');
             return;
         }
         
-        // ⭐ 清空並重建容器
+        // ⭐ 完全清空容器
         contentContainer.innerHTML = '';
         
+        // ⭐ 載入課程數據
         let coursesSnapshot = await db.collection('trainingPlanCourses')
             .where('categoryId', '==', categoryId)
             .where('level', '==', level)
@@ -4443,9 +4447,10 @@ async function showPlanByLevelReadOnly(categoryId, level) {
             courses.push({ docId: doc.id, ...doc.data() });
         });
 
+        // ⭐ 如果沒有課程，顯示空狀態
         if (courses.length === 0) {
             contentContainer.innerHTML = `
-                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center; margin-top: 20px;">
+                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center; margin-top: 20px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
                     <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
                     <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
                         此級別尚無課程
@@ -4458,8 +4463,10 @@ async function showPlanByLevelReadOnly(categoryId, level) {
             return;
         }
 
+        // ⭐ 排序課程
         courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
 
+        // ⭐ 按分類分組
         const groupedCourses = {};
         courses.forEach(course => {
             const cat = course.category || '其他';
@@ -4467,6 +4474,7 @@ async function showPlanByLevelReadOnly(categoryId, level) {
             groupedCourses[cat].push(course);
         });
 
+        // ⭐ 生成 HTML
         let planHtml = `
             <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
                         box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
@@ -4486,6 +4494,7 @@ async function showPlanByLevelReadOnly(categoryId, level) {
                 </div>
         `;
 
+        // ⭐ 生成表格
         Object.keys(groupedCourses).forEach(category => {
             planHtml += `
                 <div style="margin-bottom: 25px;">
@@ -4533,11 +4542,13 @@ async function showPlanByLevelReadOnly(categoryId, level) {
 
         planHtml += `</div>`;
 
-        // ⭐ 直接插入到 contentContainer
+        // ⭐ 直接插入 HTML 到容器
         contentContainer.innerHTML = planHtml;
         
+        console.log('✅ 培訓計劃已成功載入 -', level);
+        
     } catch (error) {
-        console.error('載入培訓計劃失敗:', error);
+        console.error('❌ 載入培訓計劃失敗:', error);
         showToast('❌ 載入失敗: ' + error.message, 'error');
     }
 }
