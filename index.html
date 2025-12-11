@@ -4267,11 +4267,130 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
     }
 }
 
-// ==================== 查看 PCA 培訓計劃 ====================
+// ==================== 查看 PCA 培訓計劃（智能路由）====================
 async function viewPCATrainingPlan(categoryId, level) {
     currentCategoryId = categoryId;
-    await showPlanByLevel(categoryId, level);
+    
+    // ⭐ 根據用戶角色決定顯示模式
+    if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
+        // 管理員/主管 → 完整管理模式
+        await showPlanByLevel(categoryId, level);
+    } else {
+        // 員工 → 唯讀查看模式
+        await showPlanByLevelReadOnly(categoryId, level);
+    }
+    
     showPage('categoryDetailPage');
+}
+
+        // ==================== 員工唯讀模式：查看培訓計劃 ====================
+async function showPlanByLevelReadOnly(categoryId, level) {
+    try {
+        // 隱藏新增按鈕
+        document.getElementById('addItemBtn').style.display = 'none';
+        
+        let coursesSnapshot = await db.collection('trainingPlanCourses')
+            .where('categoryId', '==', categoryId)
+            .where('level', '==', level)
+            .get();
+
+        let courses = [];
+        coursesSnapshot.forEach(doc => {
+            courses.push({ docId: doc.id, ...doc.data() });
+        });
+
+        if (courses.length === 0) {
+            document.getElementById('planLevelContent').innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
+                    <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
+                        此級別尚無課程
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
+
+        const groupedCourses = {};
+        courses.forEach(course => {
+            const cat = course.category || '其他';
+            if (!groupedCourses[cat]) groupedCourses[cat] = [];
+            groupedCourses[cat].push(course);
+        });
+
+        let planHtml = `
+            <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
+                        box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; 
+                            padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
+                            📚 我的 ${level} 培訓計劃
+                        </div>
+                        <div style="color: #666; margin-top: 5px;">
+                            總計 ${courses.length} 個課程
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-small" onclick="backToProgress()">
+                        🔙 返回
+                    </button>
+                </div>
+        `;
+
+        Object.keys(groupedCourses).forEach(category => {
+            planHtml += `
+                <div style="margin-bottom: 25px;">
+                    <div style="background: #f0f4ff; padding: 10px 15px; border-radius: 8px; 
+                                font-weight: bold; color: #ffa502; margin-bottom: 10px; 
+                                border-left: 4px solid #ffa502;">
+                        📂 ${category}
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                                <th style="padding: 10px; text-align: left; width: 10%;">章節</th>
+                                <th style="padding: 10px; text-align: left; width: 40%;">內容</th>
+                                <th style="padding: 10px; text-align: center; width: 15%;">講解時限</th>
+                                <th style="padding: 10px; text-align: center; width: 15%;">完成日期</th>
+                                <th style="padding: 10px; text-align: center; width: 20%;">講解人員</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            groupedCourses[category].forEach(course => {
+                const isCompleted = course.completedDate && course.completedBy;
+                const rowStyle = isCompleted ? 'background: #f0fff4;' : '';
+                
+                planHtml += `
+                    <tr style="border-bottom: 1px solid #f0f0f0; ${rowStyle}">
+                        <td style="padding: 12px; font-weight: 500;">${course.courseCode}</td>
+                        <td style="padding: 12px;">${course.courseName}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span class="badge badge-info">${course.week}</span>
+                        </td>
+                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
+                            ${isCompleted ? `✅ ${course.completedDate}` : '⏳ 待完成'}
+                        </td>
+                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
+                            ${isCompleted ? course.completedBy : '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            planHtml += `</tbody></table></div>`;
+        });
+
+        planHtml += `</div>`;
+
+        document.getElementById('planLevelContent').innerHTML = planHtml;
+    } catch (error) {
+        console.error('載入培訓計劃失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
 }
         
         // ==================== 載入重要評核時間表 ====================
