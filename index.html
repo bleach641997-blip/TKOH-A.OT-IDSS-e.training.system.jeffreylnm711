@@ -4261,6 +4261,12 @@ async function showTrainingProgress(staffId) {
 // ==================== 載入 PCA 培訓進度總覽 ====================
 async function loadPCAProgressOverview(staffId, staffLevel) {
     try {
+        // ⭐⭐⭐ 新增：員工帳戶不顯示總覽卡片 ⭐⭐⭐
+        if (currentUser.role === 'staff') {
+            console.log('👤 員工帳戶：跳過總覽卡片載入');
+            return;
+        }
+
         // ⭐ 只對 PCA1/2/3 顯示
         if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
             const existingOverview = document.getElementById('pcaProgressOverview');
@@ -4269,9 +4275,6 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
             }
             return;
         }
-
-        // ⭐⭐⭐ 移除這個檢查 - 允許員工查看自己的進度 ⭐⭐⭐
-        // 原本的程式碼會阻擋員工查看，現在移除了
 
         // ⭐ 先移除舊的總覽（防止重複）
         const existingOverview = document.getElementById('pcaProgressOverview');
@@ -4316,7 +4319,7 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
         const offset = circumference - (percentage / 100) * circumference;
         const isCompleted = percentage === 100;
 
-        // ⭐ 渲染進度卡片（唯讀模式）
+        // ⭐ 渲染進度卡片（管理員/經理模式）
         let overviewHtml = `
             <div class="pca-progress-overview" id="pcaProgressOverview" 
                  style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; 
@@ -4333,7 +4336,7 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
                                 ${level} 培訓計劃
                             </div>
                             <div style="color: #666; margin-top: 5px;">
-                                ${currentUser.role === 'staff' ? '你的培訓進度' : '培訓進度'}
+                                培訓進度
                             </div>
                         </div>
                         <div style="text-align: center;">
