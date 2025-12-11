@@ -4410,15 +4410,28 @@ async function viewPCATrainingPlan(categoryId, level) {
 // ==================== 員工唯讀模式：查看培訓計劃 ====================
 async function showPlanByLevelReadOnly(categoryId, level) {
     try {
+        showPage('categoryDetailPage');
+        
+        // ⭐ 設置標題
+        const titleElement = document.getElementById('categoryDetailTitle');
+        if (titleElement) {
+            titleElement.textContent = `📚 我的 ${level} 培訓計劃`;
+        }
+        
         // ⭐ 隱藏新增按鈕
         const addBtn = document.getElementById('addItemBtn');
         if (addBtn) addBtn.style.display = 'none';
         
         // ⭐ 確保容器存在
         let contentContainer = document.getElementById('categoryDetailContent');
-        if (contentContainer) {
-            contentContainer.innerHTML = '<div id="planLevelContent"></div>';
+        if (!contentContainer) {
+            console.error('categoryDetailContent container not found!');
+            showToast('❌ 頁面載入錯誤', 'error');
+            return;
         }
+        
+        // ⭐ 清空並重建容器
+        contentContainer.innerHTML = '';
         
         let coursesSnapshot = await db.collection('trainingPlanCourses')
             .where('categoryId', '==', categoryId)
@@ -4431,14 +4444,13 @@ async function showPlanByLevelReadOnly(categoryId, level) {
         });
 
         if (courses.length === 0) {
-            const targetElement = document.getElementById('planLevelContent') || contentContainer;
-            targetElement.innerHTML = `
-                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center;">
+            contentContainer.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center; margin-top: 20px;">
                     <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
                     <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
                         此級別尚無課程
                     </div>
-                    <button class="btn btn-secondary" onclick="backToProgress()" style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="backFromTrainingPlan()" style="margin-top: 20px;">
                         🔙 返回
                     </button>
                 </div>
@@ -4521,10 +4533,9 @@ async function showPlanByLevelReadOnly(categoryId, level) {
 
         planHtml += `</div>`;
 
-        const targetElement = document.getElementById('planLevelContent') || contentContainer;
-        if (targetElement) {
-            targetElement.innerHTML = planHtml;
-        }
+        // ⭐ 直接插入到 contentContainer
+        contentContainer.innerHTML = planHtml;
+        
     } catch (error) {
         console.error('載入培訓計劃失敗:', error);
         showToast('❌ 載入失敗: ' + error.message, 'error');
