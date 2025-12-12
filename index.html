@@ -4280,12 +4280,6 @@ async function showTrainingProgress(staffId) {
 // ==================== 載入 PCA 培訓進度總覽 ====================
 async function loadPCAProgressOverview(staffId, staffLevel) {
     try {
-        // ⭐⭐⭐ 新增：員工帳戶不顯示總覽卡片 ⭐⭐⭐
-        if (currentUser.role === 'staff') {
-            console.log('👤 員工帳戶：跳過總覽卡片載入');
-            return;
-        }
-
         // ⭐ 只對 PCA1/2/3 顯示
         if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
             const existingOverview = document.getElementById('pcaProgressOverview');
@@ -4316,7 +4310,7 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
         const planCategoryId = planCategorySnapshot.docs[0].id;
 
         // ⭐ 載入當前員工級別的課程
-        const level = staffLevel; // 例如 'PCA1', 'PCA2', 'PCA3'
+        const level = staffLevel;
         
         const coursesSnapshot = await db.collection('trainingPlanCourses')
             .where('categoryId', '==', planCategoryId)
@@ -4338,66 +4332,132 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
         const offset = circumference - (percentage / 100) * circumference;
         const isCompleted = percentage === 100;
 
-        // ⭐ 渲染進度卡片（管理員/經理模式）
-        let overviewHtml = `
-            <div class="pca-progress-overview" id="pcaProgressOverview" 
-                 style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; 
-                        box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-                <div style="font-size: 1.3em; font-weight: bold; color: #ffa502; margin-bottom: 20px;">
-                    📚 ${level} 培訓計劃總覽
-                </div>
-                <div style="background: white; border-radius: 15px; padding: 30px; 
-                            box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; 
-                                margin-bottom: 20px;">
-                        <div>
-                            <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-                                ${level} 培訓計劃
+        // ⭐⭐⭐ 根據用戶角色決定顯示模式 ⭐⭐⭐
+        let overviewHtml = '';
+        
+        if (currentUser.role === 'staff') {
+            // 👤 員工模式：簡化版（只顯示進度，點擊查看詳情）
+            overviewHtml = `
+                <div class="pca-progress-overview" id="pcaProgressOverview" 
+                     style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; 
+                            box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
+                    <div style="font-size: 1.3em; font-weight: bold; color: #ffa502; margin-bottom: 20px;">
+                        📚 我的 ${level} 培訓計劃總覽
+                    </div>
+                    <div style="background: white; border-radius: 15px; padding: 30px; 
+                                box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; 
+                                    margin-bottom: 20px;">
+                            <div>
+                                <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
+                                    ${level} 培訓計劃
+                                </div>
+                                <div style="color: #666; margin-top: 5px;">
+                                    我的培訓進度
+                                </div>
                             </div>
-                            <div style="color: #666; margin-top: 5px;">
-                                培訓進度
-                            </div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
-                                <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
-                                    <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
-                                        fill="none" stroke-width="10"/>
-                                    <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
-                                        fill="none" stroke-width="10"
-                                        stroke-dasharray="${circumference}" 
-                                        stroke-dashoffset="${offset}"
-                                        stroke-linecap="round"
-                                        style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
-                                </svg>
-                                <div style="position: absolute; top: 50%; left: 50%; 
-                                            transform: translate(-50%, -50%); text-align: center;">
-                                    <div style="font-size: 2em; font-weight: bold; 
-                                                color: ${isCompleted ? '#2ed573' : '#ffa502'};">
-                                        ${percentage}%
-                                    </div>
-                                    <div style="font-size: 0.8em; color: #666; margin-top: 3px;">
-                                        ${completedCourses}/${totalCourses}
+                            <div style="text-align: center;">
+                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
+                                    <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                                        <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
+                                            fill="none" stroke-width="10"/>
+                                        <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
+                                            fill="none" stroke-width="10"
+                                            stroke-dasharray="${circumference}" 
+                                            stroke-dashoffset="${offset}"
+                                            stroke-linecap="round"
+                                            style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
+                                    </svg>
+                                    <div style="position: absolute; top: 50%; left: 50%; 
+                                                transform: translate(-50%, -50%); text-align: center;">
+                                        <div style="font-size: 2em; font-weight: bold; 
+                                                    color: ${isCompleted ? '#2ed573' : '#ffa502'};">
+                                            ${percentage}%
+                                        </div>
+                                        <div style="font-size: 0.8em; color: #666; margin-top: 3px;">
+                                            ${completedCourses}/${totalCourses}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div style="text-align: center; padding: 15px; 
+                                    background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; 
+                                    border-radius: 10px;">
+                            ${isCompleted ? 
+                                '<span style="color: #2ed573; font-weight: bold; font-size: 1.1em;">✅ 全部完成！</span>' : 
+                                `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
+                            }
+                        </div>
+                        <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
+                                onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
+                            📋 查看我的培訓計劃
+                        </button>
                     </div>
-                    <div style="text-align: center; padding: 15px; 
-                                background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; 
-                                border-radius: 10px;">
-                        ${isCompleted ? 
-                            '<span style="color: #2ed573; font-weight: bold; font-size: 1.1em;">✅ 全部完成！</span>' : 
-                            `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
-                        }
-                    </div>
-                    <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
-                            onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
-                        📋 查看完整培訓計劃
-                    </button>
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            // 👔 管理員/主管模式：完整版（包含編輯功能）
+            overviewHtml = `
+                <div class="pca-progress-overview" id="pcaProgressOverview" 
+                     style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; 
+                            box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
+                    <div style="font-size: 1.3em; font-weight: bold; color: #ffa502; margin-bottom: 20px;">
+                        📚 ${level} 培訓計劃總覽
+                    </div>
+                    <div style="background: white; border-radius: 15px; padding: 30px; 
+                                box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; 
+                                    margin-bottom: 20px;">
+                            <div>
+                                <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
+                                    ${level} 培訓計劃
+                                </div>
+                                <div style="color: #666; margin-top: 5px;">
+                                    培訓進度
+                                </div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
+                                    <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                                        <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
+                                            fill="none" stroke-width="10"/>
+                                        <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
+                                            fill="none" stroke-width="10"
+                                            stroke-dasharray="${circumference}" 
+                                            stroke-dashoffset="${offset}"
+                                            stroke-linecap="round"
+                                            style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
+                                    </svg>
+                                    <div style="position: absolute; top: 50%; left: 50%; 
+                                                transform: translate(-50%, -50%); text-align: center;">
+                                        <div style="font-size: 2em; font-weight: bold; 
+                                                    color: ${isCompleted ? '#2ed573' : '#ffa502'};">
+                                            ${percentage}%
+                                        </div>
+                                        <div style="font-size: 0.8em; color: #666; margin-top: 3px;">
+                                            ${completedCourses}/${totalCourses}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; 
+                                    background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; 
+                                    border-radius: 10px;">
+                            ${isCompleted ? 
+                                '<span style="color: #2ed573; font-weight: bold; font-size: 1.1em;">✅ 全部完成！</span>' : 
+                                `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
+                            }
+                        </div>
+                        <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
+                                onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
+                            📋 查看完整培訓計劃
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
 
         // 插入到重要評核時間表之前
         const timelineElement = document.getElementById('importantTimeline');
