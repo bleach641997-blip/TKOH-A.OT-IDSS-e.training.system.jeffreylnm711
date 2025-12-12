@@ -1663,75 +1663,6 @@
     color: #94a3b8;
     font-size: 1.1em;
 }
-
-        /* ==================== PCA 培訓進度總覽卡片 ==================== */
-.pca-progress-overview {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    margin-bottom: 30px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-}
-
-.pca-progress-title {
-    font-size: 1.5em;
-    font-weight: bold;
-    color: #ffa502;
-    margin-bottom: 25px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.pca-levels-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
-}
-
-.pca-level-card {
-    background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
-    border-radius: 12px;
-    padding: 25px;
-    text-align: center;
-    transition: all 0.3s;
-    cursor: pointer;
-    border: 2px solid transparent;
-}
-
-.pca-level-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-    border-color: #ffa502;
-}
-
-.pca-level-name {
-    font-size: 1.3em;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.pca-level-progress {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 15px;
-}
-
-.pca-level-stats {
-    color: #666;
-    font-size: 0.95em;
-    margin-top: 10px;
-}
-
-.pca-no-staff-message {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 40px;
-    color: #999;
-    font-size: 1.1em;
-}
         
     </style>
 </head>
@@ -1740,7 +1671,7 @@
 <!-- 登入頁面 -->
 <div id="loginPage" class="page active">
     <!-- ✨ 加入 Logo 區域 ✨ -->
-    <div style="text-align: center; margin-bottom: 30px;">  <!-- ✅ 修正：text-align -->
+    <div style="text-center; margin-bottom: 30px;">
         <img src="imagestkoh-logo.png" 
              alt="將軍澳醫院" 
              style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto; 
@@ -1818,11 +1749,10 @@
                 <div class="dashboard-title" id="trainingTypeTitle">📚 員工培訓記錄介面</div>
                 <div class="dashboard-subtitle">培訓管理系統</div>
             </div>
- <div style="text-align: right; margin-bottom: 20px;">
-<button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
-<button class="btn btn-info" onclick="managePCATrainingPlan()">📅 管理 PCA 培訓計劃</button>
-    <button class="btn btn-secondary" onclick="showPage('selectTrainingTypePage')">🔙 返回選擇</button>
-</div>
+            <div style="text-align: right; margin-bottom: 20px;">
+                <button class="btn btn-success" onclick="showAddCategoryModal()">➕ 新增培訓分類</button>
+                <button class="btn btn-secondary" onclick="showPage('selectTrainingTypePage')">🔙 返回選擇</button>
+            </div>
             <div class="training-dashboard" id="categoryDashboard">
                 <!-- 動態生成培訓分類卡片 -->
             </div>
@@ -2092,39 +2022,16 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-// ==================== PCA 培訓計劃範本 ====================
-const PCA_TRAINING_PLAN_TEMPLATE = {
-    "PCA1": [
-        { courseCode: "1.1", courseName: "方向及介紹", week: "WK1", category: "基礎培訓" },
-        { courseCode: "1.2", courseName: "分工及工作流程簡介", week: "WK1", category: "基礎培訓" },
-        { courseCode: "2.1", courseName: "滅菌部門介紹", week: "WK1", category: "基礎培訓" },
-        { courseCode: "2.2", courseName: "手部衛生訓練", week: "WK1", category: "基礎培訓" },
-        { courseCode: "3.1", courseName: "儀器認識及用途", week: "WK2", category: "儀器知識" },
-        { courseCode: "4.1", courseName: "去污區工作流程", week: "WK4", category: "工作流程" }
-    ],
-    "PCA2": [
-        { courseCode: "1.1", courseName: "滅菌設備操作 - Autoclave", week: "WK6", category: "進階培訓" },
-        { courseCode: "1.2", courseName: "滅菌設備操作 - ETO", week: "WK7", category: "進階培訓" },
-        { courseCode: "2.1", courseName: "質量控制程序", week: "WK9", category: "質量管理" }
-    ],
-    "PCA3": [
-        { courseCode: "1.1", courseName: "部門日常管理", week: "WK13", category: "管理培訓" },
-        { courseCode: "1.2", courseName: "人員調配及排更", week: "WK14", category: "管理培訓" },
-        { courseCode: "3.1", courseName: "培訓新人", week: "WK17-20", category: "帶教能力" }
-    ]
-};
-        
-// ==================== 全域變數 ====================
-let currentUser = null;
-let currentStaffLevel = '';
-let currentStaffId = '';
-let currentCategoryId = '';
-let currentTrainingType = ''; // 'PCA' 或 'OTA'
-let selectedEmoji = '📚';
-let systemInitialized = false;
-let checklistSteps = [];
-let viewingFromStaffProgress = false;  // ⭐ 新增：追蹤是否從員工進度進入
-        
+        // ==================== 全域變數 ====================
+        let currentUser = null;
+        let currentStaffLevel = '';
+        let currentStaffId = '';
+        let currentCategoryId = '';
+        let currentTrainingType = ''; // 'PCA' 或 'OTA'
+        let selectedEmoji = '📚';
+        let systemInitialized = false;
+        let checklistSteps = [];
+
         // ==================== Emoji 列表 ====================
         const EMOJI_LIST = [
             '📚', '📖', '📝', '📋', '📊', '📈', '📉', '📄', '📃', '📑',
@@ -2532,111 +2439,78 @@ async function loadAccounts() {
             }
         }
 
-// ==================== 顯示培訓管理 Dashboard ====================
-async function showTrainingManage() {
-    const typeTitle = currentTrainingType === 'PCA' ? 'PCA 培訓' : 'OTA 培訓';
-    document.getElementById('trainingTypeTitle').textContent = `📚 ${typeTitle}`;
-    
-    // ⭐ 新增：檢查並建立培訓計劃分類
-    if (currentTrainingType === 'PCA') {
-        await ensureTrainingPlanCategory();
-    }
-    
-    showPage('trainingManagePage');
-    await loadCategoryDashboard();
-}
-
-// ==================== 確保培訓計劃分類存在 ====================
-async function ensureTrainingPlanCategory() {
-    try {
-        const planSnapshot = await db.collection('trainingCategories')
-            .where('trainingType', '==', 'PCA')
-            .where('isTrainingPlan', '==', true)
-            .limit(1)
-            .get();
-        
-        if (planSnapshot.empty) {
-            // 只創建分類，不創建課程
-            await db.collection('trainingCategories').add({
-                name: 'PCA I/II/III 培訓計劃',
-                trainingType: 'PCA',
-                isTrainingPlan: true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+        // ==================== 顯示培訓管理 Dashboard ====================
+        async function showTrainingManage() {
+            const typeTitle = currentTrainingType === 'PCA' ? 'PCA 培訓' : 'OTA 培訓';
+            document.getElementById('trainingTypeTitle').textContent = `📚 ${typeTitle}`;
+            
+            showPage('trainingManagePage');
+            await loadCategoryDashboard();
         }
-    } catch (error) {
-        console.error('確保培訓計劃分類存在失敗:', error);
-    }
-}
-        
-// ==================== 載入培訓分類 Dashboard ====================
-async function loadCategoryDashboard() {
-    try {
-        // ✅ 使用正確的變數名稱
-        const categoriesSnapshot = await db.collection('trainingCategories')
-            .where('trainingType', '==', currentTrainingType)
-            .get();
-        
-        const categories = [];
-        categoriesSnapshot.forEach(doc => {
-            const categoryData = doc.data();
-            // ⭐ 排除培訓計劃分類
-            if (!categoryData.isTrainingPlan) {
-                categories.push({ docId: doc.id, ...categoryData });
-            }
-        });
-        categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-        
-        const dashboardHtml = [];
 
-        for (const category of categories) {
-            const itemsSnapshot = await db.collection('trainingItems')
-                .where('categoryId', '==', category.docId)
-                .get();
+        // ==================== 載入培訓分類 Dashboard ====================
+        async function loadCategoryDashboard() {
+            try {
+                const categoriesSnapshot = await db.collection('trainingCategories')
+                    .where('trainingType', '==', currentTrainingType)
+                    .get();
+                
+                const categories = [];
+                categoriesSnapshot.forEach(doc => {
+                    categories.push({ docId: doc.id, ...doc.data() });
+                });
+                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-            const totalItems = itemsSnapshot.size;
-            const percentage = 100;
+                const dashboardHtml = [];
 
-            const circumference = 2 * Math.PI * 60;
-            const offset = circumference - (percentage / 100) * circumference;
+                for (const category of categories) {
+                    const itemsSnapshot = await db.collection('trainingItems')
+                        .where('categoryId', '==', category.docId)
+                        .get();
 
-            dashboardHtml.push(`
-                <div class="training-card" onclick="showCategoryDetail('${category.docId}')">
-                    <div class="card-icon">${category.emoji}</div>
-                    <div class="card-title">${category.name}</div>
-                    <div class="card-progress">
-                        <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
-                            <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-                                fill="none" stroke-width="12"/>
-                            <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-                                fill="none" stroke-width="12"
-                                stroke-dasharray="${circumference}" 
-                                stroke-dashoffset="${offset}"
-                                stroke-linecap="round"/>
-                        </svg>
-                        <div class="progress-text">
-                            <div class="progress-percent">${totalItems}</div>
-                            <div class="progress-label">個項目</div>
+                    const totalItems = itemsSnapshot.size;
+                    const percentage = 100;
+
+                    const circumference = 2 * Math.PI * 60;
+                    const offset = circumference - (percentage / 100) * circumference;
+
+                    dashboardHtml.push(`
+                        <div class="training-card" onclick="showCategoryDetail('${category.docId}')">
+                            <div class="card-icon">${category.emoji}</div>
+                            <div class="card-title">${category.name}</div>
+                            <div class="card-progress">
+                                <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
+    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"/>
+    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"
+        stroke-dasharray="${circumference}" 
+        stroke-dashoffset="${offset}"
+        stroke-linecap="round"/>
+</svg>
+                                <div class="progress-text">
+                                    <div class="progress-percent">${totalItems}</div>
+                                    <div class="progress-label">個項目</div>
+                                </div>
+                            </div>
+                            <div class="card-stats">${totalItems} 項培訓項目</div>
+                            <div class="card-actions">
+                                <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="card-stats">${totalItems} 項培訓項目</div>
-                    <div class="card-actions">
-                        <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteCategory('${category.docId}', '${category.name}')">🗑️ 刪除</button>
-                    </div>
-                </div>
-            `);
-        }
+                    `);
+                }
 
-        if (dashboardHtml.length === 0) {
-            dashboardHtml.push('<div class="no-data-message">📭 尚無培訓分類，請新增分類開始使用</div>');
-        }
+                if (dashboardHtml.length === 0) {
+                    dashboardHtml.push('<div class="no-data-message">📭 尚無培訓分類，請新增分類開始使用</div>');
+                }
 
-        document.getElementById('categoryDashboard').innerHTML = dashboardHtml.join('');
-    } catch (error) {
-        console.error('載入培訓Dashboard失敗:', error);
-        showToast('❌ 載入失敗', 'error');
-    }
-}
+                document.getElementById('categoryDashboard').innerHTML = dashboardHtml.join('');
+            } catch (error) {
+                console.error('載入培訓Dashboard失敗:', error);
+                showToast('❌ 載入失敗', 'error');
+            }
+        }
 
 // ==================== 顯示分類詳情（管理模式）====================
 async function showCategoryDetail(categoryId) {
@@ -2649,28 +2523,6 @@ async function showCategoryDetail(categoryId) {
 
         document.getElementById('categoryDetailTitle').textContent = `${category.emoji} ${category.name}`;
 
-        // ⭐ 檢查是否為培訓計劃分類
-        if (category.isTrainingPlan) {
-            // ⭐ 只有管理員可以看到管理介面
-            if (currentUser.role === 'admin') {
-                await showTrainingPlanManagement(categoryId, category);
-            } else {
-                // 非管理員只能查看
-                document.getElementById('addItemBtn').style.display = 'none';
-                document.getElementById('categoryDetailContent').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #999;">
-                        <div style="font-size: 3em; margin-bottom: 15px;">🔒</div>
-                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 10px;">
-                            此為系統培訓計劃
-                        </div>
-                        <div>請從員工列表查看培訓進度</div>
-                    </div>
-                `;
-            }
-            return;
-        }
-
-        // ... 原有的其他分類顯示邏輯保持不變
         const itemsSnapshot = await db.collection('trainingItems')
             .where('categoryId', '==', categoryId)
             .get();
@@ -2698,8 +2550,9 @@ async function showCategoryDetail(categoryId) {
                 badges += '<span class="badge badge-critical">⭐ 重要評核</span>';
             }
 
+            // ⭐ ADD THIS LINE - Calculate actual steps (excluding subtitles)
             const actualStepCount = item.checklist ? item.checklist.filter(s => !s.isSubtitle).length : 0;
-            const totalSteps = actualStepCount;
+            const totalSteps = actualStepCount; // Use actualStepCount instead of item.checklist.length
             
             const percentage = item.hasChecklist ? 100 : 0;
             
@@ -2709,9 +2562,11 @@ async function showCategoryDetail(categoryId) {
             let checklistHtml = '';
             
             if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
-                let stepCounter = 0;
+                // ⭐ UPDATE THIS SECTION - Use stepCounter for proper numbering
+                let stepCounter = 0; // Add counter
                 
                 const stepsHtml = item.checklist.map((step, index) => {
+                    // Check if this is a subtitle
                     if (step.isSubtitle) {
                         return `
                             <div style="margin: 20px 0 10px 0;">
@@ -2720,6 +2575,7 @@ async function showCategoryDetail(categoryId) {
                         `;
                     }
                     
+                    // Increment counter for actual steps only
                     stepCounter++;
                     const criticalBadge = step.critical ? '<span class="badge badge-critical">⚠️ Critical</span>' : '';
                     
@@ -2737,6 +2593,7 @@ async function showCategoryDetail(categoryId) {
                     `;
                 }).join('');
 
+                // ⭐ UPDATE THIS LINE - Use actualStepCount
                 checklistHtml = `
                     <div class="checklist-container">
                         <div class="checklist-header">📋 評核步驟 Checklist (共 ${actualStepCount} 個步驟)</div>
@@ -2793,578 +2650,6 @@ async function showCategoryDetail(categoryId) {
     }
 }
 
-        // ==================== 顯示培訓計劃管理介面 ====================
-async function showTrainingPlanManagement(categoryId, category) {
-    // ⭐ 隱藏新增項目按鈕（這是系統分類）
-    const addBtn = document.getElementById('addItemBtn');
-    if (addBtn) {
-        addBtn.style.display = 'none';
-    }
-    
-    const levelSelectorHtml = `
-        <div style="background: white; border-radius: 15px; padding: 30px; margin-bottom: 20px; 
-                    box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-            <div style="font-size: 1.3em; font-weight: bold; color: #ffa502; margin-bottom: 20px;">
-                📋 選擇培訓級別
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                <div class="training-plan-level-card" onclick="showPlanByLevel('${categoryId}', 'PCA1')" 
-                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                            color: white; padding: 40px; border-radius: 15px; text-align: center; 
-                            cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);">
-                    <div style="font-size: 3em; margin-bottom: 10px;">👤</div>
-                    <div style="font-size: 1.5em; font-weight: bold;">PCA I 培訓</div>
-                    <div style="margin-top: 10px; opacity: 0.9;" id="pca1Count">載入中...</div>
-                </div>
-                
-                <div class="training-plan-level-card" onclick="showPlanByLevel('${categoryId}', 'PCA2')" 
-                     style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
-                            color: white; padding: 40px; border-radius: 15px; text-align: center; 
-                            cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(240, 147, 251, 0.3);">
-                    <div style="font-size: 3em; margin-bottom: 10px;">👥</div>
-                    <div style="font-size: 1.5em; font-weight: bold;">PCA II 培訓</div>
-                    <div style="margin-top: 10px; opacity: 0.9;" id="pca2Count">載入中...</div>
-                </div>
-                
-                <div class="training-plan-level-card" onclick="showPlanByLevel('${categoryId}', 'PCA3')" 
-                     style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-                            color: white; padding: 40px; border-radius: 15px; text-align: center; 
-                            cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);">
-                    <div style="font-size: 3em; margin-bottom: 10px;">🎓</div>
-                    <div style="font-size: 1.5em; font-weight: bold;">PCA III 培訓</div>
-                    <div style="margin-top: 10px; opacity: 0.9;" id="pca3Count">載入中...</div>
-                </div>
-            </div>
-        </div>
-        
-        <div id="planLevelContent"></div>
-    `;
-
-    document.getElementById('categoryDetailContent').innerHTML = levelSelectorHtml;
-
-['PCA1', 'PCA2', 'PCA3'].forEach(async (level) => {
-    const snapshot = await db.collection('trainingPlanCourses')
-        .where('categoryId', '==', categoryId)
-        .where('level', '==', level)
-        .get();
-    
-    const count = snapshot.size; // ✅ 只顯示實際數量
-    const countElement = document.getElementById(`${level.toLowerCase()}Count`);
-    if (countElement) {
-        countElement.textContent = `${count} 個課程`;
-    }
-});
-}
-
-// ==================== 顯示指定級別的培訓計劃 ====================
-async function showPlanByLevel(categoryId, level) {
-    try {
-        showPage('categoryDetailPage');
-        
-        const titleElement = document.getElementById('categoryDetailTitle');
-        if (titleElement) {
-            titleElement.textContent = `📚 ${level} 培訓計劃`;
-        }
-        
-        const addBtn = document.getElementById('addItemBtn');
-        if (addBtn) {
-            if (currentUser.role === 'admin') {
-                addBtn.style.display = 'inline-block';
-                addBtn.onclick = function() { addNewCourse(categoryId, level); };
-            } else {
-                addBtn.style.display = 'none';
-            }
-        }
-        
-        let contentContainer = document.getElementById('categoryDetailContent');
-        if (!contentContainer) {
-            console.error('categoryDetailContent container not found!');
-            showToast('❌ 頁面載入錯誤', 'error');
-            return;
-        }
-        
-        contentContainer.innerHTML = '<div id="planLevelContent"></div>';
-        
-        let coursesSnapshot = await db.collection('trainingPlanCourses')
-            .where('categoryId', '==', categoryId)
-            .where('level', '==', level)
-            .get();
-
-       let courses = [];
-        coursesSnapshot.forEach(doc => {
-            courses.push({ docId: doc.id, ...doc.data() });
-        });
-
-        // ⭐ 按課程編號排序（數字順序）
-        courses.sort((a, b) => {
-            const numA = parseFloat(a.courseCode) || 0;
-            const numB = parseFloat(b.courseCode) || 0;
-            return numA - numB;
-        });
-        
-        if (courses.length === 0) {
-            const planContent = document.getElementById('planLevelContent');
-            if (planContent) {
-                planContent.innerHTML = `
-                    <div style="background: white; border-radius: 15px; padding: 40px; text-align: center;">
-                        <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
-                        <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
-                            此級別尚無課程
-                        </div>
-                        ${currentUser.role === 'admin' ? `
-                            <button class="btn btn-success" onclick="addNewCourse('${categoryId}', '${level}')">
-                                ➕ 新增第一個課程
-                            </button>
-                        ` : `
-                            <button class="btn btn-secondary" onclick="backToDashboard()">
-                                🔙 返回
-                            </button>
-                        `}
-                    </div>
-                `;
-            }
-            return;
-        }
-
-        courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
-
-        const groupedCourses = {};
-        courses.forEach(course => {
-            const cat = course.category || '其他';
-            if (!groupedCourses[cat]) groupedCourses[cat] = [];
-            groupedCourses[cat].push(course);
-        });
-
-        // ✅ 正確的開始
-        let planHtml = `
-            <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
-                        box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center; 
-                            padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
-                    <div>
-                        <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-                            📚 ${level} 培訓計劃
-                        </div>
-                        <div style="color: #666; margin-top: 5px;">
-                            總計 ${courses.length} 個課程
-                        </div>
-                    </div>
-                    <div>
-                        ${currentUser.role === 'admin' && !viewingFromStaffProgress ? `
-                            <button class="btn btn-success btn-small" onclick="addNewCourse('${categoryId}', '${level}')">
-                                ➕ 新增課程
-                            </button>
-                        ` : ''}
-                        <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
-                            🔙 返回
-                        </button>
-                    </div>
-                </div>
-        `;
-
-        Object.keys(groupedCourses).forEach(category => {
-            planHtml += `
-                <div style="margin-bottom: 25px;">
-                    <div style="background: #f0f4ff; padding: 10px 15px; border-radius: 8px; 
-                                font-weight: bold; color: #ffa502; margin-bottom: 10px; 
-                                border-left: 4px solid #ffa502;">
-                        📂 ${category}
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
-                                <th style="padding: 10px; text-align: left;">章節</th>
-                                <th style="padding: 10px; text-align: left;">內容</th>
-                                <th style="padding: 10px; text-align: center;">講解時限</th>
-                                <th style="padding: 10px; text-align: center;">完成日期</th>
-                                <th style="padding: 10px; text-align: center;">講解人員</th>
-                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                    <th style="padding: 10px; text-align: center;">操作</th>
-                                ` : ''}
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            groupedCourses[category].forEach(course => {
-                const isCompleted = course.completedDate && course.completedBy;
-                const rowStyle = isCompleted ? 'background: #f0fff4;' : '';
-                
-                planHtml += `
-                    <tr style="border-bottom: 1px solid #f0f0f0; ${rowStyle}">
-                        <td style="padding: 12px; font-weight: 500;">${course.courseCode}</td>
-                        <td style="padding: 12px;">${course.courseName}</td>
-                        <td style="padding: 12px; text-align: center;">
-                            <span class="badge badge-info">${course.week}</span>
-                        </td>
-                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
-                            ${isCompleted ? `✅ ${course.completedDate}` : '-'}
-                        </td>
-                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
-                            ${isCompleted ? `${course.completedBy}` : '-'}
-                        </td>
-                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                            <td style="padding: 12px; text-align: center;">
-                                ${!isCompleted ? `
-                                    <button class="btn btn-success btn-small" onclick="markCourseCompleted('${course.docId}', '${categoryId}', '${level}')">
-                                        ✅ 標記完成
-                                    </button>
-                                ` : `
-                                    <button class="btn btn-warning btn-small" onclick="resetCourseCompletion('${course.docId}', '${categoryId}', '${level}')">
-                                        🔄 重設
-                                    </button>
-                                `}
-                                ${currentUser.role === 'admin' ? `
-                                    <button class="btn btn-danger btn-small" onclick="deleteCourse('${course.docId}', '${course.courseName}', '${categoryId}', '${level}')">
-                                        🗑️ 刪除
-                                    </button>
-                                ` : ''}
-                            </td>
-                        ` : ''}
-                    </tr>
-                `;
-            });
-
-            planHtml += `</tbody></table></div>`;
-        });
-
-        planHtml += `</div>`;
-
-        const planContent = document.getElementById('planLevelContent');
-        if (planContent) {
-            planContent.innerHTML = planHtml;
-        }
-    } catch (error) {
-        console.error('載入培訓計劃失敗:', error);
-        showToast('❌ 載入失敗: ' + error.message, 'error');
-    }
-}
-        
-// ==================== NEW: 重設課程完成狀態（主管專用）====================
-async function resetCourseCompletion(courseId, categoryId, level) {
-    if (!confirm('❓ 確認要重設此課程的完成狀態嗎？\n\n此操作將清除完成記錄。')) {
-        return;
-    }
-
-    try {
-        await db.collection('trainingPlanCourses').doc(courseId).update({
-            completedDate: firebase.firestore.FieldValue.delete(),
-            completedBy: firebase.firestore.FieldValue.delete(),
-            completedAt: firebase.firestore.FieldValue.delete()
-        });
-
-        showToast('✅ 課程已重設', 'success');
-        await showPlanByLevel(categoryId, level);
-    } catch (error) {
-        console.error('重設課程失敗:', error);
-        showToast('❌ 操作失敗', 'error');
-    }
-}
-
-// ==================== 更新 editCourse 函數 - 只允許管理員編輯 ====================
-async function editCourse(courseId, categoryId, level) {
-    // ⭐ 權限檢查
-    if (currentUser.role !== 'admin') {
-        showToast('❌ 只有管理員可以編輯課程內容', 'error');
-        return;
-    }
-    
-    try {
-        const doc = await db.collection('trainingPlanCourses').doc(courseId).get();
-        
-        if (!doc.exists) {
-            showToast('❌ 找不到此課程', 'error');
-            return;
-        }
-        
-        const course = doc.data();
-
-        const modalBody = `
-            <div class="input-group">
-                <label>📝 課程編號</label>
-                <input type="text" id="newCourseCode" value="${course.courseCode || ''}" placeholder="例如: 1.1">
-            </div>
-            <div class="input-group">
-                <label>📚 課程名稱</label>
-                <input type="text" id="newCourseName" value="${course.courseName || ''}" placeholder="請輸入課程名稱">
-            </div>
-            <div class="input-group">
-                <label>📅 週次</label>
-                <input type="text" id="newCourseWeek" value="${course.week || ''}" placeholder="例如: WK1 或 WK2-3">
-            </div>
-            <div class="input-group">
-                <label>📂 分類</label>
-                <input type="text" id="newCourseCategory" value="${course.category || ''}" placeholder="請輸入分類">
-            </div>
-            <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 0.9em;">
-                💡 <strong>提示：</strong>儲存後將自動記錄今天的日期及你的名字作為完成記錄
-            </div>
-            <div class="modal-buttons">
-                <button class="btn btn-success" onclick="saveCourse('${courseId}', '${categoryId}', '${level}')">✅ 儲存</button>
-                <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-            </div>
-        `;
-
-        showModal('✏️ 編輯課程', modalBody);
-    } catch (error) {
-        console.error('載入課程失敗:', error);
-        showToast('❌ 載入課程失敗: ' + error.message, 'error');
-    }
-}
-        
-// ==================== 新增課程 ====================
-function addNewCourse(categoryId, level) {
-    const modalBody = `
-        <div class="input-group">
-            <label>📝 課程編號</label>
-            <input type="text" id="newCourseCode" placeholder="例如: 1.1">
-        </div>
-        <div class="input-group">
-            <label>📚 課程名稱</label>
-            <input type="text" id="newCourseName" placeholder="請輸入課程名稱">
-        </div>
-        <div class="input-group">
-            <label>📅 週次</label>
-            <input type="text" id="newCourseWeek" placeholder="例如: WK1 或 WK2-3">
-        </div>
-        <div class="input-group">
-            <label>📂 分類</label>
-            <input type="text" id="newCourseCategory" placeholder="請輸入分類">
-        </div>
-        <div class="modal-buttons">
-            <button class="btn btn-success" onclick="saveCourse(null, '${categoryId}', '${level}')">✅ 儲存</button>
-            <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-        </div>
-    `;
-
-    showModal('➕ 新增課程', modalBody);
-}
-        
-        // ==================== 儲存批量課程 ====================
-async function saveBulkCourses(categoryId, level) {
-    try {
-        const bulkInput = document.getElementById('bulkCourseInput').value.trim();
-        const singleCode = document.getElementById('singleCourseCode').value.trim();
-        const singleName = document.getElementById('singleCourseName').value.trim();
-        const singleWeek = document.getElementById('singleCourseWeek').value.trim();
-        const singleCategory = document.getElementById('singleCourseCategory').value.trim();
-        
-        let coursesToAdd = [];
-        
-        // ⭐ 檢查是批量輸入還是單個輸入
-        if (bulkInput) {
-            // 批量處理
-            const lines = bulkInput.split('\n').filter(line => line.trim());
-            
-            for (const line of lines) {
-                const parts = line.split('|').map(p => p.trim());
-                
-                if (parts.length !== 4) {
-                    showToast(`❌ 格式錯誤：${line}\n正確格式：課程編號 | 課程名稱 | 週次 | 分類`, 'error');
-                    return;
-                }
-                
-                coursesToAdd.push({
-                    courseCode: parts[0],
-                    courseName: parts[1],
-                    week: parts[2],
-                    category: parts[3]
-                });
-            }
-        } else if (singleCode && singleName && singleWeek && singleCategory) {
-            // 單個新增
-            coursesToAdd.push({
-                courseCode: singleCode,
-                courseName: singleName,
-                week: singleWeek,
-                category: singleCategory
-            });
-        } else {
-            showToast('❌ 請填寫課程資料（批量或單個）', 'error');
-            return;
-        }
-        
-        if (coursesToAdd.length === 0) {
-            showToast('❌ 沒有要新增的課程', 'error');
-            return;
-        }
-        
-        // ⭐⭐⭐ 取得當前最大的 order 值 ⭐⭐⭐
-        const existingCourses = await db.collection('trainingPlanCourses')
-            .where('categoryId', '==', categoryId)
-            .where('level', '==', level)
-            .get();
-        
-        let maxOrder = 0;
-        existingCourses.forEach(doc => {
-            const order = doc.data().order || 0;
-            if (order > maxOrder) maxOrder = order;
-        });
-        
-        // ⭐ 批量新增，order 從 maxOrder + 1 開始遞增
-        const batch = db.batch();
-        
-        coursesToAdd.forEach((course, index) => {
-            const newCourseRef = db.collection('trainingPlanCourses').doc();
-            batch.set(newCourseRef, {
-                ...course,
-                categoryId: categoryId,
-                level: level,
-                order: maxOrder + index + 1,  // ⭐ 新課程排在最後
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        });
-        
-        await batch.commit();
-        
-        showToast(`✅ 成功新增 ${coursesToAdd.length} 個課程！`, 'success');
-        closeModal();
-        showPlanByLevel(categoryId, level);
-        
-    } catch (error) {
-        console.error('新增課程失敗:', error);
-        showToast('❌ 新增課程失敗: ' + error.message, 'error');
-    }
-}
-        
-// ==================== 儲存課程 ====================
-async function saveCourse(courseId, categoryId, level) {
-    const courseData = {
-        courseCode: document.getElementById('newCourseCode').value.trim(),
-        courseName: document.getElementById('newCourseName').value.trim(),
-        week: document.getElementById('newCourseWeek').value.trim(),
-        category: document.getElementById('newCourseCategory').value,
-        categoryId: categoryId,
-        level: level
-    };
-
-    if (!courseData.courseCode || !courseData.courseName || !courseData.week) {
-        showToast('❌ 請填寫所有欄位', 'error');
-        return;
-    }
-
-    try {
-        if (courseId) {
-            // ⭐ 編輯模式：保持原有 order，添加完成記錄
-            courseData.completedDate = new Date().toLocaleDateString('zh-TW');
-            courseData.completedBy = currentUser.name;
-            
-            await db.collection('trainingPlanCourses').doc(courseId).update(courseData);
-            showToast('✅ 課程已更新', 'success');
-        } else {
-            // ⭐⭐⭐ 新增模式：計算正確的 order 值（排在最後）⭐⭐⭐
-            const existingCourses = await db.collection('trainingPlanCourses')
-                .where('categoryId', '==', categoryId)
-                .where('level', '==', level)
-                .get();
-            
-            let maxOrder = 0;
-            existingCourses.forEach(doc => {
-                const order = doc.data().order || 0;
-                if (order > maxOrder) maxOrder = order;
-            });
-            
-            courseData.order = maxOrder + 1;  // ⭐ 新課程排在最後
-            courseData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            
-            await db.collection('trainingPlanCourses').add(courseData);
-            showToast('✅ 課程已新增', 'success');
-        }
-
-        closeModal();
-        showPlanByLevel(categoryId, level);
-    } catch (error) {
-        console.error('儲存課程失敗:', error);
-        showToast('❌ 儲存失敗', 'error');
-    }
-}
-
-// ==================== 編輯課程 ====================
-async function editCourse(courseId, categoryId, level) {
-    try {
-        const doc = await db.collection('trainingPlanCourses').doc(courseId).get();
-        
-        if (!doc.exists) {
-            showToast('❌ 找不到此課程', 'error');
-            return;
-        }
-        
-        const course = doc.data();
-
-        const modalBody = `
-            <div class="input-group">
-                <label>📝 課程編號</label>
-                <input type="text" id="newCourseCode" value="${course.courseCode || ''}" placeholder="例如: 1.1">
-            </div>
-            <div class="input-group">
-                <label>📚 課程名稱</label>
-                <input type="text" id="newCourseName" value="${course.courseName || ''}" placeholder="請輸入課程名稱">
-            </div>
-            <div class="input-group">
-                <label>📅 週次</label>
-                <input type="text" id="newCourseWeek" value="${course.week || ''}" placeholder="例如: WK1 或 WK2-3">
-            </div>
-            <div class="input-group">
-                <label>📂 分類</label>
-                <input type="text" id="newCourseCategory" value="${course.category || ''}" placeholder="請輸入分類">
-            </div>
-            <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 0.9em;">
-                💡 <strong>提示：</strong>儲存後將自動記錄今天的日期及你的名字作為完成記錄
-            </div>
-            <div class="modal-buttons">
-                <button class="btn btn-success" onclick="saveCourse('${courseId}', '${categoryId}', '${level}')">✅ 儲存</button>
-                <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
-            </div>
-        `;
-
-        showModal('✏️ 編輯課程', modalBody);
-    } catch (error) {
-        console.error('載入課程失敗:', error);
-        showToast('❌ 載入課程失敗: ' + error.message, 'error');
-    }
-}
-
-// ==================== 刪除課程 ====================
-async function deleteCourse(courseId, courseName, categoryId, level) {
-    if (!confirm(`❓ 確定要刪除課程「${courseName}」嗎？\n⚠️ 此操作無法復原！`)) {
-        return;
-    }
-
-    try {
-        // ⭐ 直接刪除，不檢查是否為範本
-        await db.collection('trainingPlanCourses').doc(courseId).delete();
-        
-        showToast('✅ 課程已刪除', 'success');
-        
-        // 重新載入當前級別的課程列表
-        await showPlanByLevel(categoryId, level);
-    } catch (error) {
-        console.error('刪除課程失敗:', error);
-        showToast('❌ 刪除失敗: ' + error.message, 'error');
-    }
-}
-
- // ==================== 標記課程完成 ====================
-async function markCourseCompleted(courseId, categoryId, level) {
-    if (!confirm('❓ 確認此課程已向員工講解完畢？\n\n系統將記錄今天的日期及你的名字。')) {
-        return;
-    }
-
-    try {
-        await db.collection('trainingPlanCourses').doc(courseId).update({
-            completedDate: new Date().toLocaleDateString('zh-TW'),
-            completedBy: currentUser.name,
-            completedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        showToast('✅ 課程已標記完成', 'success');
-        await showPlanByLevel(categoryId, level);
-    } catch (error) {
-        console.error('標記完成失敗:', error);
-        showToast('❌ 操作失敗', 'error');
-    }
-}
-        
 // ==================== 切換項目卡片展開/收起 ====================
 function toggleItemCard(itemId) {
     const card = document.getElementById(`item_${itemId}`);
@@ -4224,514 +3509,143 @@ if (hasDeadline && isRecurring) {
             return date;
         }
 
-// ==================== 顯示培訓進度 Dashboard ====================
-async function showTrainingProgress(staffId) {
-    currentStaffId = staffId;
-    showPage('trainingProgressPage');
+        // ==================== 顯示培訓進度 Dashboard ====================
+        async function showTrainingProgress(staffId) {
+            currentStaffId = staffId;
+            showPage('trainingProgressPage');
 
-    try {
-        const staffDoc = await db.collection('accounts').doc(staffId).get();
-        const staff = staffDoc.data();
+            try {
+                const staffDoc = await db.collection('accounts').doc(staffId).get();
+                const staff = staffDoc.data();
 
-        document.getElementById('progressStaffName').textContent = `${staff.name} - 培訓進度`;
+                document.getElementById('progressStaffName').textContent = `${staff.name} - 培訓進度`;
 
-        // 根據員工職級決定要顯示哪個類型的培訓
-        const staffTrainingType = ['PCA1', 'PCA2', 'PCA3'].includes(staff.level) ? 'PCA' : 'OTA';
+                // 根據員工職級決定要顯示哪個類型的培訓
+                const staffTrainingType = ['PCA1', 'PCA2', 'PCA3'].includes(staff.level) ? 'PCA' : 'OTA';
 
-        // 載入重要評核時間表
-        await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
+                // 載入重要評核時間表
+                await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
 
-        // ⭐ 載入 PCA 培訓進度總覽（只對 PCA1/2/3 顯示）
-        await loadPCAProgressOverview(staffId, staff.level);
-
-        // ✅ 載入培訓分類並過濾
-        const categoriesSnapshot = await db.collection('trainingCategories')
-            .where('trainingType', '==', staffTrainingType)
-            .get();
-        
-        const categories = [];
-        categoriesSnapshot.forEach(doc => {
-            const categoryData = doc.data();
-            // ⭐ 排除培訓計劃分類
-            if (!categoryData.isTrainingPlan) {
-                categories.push({ docId: doc.id, ...categoryData });
-            }
-        });
-        categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-        
-        const progressHtml = [];
-
-        for (const category of categories) {
-            const itemsSnapshot = await db.collection('trainingItems')
-                .where('categoryId', '==', category.docId)
-                .get();
-
-            const items = [];
-            itemsSnapshot.forEach(doc => {
-                const item = doc.data();
-                // Filter by PCA level if applicable
-                if (staffTrainingType === 'PCA' && item.pcaLevel && item.pcaLevel !== 'ALL') {
-                    if (item.pcaLevel !== staff.level) {
-                        return; // Skip this item
-                    }
-                }
-                items.push({ docId: doc.id, ...item });
-            });
-            items.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-            const recordsSnapshot = await db.collection('trainingRecords')
-                .where('userId', '==', staffId)
-                .get();
-
-            const records = {};
-            recordsSnapshot.forEach(doc => {
-                const record = doc.data();
-                records[record.itemId] = record;
-            });
-
-            let completedCount = 0;
-            let totalCount = items.length;
-
-            items.forEach(itemObj => {
-                const item = itemObj;
-                const record = records[itemObj.docId];
+                const categoriesSnapshot = await db.collection('trainingCategories')
+                    .where('trainingType', '==', staffTrainingType)
+                    .get();
                 
-                if (item.hasChecklist && record) {
-                    const allCriticalPassed = item.checklist.every((step, index) => {
-                        if (step.isSubtitle || !step.critical) return true;
-                        return record.checklistStatus && record.checklistStatus[index] === 'pass';
-                    });
-                    
-                    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
-                    let passedSteps = 0;
-                    
-                    item.checklist.forEach((step, index) => {
-                        if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
-                            passedSteps++;
-                        }
-                    });
-                    
-                    const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
-                    
-                    if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
-                        completedCount++;
-                    }
-                } else if (!item.hasChecklist && record && record.status === 'completed') {
-                    completedCount++;
+                const categories = [];
+                categoriesSnapshot.forEach(doc => {
+                    categories.push({ docId: doc.id, ...doc.data() });
+                });
+                categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                const progressHtml = [];
+
+  for (const category of categories) {
+    const itemsSnapshot = await db.collection('trainingItems')
+        .where('categoryId', '==', category.docId)
+        .get();
+
+    const items = [];
+    itemsSnapshot.forEach(doc => {
+        const item = doc.data();
+        // Filter by PCA level if applicable
+        if (staffTrainingType === 'PCA' && item.pcaLevel && item.pcaLevel !== 'ALL') {
+            if (item.pcaLevel !== staff.level) {
+                return; // Skip this item
+            }
+        }
+        items.push({ docId: doc.id, ...item });
+    });
+    items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    // Continue with existing logic but use 'items' array instead of creating a new one
+
+const recordsSnapshot = await db.collection('trainingRecords')
+    .where('userId', '==', staffId)
+    .get();
+
+const records = {};
+recordsSnapshot.forEach(doc => {
+    const record = doc.data();
+    records[record.itemId] = record;
+});
+
+let completedCount = 0;
+let totalCount = items.length; // Use filtered items array
+
+items.forEach(itemObj => {
+    const item = itemObj;
+    const record = records[itemObj.docId];
+    
+  if (item.hasChecklist && record) {
+    // ⭐ 排除章節標題
+    const allCriticalPassed = item.checklist.every((step, index) => {
+        if (step.isSubtitle || !step.critical) return true;
+        return record.checklistStatus && record.checklistStatus[index] === 'pass';
+    });
+    
+    // 計算完成率（百分比）- 只計算實際步驟
+    const actualSteps = item.checklist.filter(s => !s.isSubtitle);
+    let passedSteps = 0;
+    
+    item.checklist.forEach((step, index) => {
+        if (!step.isSubtitle && record.checklistStatus && record.checklistStatus[index] === 'pass') {
+            passedSteps++;
+        }
+    });
+    
+    const completionRate = Math.round((passedSteps / actualSteps.length) * 100);
+        
+        // 只有當所有 Critical 步驟通過且完成率 100% 才算完成
+        if (allCriticalPassed && completionRate === 100 && record.status === 'completed') {
+            completedCount++;
+        }
+    } else if (!item.hasChecklist && record && record.status === 'completed') {
+        completedCount++;
+    }
+});
+
+const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+const isCompleted = percentage === 100;
+
+const circumference = 2 * Math.PI * 60;
+const offset = circumference - (percentage / 100) * circumference;
+
+                    progressHtml.push(`
+                        <div class="training-card ${isCompleted ? 'completed' : 'in-progress'}" 
+                             onclick="showCategoryEvaluation('${category.docId}')">
+                            <div class="card-icon">${category.emoji}</div>
+                            <div class="card-title">${category.name}</div>
+                            <div class="card-progress">
+                                <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
+    <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"/>
+    <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
+        fill="none" stroke-width="12"
+        stroke-dasharray="${circumference}" 
+        stroke-dashoffset="${offset}"
+        stroke-linecap="round"/>
+</svg>
+                                <div class="progress-text">
+                                    <div class="progress-percent">${percentage}%</div>
+                                    <div class="progress-label">${completedCount}/${totalCount} 項目完成</div>
+                                </div>
+                            </div>
+                            <div class="card-stats">${completedCount}/${totalCount} 項目已完成</div>
+                            ${isCompleted ? '<div class="card-success-badge">✅ 全部完成！</div>' : ''}
+                        </div>
+                    `);
                 }
-            });
 
-            const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-            const isCompleted = percentage === 100;
+                if (progressHtml.length === 0) {
+                    progressHtml.push('<p class="no-data-message">📭 尚無培訓項目</p>');
+                }
 
-            const circumference = 2 * Math.PI * 60;
-            const offset = circumference - (percentage / 100) * circumference;
-
-            progressHtml.push(`
-                <div class="training-card ${isCompleted ? 'completed' : 'in-progress'}" 
-                     onclick="showCategoryEvaluation('${category.docId}')">
-                    <div class="card-icon">${category.emoji}</div>
-                    <div class="card-title">${category.name}</div>
-                    <div class="card-progress">
-                        <svg class="progress-ring" width="150" height="150" viewBox="0 0 150 150">
-                            <circle class="progress-ring-bg" cx="75" cy="75" r="60" 
-                                fill="none" stroke-width="12"/>
-                            <circle class="progress-ring-circle" cx="75" cy="75" r="60" 
-                                fill="none" stroke-width="12"
-                                stroke-dasharray="${circumference}" 
-                                stroke-dashoffset="${offset}"
-                                stroke-linecap="round"/>
-                        </svg>
-                        <div class="progress-text">
-                            <div class="progress-percent">${percentage}%</div>
-                            <div class="progress-label">${completedCount}/${totalCount} 項目完成</div>
-                        </div>
-                    </div>
-                    <div class="card-stats">${completedCount}/${totalCount} 項目已完成</div>
-                    ${isCompleted ? '<div class="card-success-badge">✅ 全部完成！</div>' : ''}
-                </div>
-            `);
-        }
-
-        if (progressHtml.length === 0) {
-            progressHtml.push('<p class="no-data-message">📭 尚無培訓項目</p>');
-        }
-
-        document.getElementById('trainingProgress').innerHTML = progressHtml.join('');
-    } catch (error) {
-        console.error('載入培訓進度失敗:', error);
-        showToast('❌ 載入培訓進度失敗', 'error');
-    }
-}
-
-// ==================== 載入 PCA 培訓進度總覽 ====================
-async function loadPCAProgressOverview(staffId, staffLevel) {
-    try {
-        // ⭐ 只對 PCA1/2/3 顯示
-        if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
-            const existingOverview = document.getElementById('pcaProgressOverview');
-            if (existingOverview) {
-                existingOverview.remove();
-            }
-            return;
-        }
-
-        // ⭐ 先移除舊的總覽（防止重複）
-        const existingOverview = document.getElementById('pcaProgressOverview');
-        if (existingOverview) {
-            existingOverview.remove();
-        }
-
-        // 取得培訓計劃分類
-        const planCategorySnapshot = await db.collection('trainingCategories')
-            .where('trainingType', '==', 'PCA')
-            .where('isTrainingPlan', '==', true)
-            .limit(1)
-            .get();
-
-        if (planCategorySnapshot.empty) {
-            console.log('⚠️ 找不到培訓計劃分類');
-            return;
-        }
-
-        const planCategoryId = planCategorySnapshot.docs[0].id;
-
-        // ⭐ 載入當前員工級別的課程
-        const level = staffLevel;
-        
-        const coursesSnapshot = await db.collection('trainingPlanCourses')
-            .where('categoryId', '==', planCategoryId)
-            .where('level', '==', level)
-            .get();
-
-        const totalCourses = coursesSnapshot.size;
-        let completedCourses = 0;
-
-        coursesSnapshot.forEach(doc => {
-            const course = doc.data();
-            if (course.completedDate && course.completedBy) {
-                completedCourses++;
-            }
-        });
-
-        const percentage = totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0;
-        const circumference = 2 * Math.PI * 50;
-        const offset = circumference - (percentage / 100) * circumference;
-        const isCompleted = percentage === 100;
-
-        // ⭐⭐⭐ 根據用戶角色決定顯示模式 ⭐⭐⭐
-        let overviewHtml = '';
-        
-        if (currentUser.role === 'staff') {
-            // 👤 員工模式：簡化版（只顯示進度，點擊查看詳情）
-            overviewHtml = `
-                <div class="pca-progress-overview" id="pcaProgressOverview" 
-                     style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; 
-                            box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-                    <div style="font-size: 1.3em; font-weight: bold; color: #ffa502; margin-bottom: 20px;">
-                        📚 我的 ${level} 培訓計劃總覽
-                    </div>
-                    <div style="background: white; border-radius: 15px; padding: 30px; 
-                                box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; 
-                                    margin-bottom: 20px;">
-                            <div>
-                                <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-                                    ${level} 培訓計劃
-                                </div>
-                                <div style="color: #666; margin-top: 5px;">
-                                    我的培訓進度
-                                </div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
-                                    <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
-                                        <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
-                                            fill="none" stroke-width="10"/>
-                                        <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
-                                            fill="none" stroke-width="10"
-                                            stroke-dasharray="${circumference}" 
-                                            stroke-dashoffset="${offset}"
-                                            stroke-linecap="round"
-                                            style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
-                                    </svg>
-                                    <div style="position: absolute; top: 50%; left: 50%; 
-                                                transform: translate(-50%, -50%); text-align: center;">
-                                        <div style="font-size: 2em; font-weight: bold; 
-                                                    color: ${isCompleted ? '#2ed573' : '#ffa502'};">
-                                            ${percentage}%
-                                        </div>
-                                        <div style="font-size: 0.8em; color: #666; margin-top: 3px;">
-                                            ${completedCourses}/${totalCourses}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="text-align: center; padding: 15px; 
-                                    background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; 
-                                    border-radius: 10px;">
-                            ${isCompleted ? 
-                                '<span style="color: #2ed573; font-weight: bold; font-size: 1.1em;">✅ 全部完成！</span>' : 
-                                `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
-                            }
-                        </div>
-                        <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
-                                onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
-                            📋 查看我的培訓計劃
-                        </button>
-                    </div>
-                </div>
-            `;
-        } else {
-            // 👔 管理員/主管模式：完整版（包含編輯功能）
-            overviewHtml = `
-                <div class="pca-progress-overview" id="pcaProgressOverview" 
-                     style="background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; 
-                            box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-                    <div style="font-size: 1.3em; font-weight: bold; color: #ffa502; margin-bottom: 20px;">
-                        📚 ${level} 培訓計劃總覽
-                    </div>
-                    <div style="background: white; border-radius: 15px; padding: 30px; 
-                                box-shadow: 0 3px 15px rgba(0,0,0,0.08);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; 
-                                    margin-bottom: 20px;">
-                            <div>
-                                <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-                                    ${level} 培訓計劃
-                                </div>
-                                <div style="color: #666; margin-top: 5px;">
-                                    培訓進度
-                                </div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
-                                    <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
-                                        <circle class="progress-ring-bg" cx="60" cy="60" r="50" 
-                                            fill="none" stroke-width="10"/>
-                                        <circle class="progress-ring-circle" cx="60" cy="60" r="50" 
-                                            fill="none" stroke-width="10"
-                                            stroke-dasharray="${circumference}" 
-                                            stroke-dashoffset="${offset}"
-                                            stroke-linecap="round"
-                                            style="stroke: ${isCompleted ? '#2ed573' : '#ffa502'};"/>
-                                    </svg>
-                                    <div style="position: absolute; top: 50%; left: 50%; 
-                                                transform: translate(-50%, -50%); text-align: center;">
-                                        <div style="font-size: 2em; font-weight: bold; 
-                                                    color: ${isCompleted ? '#2ed573' : '#ffa502'};">
-                                            ${percentage}%
-                                        </div>
-                                        <div style="font-size: 0.8em; color: #666; margin-top: 3px;">
-                                            ${completedCourses}/${totalCourses}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="text-align: center; padding: 15px; 
-                                    background: ${isCompleted ? '#f0fff4' : '#fff9e6'}; 
-                                    border-radius: 10px;">
-                            ${isCompleted ? 
-                                '<span style="color: #2ed573; font-weight: bold; font-size: 1.1em;">✅ 全部完成！</span>' : 
-                                `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
-                            }
-                        </div>
-                        <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
-                                onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
-                            📋 查看完整培訓計劃
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 插入到重要評核時間表之前
-        const timelineElement = document.getElementById('importantTimeline');
-        if (timelineElement && timelineElement.parentNode) {
-            timelineElement.insertAdjacentHTML('beforebegin', overviewHtml);
-        } else {
-            const progressElement = document.getElementById('trainingProgress');
-            if (progressElement && progressElement.parentNode) {
-                progressElement.insertAdjacentHTML('beforebegin', overviewHtml);
+                document.getElementById('trainingProgress').innerHTML = progressHtml.join('');
+            } catch (error) {
+                console.error('載入培訓進度失敗:', error);
+                showToast('❌ 載入培訓進度失敗', 'error');
             }
         }
 
-        console.log(`✅ ${level} 培訓計劃總覽已載入 (${completedCourses}/${totalCourses})`);
-
-    } catch (error) {
-        console.error('❌ 載入 PCA 培訓進度總覽失敗:', error);
-    }
-}
-
-// ==================== 查看 PCA 培訓計劃（智能路由）====================
-async function viewPCATrainingPlan(categoryId, level) {
-    currentCategoryId = categoryId;
-    
-    // ⭐ 標記為從員工進度進入
-    viewingFromStaffProgress = true;
-    
-    // ⭐ 根據用戶角色決定顯示模式
-    if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
-        await showPlanByLevel(categoryId, level);
-    } else {
-        await showPlanByLevelReadOnly(categoryId, level);
-    }
-    
-    showPage('categoryDetailPage');
-}
-
-// ==================== 員工唯讀模式：查看培訓計劃 ====================
-async function showPlanByLevelReadOnly(categoryId, level) {
-    try {
-        showPage('categoryDetailPage');
-        
-        const titleElement = document.getElementById('categoryDetailTitle');
-        if (titleElement) {
-            titleElement.textContent = `📚 我的 ${level} 培訓計劃`;
-        }
-        
-        // ⭐ 隱藏新增按鈕
-        const addBtn = document.getElementById('addItemBtn');
-        if (addBtn) {
-            addBtn.style.display = 'none';
-        }
-        
-        // ⭐⭐⭐ 隱藏頁面頂部的返回按鈕（那是給管理員用的）⭐⭐⭐
-        const topBar = document.querySelector('#categoryDetailPage .top-bar');
-        if (topBar) {
-            topBar.style.display = 'none';
-        }
-        
-        // ⭐ 確保容器存在並清空
-        let contentContainer = document.getElementById('categoryDetailContent');
-        if (!contentContainer) {
-            console.error('❌ categoryDetailContent container not found!');
-            showToast('❌ 頁面載入錯誤', 'error');
-            return;
-        }
-        
-        // ⭐ 完全清空容器
-        contentContainer.innerHTML = '';
-        
-        // ⭐ 載入課程數據
-        let coursesSnapshot = await db.collection('trainingPlanCourses')
-            .where('categoryId', '==', categoryId)
-            .where('level', '==', level)
-            .get();
-
-        let courses = [];
-        coursesSnapshot.forEach(doc => {
-            courses.push({ docId: doc.id, ...doc.data() });
-        });
-
-        // ⭐ 如果沒有課程，顯示空狀態
-        if (courses.length === 0) {
-            contentContainer.innerHTML = `
-                <div style="background: white; border-radius: 15px; padding: 40px; text-align: center; margin-top: 20px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-                    <div style="font-size: 3em; margin-bottom: 15px;">📭</div>
-                    <div style="font-size: 1.3em; font-weight: bold; color: #666; margin-bottom: 10px;">
-                        此級別尚無課程
-                    </div>
-                    <button class="btn btn-secondary" onclick="backFromTrainingPlan()" style="margin-top: 20px;">
-                        🔙 返回
-                    </button>
-                </div>
-            `;
-            return;
-        }
-
-        // ⭐ 排序課程
-        courses.sort((a, b) => parseFloat(a.courseCode) - parseFloat(b.courseCode));
-
-        // ⭐ 按分類分組
-        const groupedCourses = {};
-        courses.forEach(course => {
-            const cat = course.category || '其他';
-            if (!groupedCourses[cat]) groupedCourses[cat] = [];
-            groupedCourses[cat].push(course);
-        });
-
-        // ⭐ 生成 HTML
-        let planHtml = `
-            <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
-                        box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center; 
-                            padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
-<div>
-    <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-        📚 我的 ${level} 培訓計劃
-    </div>
-    <div style="color: #666; margin-top: 5px;">
-        總計 ${courses.length} 個課程
-    </div>
-</div>
-<!-- ⭐⭐⭐ 加入員工專用的返回按鈕 ⭐⭐⭐ -->
-<button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
-    🔙 返回我的進度
-</button>
-                </div>
-        `;
-
-        // ⭐ 生成表格
-        Object.keys(groupedCourses).forEach(category => {
-            planHtml += `
-                <div style="margin-bottom: 25px;">
-                    <div style="background: #f0f4ff; padding: 10px 15px; border-radius: 8px; 
-                                font-weight: bold; color: #ffa502; margin-bottom: 10px; 
-                                border-left: 4px solid #ffa502;">
-                        📂 ${category}
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
-                                <th style="padding: 10px; text-align: left; width: 10%;">章節</th>
-                                <th style="padding: 10px; text-align: left; width: 40%;">內容</th>
-                                <th style="padding: 10px; text-align: center; width: 15%;">講解時限</th>
-                                <th style="padding: 10px; text-align: center; width: 15%;">完成日期</th>
-                                <th style="padding: 10px; text-align: center; width: 20%;">講解人員</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            groupedCourses[category].forEach(course => {
-                const isCompleted = course.completedDate && course.completedBy;
-                const rowStyle = isCompleted ? 'background: #f0fff4;' : '';
-                
-                planHtml += `
-                    <tr style="border-bottom: 1px solid #f0f0f0; ${rowStyle}">
-                        <td style="padding: 12px; font-weight: 500;">${course.courseCode}</td>
-                        <td style="padding: 12px;">${course.courseName}</td>
-                        <td style="padding: 12px; text-align: center;">
-                            <span class="badge badge-info">${course.week}</span>
-                        </td>
-                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
-                            ${isCompleted ? `✅ ${course.completedDate}` : '⏳ 待完成'}
-                        </td>
-                        <td style="padding: 12px; text-align: center; font-size: 0.9em; color: #666;">
-                            ${isCompleted ? course.completedBy : '-'}
-                        </td>
-                    </tr>
-                `;
-            });
-
-            planHtml += `</tbody></table></div>`;
-        });
-
-        planHtml += `</div>`;
-
-        // ⭐ 直接插入 HTML 到容器
-        contentContainer.innerHTML = planHtml;
-        
-        console.log('✅ 培訓計劃已成功載入 -', level);
-        
-    } catch (error) {
-        console.error('❌ 載入培訓計劃失敗:', error);
-        showToast('❌ 載入失敗: ' + error.message, 'error');
-    }
-}
-        
         // ==================== 載入重要評核時間表 ====================
         async function loadImportantTimeline(staffId, joinDate, trainingType) {
             try {
@@ -6525,47 +5439,6 @@ showPage = function(pageId) {
         loadAuditStats();
     }
 };
-
-        // ==================== 管理 PCA 培訓計劃（管理員專用）====================
-async function managePCATrainingPlan() {
-    try {
-        // ⭐ 標記為從管理介面進入
-        viewingFromStaffProgress = false;
-        
-        // 確保分類存在
-        await ensureTrainingPlanCategory();
-        
-        // 取得培訓計劃分類
-        const planSnapshot = await db.collection('trainingCategories')
-            .where('trainingType', '==', 'PCA')
-            .where('isTrainingPlan', '==', true)
-            .limit(1)
-            .get();
-        
-        if (!planSnapshot.empty) {
-            const categoryId = planSnapshot.docs[0].id;
-            showCategoryDetail(categoryId);
-        } else {
-            showToast('❌ 培訓計劃分類不存在', 'error');
-        }
-    } catch (error) {
-        console.error('開啟培訓計劃管理失敗:', error);
-        showToast('❌ 開啟失敗', 'error');
-    }
-}
-
-        // ==================== 智能返回函數 ====================
-function backFromTrainingPlan() {
-    if (viewingFromStaffProgress) {
-        // ⭐ 從員工進度進入 → 返回員工進度
-        viewingFromStaffProgress = false;  // 重設標記
-        showTrainingProgress(currentStaffId);
-    } else {
-        // ⭐ 從管理介面進入 → 返回管理介面
-        showTrainingManage();
-    }
-}
-        
     </script>
 </body>
 </html>
