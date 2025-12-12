@@ -4510,6 +4510,12 @@ async function showPlanByLevelReadOnly(categoryId, level) {
             addBtn.style.display = 'none';
         }
         
+        // ⭐⭐⭐ 隱藏頁面頂部的返回按鈕（那是給管理員用的）⭐⭐⭐
+        const topBar = document.querySelector('#categoryDetailPage .top-bar');
+        if (topBar) {
+            topBar.style.display = 'none';
+        }
+        
         // ⭐ 確保容器存在並清空
         let contentContainer = document.getElementById('categoryDetailContent');
         if (!contentContainer) {
@@ -4565,15 +4571,18 @@ async function showPlanByLevelReadOnly(categoryId, level) {
                         box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center; 
                             padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
-                    <div>
-                        <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
-                            📚 我的 ${level} 培訓計劃
-                        </div>
-                        <div style="color: #666; margin-top: 5px;">
-                            總計 ${courses.length} 個課程
-                        </div>
-                    </div>
-                    <!-- ⭐ 移除返回按鈕 -->
+<div>
+    <div style="font-size: 1.5em; font-weight: bold; color: #ffa502;">
+        📚 我的 ${level} 培訓計劃
+    </div>
+    <div style="color: #666; margin-top: 5px;">
+        總計 ${courses.length} 個課程
+    </div>
+</div>
+<!-- ⭐⭐⭐ 加入員工專用的返回按鈕 ⭐⭐⭐ -->
+<button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
+    🔙 返回我的進度
+</button>
                 </div>
         `;
 
