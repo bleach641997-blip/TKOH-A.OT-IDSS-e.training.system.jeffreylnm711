@@ -2929,7 +2929,7 @@ async function showPlanByLevel(categoryId, level) {
         });
 
         // ✅ 正確的開始
-      let planHtml = `
+        let planHtml = `
             <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
                         box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center; 
@@ -2948,10 +2948,9 @@ async function showPlanByLevel(categoryId, level) {
                                 ➕ 新增課程
                             </button>
                         ` : ''}
-                        <!-- ❌ 刪除這段返回按鈕 ❌ -->
-                        <!-- <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
+                        <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
                             🔙 返回
-                        </button> -->
+                        </button>
                     </div>
                 </div>
         `;
@@ -4262,6 +4261,11 @@ async function showTrainingProgress(staffId) {
 // ==================== 載入 PCA 培訓進度總覽 ====================
 async function loadPCAProgressOverview(staffId, staffLevel) {
     try {
+        // ⭐⭐⭐ 新增：員工帳戶不顯示總覽卡片 ⭐⭐⭐
+        if (currentUser.role === 'staff') {
+            console.log('👤 員工帳戶：跳過總覽卡片載入');
+            return;
+        }
 
         // ⭐ 只對 PCA1/2/3 顯示
         if (!['PCA1', 'PCA2', 'PCA3'].includes(staffLevel)) {
@@ -4368,12 +4372,10 @@ async function loadPCAProgressOverview(staffId, staffLevel) {
                             `<span style="color: #ffa502; font-weight: bold; font-size: 1.1em;">⏳ 還有 ${totalCourses - completedCourses} 個課程待完成</span>`
                         }
                     </div>
-  ${currentUser.role === 'staff' ? '' : `
-    <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
-            onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
-        📋 查看完整培訓計劃
-    </button>
-`}
+                    <button class="btn btn-info" style="width: 100%; margin-top: 15px;" 
+                            onclick="viewPCATrainingPlan('${planCategoryId}', '${level}')">
+                        📋 查看完整培訓計劃
+                    </button>
                 </div>
             </div>
         `;
@@ -4481,7 +4483,7 @@ async function showPlanByLevelReadOnly(categoryId, level) {
         });
 
         // ⭐ 生成 HTML
-      let planHtml = `
+        let planHtml = `
             <div style="background: white; border-radius: 15px; padding: 25px; margin-top: 20px; 
                         box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center; 
@@ -4494,10 +4496,9 @@ async function showPlanByLevelReadOnly(categoryId, level) {
                             總計 ${courses.length} 個課程
                         </div>
                     </div>
-                    <!-- ❌ 刪除這段返回按鈕 ❌ -->
-                    <!-- <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
+                    <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
                         🔙 返回
-                    </button> -->
+                    </button>
                 </div>
         `;
 
