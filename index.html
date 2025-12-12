@@ -2890,11 +2890,18 @@ async function showPlanByLevel(categoryId, level) {
             .where('level', '==', level)
             .get();
 
-        let courses = [];
+       let courses = [];
         coursesSnapshot.forEach(doc => {
             courses.push({ docId: doc.id, ...doc.data() });
         });
 
+        // ⭐ 按課程編號排序（數字順序）
+        courses.sort((a, b) => {
+            const numA = parseFloat(a.courseCode) || 0;
+            const numB = parseFloat(b.courseCode) || 0;
+            return numA - numB;
+        });
+        
         if (courses.length === 0) {
             const planContent = document.getElementById('planLevelContent');
             if (planContent) {
@@ -3151,17 +3158,29 @@ async function saveCourse(courseId, categoryId, level) {
 
     try {
         if (courseId) {
-            // ⭐ 編輯模式：自動記錄完成日期和講解人員
+            // ⭐ 編輯模式：保持原有 order，添加完成記錄
             courseData.completedDate = new Date().toLocaleDateString('zh-TW');
             courseData.completedBy = currentUser.name;
             
             await db.collection('trainingPlanCourses').doc(courseId).update(courseData);
             showToast('✅ 課程已更新', 'success');
         } else {
-            await db.collection('trainingPlanCourses').add({
-                ...courseData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            // ⭐⭐⭐ 新增模式：計算正確的 order 值 ⭐⭐⭐
+            const existingCourses = await db.collection('trainingPlanCourses')
+                .where('categoryId', '==', categoryId)
+                .where('level', '==', level)
+                .get();
+            
+            let maxOrder = 0;
+            existingCourses.forEach(doc => {
+                const order = doc.data().order || 0;
+                if (order > maxOrder) maxOrder = order;
             });
+            
+            courseData.order = maxOrder + 1;  // ⭐ 新課程排在最後
+            courseData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            
+            await db.collection('trainingPlanCourses').add(courseData);
             showToast('✅ 課程已新增', 'success');
         }
 
@@ -4418,10 +4437,8 @@ async function viewPCATrainingPlan(categoryId, level) {
 // ==================== 員工唯讀模式：查看培訓計劃 ====================
 async function showPlanByLevelReadOnly(categoryId, level) {
     try {
-        // ⭐ 確保切換到正確的頁面
         showPage('categoryDetailPage');
         
-        // ⭐ 設置標題
         const titleElement = document.getElementById('categoryDetailTitle');
         if (titleElement) {
             titleElement.textContent = `📚 我的 ${level} 培訓計劃`;
@@ -4496,9 +4513,7 @@ async function showPlanByLevelReadOnly(categoryId, level) {
                             總計 ${courses.length} 個課程
                         </div>
                     </div>
-                    <button class="btn btn-secondary btn-small" onclick="backFromTrainingPlan()">
-                        🔙 返回
-                    </button>
+                    <!-- ⭐ 移除返回按鈕 -->
                 </div>
         `;
 
