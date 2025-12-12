@@ -3112,52 +3112,34 @@ async function editCourse(courseId, categoryId, level) {
     }
 }
         
-// ==================== 新增課程（支援批量）====================
+// ==================== 新增課程 ====================
 function addNewCourse(categoryId, level) {
     const modalBody = `
-        <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9em;">
-            💡 <strong>提示：</strong>可以一次過新增多個課程，每行一個課程
-        </div>
-        
         <div class="input-group">
-            <label>📝 課程列表（每行一個課程）</label>
-            <textarea id="bulkCourseInput" placeholder="格式範例：&#10;1.1 | 方向及介紹 | WK1 | 基礎培訓&#10;1.2 | 分工及工作流程簡介 | WK1 | 基礎培訓&#10;2.1 | 滅菌部門介紹 | WK2 | 基礎培訓" 
-                      style="min-height: 200px; font-family: monospace; font-size: 0.9em;"></textarea>
-            <div style="margin-top: 8px; color: #666; font-size: 0.85em;">
-                格式：<code>課程編號 | 課程名稱 | 週次 | 分類</code><br>
-                例如：<code>1.1 | 方向及介紹 | WK1 | 基礎培訓</code>
-            </div>
+            <label>📝 課程編號</label>
+            <input type="text" id="newCourseCode" placeholder="例如: 1.1">
         </div>
-        
-        <div style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 8px;">
-            <div style="font-weight: bold; margin-bottom: 10px;">或者單個新增：</div>
-            <div class="input-group" style="margin-bottom: 10px;">
-                <label>📝 課程編號</label>
-                <input type="text" id="singleCourseCode" placeholder="例如: 1.1">
-            </div>
-            <div class="input-group" style="margin-bottom: 10px;">
-                <label>📚 課程名稱</label>
-                <input type="text" id="singleCourseName" placeholder="請輸入課程名稱">
-            </div>
-            <div class="input-group" style="margin-bottom: 10px;">
-                <label>📅 週次</label>
-                <input type="text" id="singleCourseWeek" placeholder="例如: WK1 或 WK2-3">
-            </div>
-            <div class="input-group">
-                <label>📂 分類</label>
-                <input type="text" id="singleCourseCategory" placeholder="請輸入分類">
-            </div>
+        <div class="input-group">
+            <label>📚 課程名稱</label>
+            <input type="text" id="newCourseName" placeholder="請輸入課程名稱">
         </div>
-        
+        <div class="input-group">
+            <label>📅 週次</label>
+            <input type="text" id="newCourseWeek" placeholder="例如: WK1 或 WK2-3">
+        </div>
+        <div class="input-group">
+            <label>📂 分類</label>
+            <input type="text" id="newCourseCategory" placeholder="請輸入分類">
+        </div>
         <div class="modal-buttons">
-            <button class="btn btn-success" onclick="saveBulkCourses('${categoryId}', '${level}')">✅ 新增課程</button>
+            <button class="btn btn-success" onclick="saveCourse(null, '${categoryId}', '${level}')">✅ 儲存</button>
             <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
         </div>
     `;
 
     showModal('➕ 新增課程', modalBody);
 }
-
+        
         // ==================== 儲存批量課程 ====================
 async function saveBulkCourses(categoryId, level) {
     try {
