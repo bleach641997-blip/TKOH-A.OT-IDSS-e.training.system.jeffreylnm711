@@ -5940,21 +5940,21 @@ async function saveStepTrainingDate(itemId, stepIndex) {
     }
 }
 
-// ⭐⭐⭐ 編輯單一步驟的簽名（新增一鍵多簽 + 自動填入陪帶同事）⭐⭐⭐
+// ⭐⭐⭐ 編輯單一步驟的簽名（新增可選擇性一鍵多簽 + 自動填入陪帶同事）⭐⭐⭐
 function editStepSignature(itemId, stepIndex, type, currentValue) {
     const label = type === 'trainee' ? '新同事' : '陪帶同事';
     
     // ⭐ 陪帶同事自動填入登入者姓名
     const defaultValue = type === 'mentor' && !currentValue ? currentUser.name : currentValue;
     
-    // ⭐ 新同事簽名增加「一鍵全簽」按鈕
+    // ⭐ 新同事簽名增加「選擇性一鍵多簽」按鈕
     const batchSignButton = type === 'trainee' ? `
         <button class="btn btn-warning" style="width: 100%; margin-top: 10px;" 
-                onclick="batchSignAllSteps('${itemId}')">
-            ✍️ 一鍵簽署全部步驟
+                onclick="showBatchSignModal('${itemId}')">
+            ✍️ 一鍵多簽（可選擇步驟）
         </button>
         <div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-radius: 6px; font-size: 0.85em; text-align: center;">
-            💡 提示：將會使用此簽名自動填入所有未簽署的步驟
+            💡 提示：可以選擇要簽署哪些步驟
         </div>
     ` : '';
     
@@ -5973,6 +5973,210 @@ function editStepSignature(itemId, stepIndex, type, currentValue) {
     showModal(`✍️ ${label}簽名`, modalBody);
 }
 
+        // ⭐⭐⭐ 新增：顯示批量簽署選擇介面 ⭐⭐⭐
+async function showBatchSignModal(itemId) {
+    const signature = document.getElementById('signatureInput').value.trim();
+    
+    if (!signature) {
+        showToast('❌ 請先輸入簽名', 'error');
+        return;
+    }
+
+    try {
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
+
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
+
+        let stepRecords = {};
+        if (!recordsSnapshot.empty) {
+            const record = recordsSnapshot.docs[0].data();
+            stepRecords = record.stepRecords || {};
+        }
+
+        // 生成步驟選擇清單
+        let stepCounter = 0;
+        let checkboxesHtml = '<div style="max-height: 400px; overflow-y: auto; margin: 15px 0;">';
+        
+        // ⭐ 快速選擇按鈕
+        checkboxesHtml += `
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; padding: 10px; background: #f0f4ff; border-radius: 8px;">
+                <button class="btn btn-info btn-small" onclick="selectAllSteps()" style="flex: 1;">
+                    ✅ 全選
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="deselectAllSteps()" style="flex: 1;">
+                    ❌ 清除
+                </button>
+                <button class="btn btn-warning btn-small" onclick="selectUnsignedSteps()" style="flex: 1;">
+                    📝 只選未簽
+                </button>
+            </div>
+        `;
+
+        item.checklist.forEach((step, index) => {
+            if (step.isSubtitle) {
+                // 章節標題
+                checkboxesHtml += `
+                    <div style="margin: 20px 0 10px 0;">
+                        <span class="step-subtitle">${step.step}</span>
+                    </div>
+                `;
+            } else {
+                stepCounter++;
+                const isSigned = stepRecords[index]?.traineeSignature ? true : false;
+                const statusBadge = isSigned 
+                    ? '<span class="badge badge-success" style="font-size: 0.75em; margin-left: 8px;">✅ 已簽</span>' 
+                    : '<span class="badge badge-warning" style="font-size: 0.75em; margin-left: 8px;">⏳ 未簽</span>';
+                
+                const checkboxId = `step_checkbox_${index}`;
+                const isChecked = !isSigned; // 預設勾選未簽署的
+                
+                checkboxesHtml += `
+                    <label style="display: flex; align-items: center; padding: 12px; margin: 5px 0; 
+                                  background: ${isSigned ? '#f0f0f0' : '#fff'}; 
+                                  border: 2px solid ${isSigned ? '#e0e0e0' : '#ffa502'}; 
+                                  border-radius: 8px; cursor: pointer; 
+                                  transition: all 0.3s;"
+                           onmouseover="this.style.background='#fffbf0'"
+                           onmouseout="this.style.background='${isSigned ? '#f0f0f0' : '#fff'}'">
+                        <input type="checkbox" 
+                               id="${checkboxId}" 
+                               data-step-index="${index}"
+                               ${isChecked ? 'checked' : ''}
+                               style="width: 20px; height: 20px; margin-right: 12px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <strong style="color: #ffa502;">Step ${stepCounter}:</strong> 
+                            ${step.step}
+                            ${statusBadge}
+                        </span>
+                    </label>
+                `;
+            }
+        });
+        
+        checkboxesHtml += '</div>';
+
+        const modalBody = `
+            <div style="margin-bottom: 15px;">
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; border-left: 4px solid #4caf50;">
+                    <strong>✍️ 簽名：</strong>${signature}
+                </div>
+            </div>
+            
+            <div style="font-weight: bold; color: #ffa502; margin-bottom: 10px; font-size: 1.1em;">
+                📋 請選擇要簽署的步驟：
+            </div>
+            
+            ${checkboxesHtml}
+            
+            <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; text-align: center; font-size: 0.9em;">
+                <strong>💡 提示：</strong>預設已勾選所有未簽署的步驟，你可以自由調整
+            </div>
+            
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="btn btn-success" onclick="confirmBatchSign('${itemId}', '${signature}')">
+                    ✅ 確定簽署
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    ❌ 取消
+                </button>
+            </div>
+        `;
+
+        showModal('✍️ 一鍵多簽 - 選擇步驟', modalBody);
+        
+    } catch (error) {
+        console.error('載入步驟清單失敗:', error);
+        showToast('❌ 載入失敗', 'error');
+    }
+}
+
+        // ⭐⭐⭐ 快速選擇函數 ⭐⭐⭐
+function selectAllSteps() {
+    document.querySelectorAll('[id^="step_checkbox_"]').forEach(cb => {
+        cb.checked = true;
+    });
+}
+
+function deselectAllSteps() {
+    document.querySelectorAll('[id^="step_checkbox_"]').forEach(cb => {
+        cb.checked = false;
+    });
+}
+
+function selectUnsignedSteps() {
+    document.querySelectorAll('[id^="step_checkbox_"]').forEach(cb => {
+        const label = cb.closest('label');
+        const hasSigned = label.querySelector('.badge-success');
+        cb.checked = !hasSigned; // 只勾選未簽的
+    });
+}
+
+        // ⭐⭐⭐ 確認批量簽署 ⭐⭐⭐
+async function confirmBatchSign(itemId, signature) {
+    try {
+        const checkedBoxes = document.querySelectorAll('[id^="step_checkbox_"]:checked');
+        
+        if (checkedBoxes.length === 0) {
+            showToast('❌ 請至少選擇一個步驟', 'error');
+            return;
+        }
+
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
+
+        let stepRecords = {};
+        if (!recordsSnapshot.empty) {
+            const record = recordsSnapshot.docs[0].data();
+            stepRecords = record.stepRecords || {};
+        }
+
+        // 為選中的步驟簽名
+        let signedCount = 0;
+        checkedBoxes.forEach(checkbox => {
+            const stepIndex = parseInt(checkbox.dataset.stepIndex);
+            
+            if (!stepRecords[stepIndex]) {
+                stepRecords[stepIndex] = {};
+            }
+            
+            stepRecords[stepIndex].traineeSignature = signature;
+            signedCount++;
+        });
+
+        const recordData = {
+            userId: currentStaffId,
+            itemId: itemId,
+            stepRecords: stepRecords,
+            updatedBy: currentUser.docId,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (recordsSnapshot.empty) {
+            await db.collection('trainingRecords').add(recordData);
+        } else {
+            await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
+        }
+
+        showToast(`✅ 已成功簽署 ${signedCount} 個步驟！`, 'success');
+        closeModal();
+        
+        // 重新載入頁面以顯示所有簽名
+        showCategoryEvaluation(currentCategoryId);
+        
+    } catch (error) {
+        console.error('批量簽署失敗:', error);
+        showToast('❌ 批量簽署失敗', 'error');
+    }
+}
+        
         // ⭐⭐⭐ 新增：一鍵簽署全部步驟（新同事專用）⭐⭐⭐
 async function batchSignAllSteps(itemId) {
     const signature = document.getElementById('signatureInput').value.trim();
