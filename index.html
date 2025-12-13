@@ -5892,7 +5892,7 @@ async function resetTraining(itemId) {
 
         // ==================== 訓練記錄相關函數 ====================
 
-// 儲存單一步驟的訓練日期
+// ⭐⭐⭐ 儲存單一步驟的訓練日期（即時更新狀態）⭐⭐⭐
 async function saveStepTrainingDate(itemId, stepIndex) {
     const date = document.getElementById(`trainingDate_${itemId}_${stepIndex}`).value;
     
@@ -5930,21 +5930,40 @@ async function saveStepTrainingDate(itemId, stepIndex) {
         }
 
         showToast('✅ 訓練日期已儲存', 'success');
+        
+        // ⭐ 即時更新完成狀態顯示
+        await refreshTrainingStepStatus(itemId, stepIndex);
+        
     } catch (error) {
         console.error('儲存訓練日期失敗:', error);
         showToast('❌ 儲存失敗', 'error');
     }
 }
 
-// 編輯單一步驟的簽名
+// ⭐⭐⭐ 編輯單一步驟的簽名（新增一鍵多簽 + 自動填入陪帶同事）⭐⭐⭐
 function editStepSignature(itemId, stepIndex, type, currentValue) {
     const label = type === 'trainee' ? '新同事' : '陪帶同事';
+    
+    // ⭐ 陪帶同事自動填入登入者姓名
+    const defaultValue = type === 'mentor' && !currentValue ? currentUser.name : currentValue;
+    
+    // ⭐ 新同事簽名增加「一鍵全簽」按鈕
+    const batchSignButton = type === 'trainee' ? `
+        <button class="btn btn-warning" style="width: 100%; margin-top: 10px;" 
+                onclick="batchSignAllSteps('${itemId}')">
+            ✍️ 一鍵簽署全部步驟
+        </button>
+        <div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-radius: 6px; font-size: 0.85em; text-align: center;">
+            💡 提示：將會使用此簽名自動填入所有未簽署的步驟
+        </div>
+    ` : '';
     
     const modalBody = `
         <div class="input-group">
             <label>✍️ ${label}簽名</label>
-            <input type="text" id="signatureInput" value="${currentValue}" placeholder="請輸入簽名">
+            <input type="text" id="signatureInput" value="${defaultValue}" placeholder="請輸入簽名" autofocus>
         </div>
+        ${batchSignButton}
         <div class="modal-buttons">
             <button class="btn btn-success" onclick="saveStepSignature('${itemId}', ${stepIndex}, '${type}')">✅ 確定</button>
             <button class="btn btn-secondary" onclick="closeModal()">❌ 取消</button>
@@ -5954,6 +5973,76 @@ function editStepSignature(itemId, stepIndex, type, currentValue) {
     showModal(`✍️ ${label}簽名`, modalBody);
 }
 
+        // ⭐⭐⭐ 新增：一鍵簽署全部步驟（新同事專用）⭐⭐⭐
+async function batchSignAllSteps(itemId) {
+    const signature = document.getElementById('signatureInput').value.trim();
+    
+    if (!signature) {
+        showToast('❌ 請先輸入簽名', 'error');
+        return;
+    }
+
+    if (!confirm(`❓ 確定要使用「${signature}」簽署所有步驟嗎？`)) {
+        return;
+    }
+
+    try {
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
+
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
+
+        let stepRecords = {};
+        if (!recordsSnapshot.empty) {
+            const record = recordsSnapshot.docs[0].data();
+            stepRecords = record.stepRecords || {};
+        }
+
+        // 為所有實際步驟（非章節標題）簽名
+        let signedCount = 0;
+        item.checklist.forEach((step, index) => {
+            if (!step.isSubtitle) {
+                if (!stepRecords[index]) {
+                    stepRecords[index] = {};
+                }
+                // 只有未簽名的才簽
+                if (!stepRecords[index].traineeSignature) {
+                    stepRecords[index].traineeSignature = signature;
+                    signedCount++;
+                }
+            }
+        });
+
+        const recordData = {
+            userId: currentStaffId,
+            itemId: itemId,
+            stepRecords: stepRecords,
+            updatedBy: currentUser.docId,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (recordsSnapshot.empty) {
+            await db.collection('trainingRecords').add(recordData);
+        } else {
+            await db.collection('trainingRecords').doc(recordsSnapshot.docs[0].id).update(recordData);
+        }
+
+        showToast(`✅ 已成功簽署 ${signedCount} 個步驟！`, 'success');
+        closeModal();
+        
+        // ⭐ 重新載入頁面以顯示所有簽名
+        showCategoryEvaluation(currentCategoryId);
+        
+    } catch (error) {
+        console.error('一鍵簽署失敗:', error);
+        showToast('❌ 批量簽署失敗', 'error');
+    }
+}
+        
 // 儲存單一步驟的簽名 (⭐ 不自動收起頁面)
 async function saveStepSignature(itemId, stepIndex, type) {
     const signature = document.getElementById('signatureInput').value.trim();
@@ -6010,13 +6099,11 @@ async function saveStepSignature(itemId, stepIndex, type) {
     }
 }
 
-// ⭐⭐⭐ 新增函數：只更新簽名框內容 ⭐⭐⭐
+// ⭐⭐⭐ 更新簽名框及完成狀態 ⭐⭐⭐
 async function refreshSignatureBox(itemId, stepIndex, type, signature) {
     try {
-        // 找到對應的簽名框元素
         const signatureBoxes = document.querySelectorAll(`#eval_item_${itemId} .signature-box`);
         
-        // 計算實際的簽名框索引（跳過章節標題）
         const itemDoc = await db.collection('trainingItems').doc(itemId).get();
         const item = itemDoc.data();
         
@@ -6028,20 +6115,159 @@ async function refreshSignatureBox(itemId, stepIndex, type, signature) {
             }
         }
         
-        // 根據類型確定是第幾個簽名框（每個步驟有2個：trainee 和 mentor）
         const boxIndex = (actualBoxIndex * 2) + (type === 'trainee' ? 0 : 1);
         
         if (signatureBoxes[boxIndex]) {
             signatureBoxes[boxIndex].textContent = signature;
             signatureBoxes[boxIndex].classList.add('signed');
         }
+        
+        // ⭐ 同時更新完成狀態
+        await refreshTrainingStepStatus(itemId, stepIndex);
+        
     } catch (error) {
         console.error('更新簽名框失敗:', error);
-        // 如果更新失敗，則重新載入整個頁面
         showCategoryEvaluation(currentCategoryId);
     }
 }
 
+        // ⭐⭐⭐ 新增：即時更新訓練步驟完成狀態 ⭐⭐⭐
+async function refreshTrainingStepStatus(itemId, stepIndex) {
+    try {
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
+
+        if (recordsSnapshot.empty) return;
+
+        const record = recordsSnapshot.docs[0].data();
+        const stepRecords = record.stepRecords || {};
+        const stepRecord = stepRecords[stepIndex] || {};
+
+        const trainingDate = stepRecord.trainingDate || '';
+        const traineeSignature = stepRecord.traineeSignature || '';
+        const mentorSignature = stepRecord.mentorSignature || '';
+        const stepCompleted = trainingDate && traineeSignature && mentorSignature;
+
+        // 找到對應的 checklist-item 元素
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
+        
+        let actualStepIndex = 0;
+        for (let i = 0; i <= stepIndex; i++) {
+            if (!item.checklist[i].isSubtitle) {
+                if (i === stepIndex) break;
+                actualStepIndex++;
+            }
+        }
+
+        const checklistItems = document.querySelectorAll(`#eval_item_${itemId} .checklist-item`);
+        const targetItem = checklistItems[actualStepIndex];
+
+        if (targetItem) {
+            // 更新完成狀態樣式
+            if (stepCompleted) {
+                targetItem.classList.add('completed');
+            } else {
+                targetItem.classList.remove('completed');
+            }
+
+            // 更新完成狀態文字
+            const statusDiv = targetItem.querySelector('div[style*="margin-top: 10px"]');
+            if (statusDiv) {
+                const statusText = stepCompleted 
+                    ? '<strong style="color: #2ed573;">✅ 此步驟已完成</strong>'
+                    : '<strong style="color: #ffa502;">⏳ 待完成</strong>';
+                statusDiv.innerHTML = statusText;
+            }
+        }
+
+        // ⭐ 同時更新整體進度
+        await updateOverallProgress(itemId);
+
+    } catch (error) {
+        console.error('更新步驟狀態失敗:', error);
+    }
+}
+
+        // ⭐⭐⭐ 新增：更新整體訓練進度 ⭐⭐⭐
+async function updateOverallProgress(itemId) {
+    try {
+        const itemDoc = await db.collection('trainingItems').doc(itemId).get();
+        const item = itemDoc.data();
+
+        const recordsSnapshot = await db.collection('trainingRecords')
+            .where('userId', '==', currentStaffId)
+            .where('itemId', '==', itemId)
+            .limit(1)
+            .get();
+
+        if (recordsSnapshot.empty) return;
+
+        const record = recordsSnapshot.docs[0].data();
+        const stepRecords = record.stepRecords || {};
+
+        const actualSteps = item.checklist.filter(s => !s.isSubtitle);
+        let totalSteps = actualSteps.length;
+        let completedSteps = 0;
+
+        item.checklist.forEach((step, index) => {
+            if (!step.isSubtitle && stepRecords[index]?.trainingDate && 
+                stepRecords[index]?.traineeSignature && stepRecords[index]?.mentorSignature) {
+                completedSteps++;
+            }
+        });
+
+        const completionRate = Math.round((completedSteps / totalSteps) * 100);
+        const isCompleted = completionRate === 100;
+
+        // 更新進度環
+        const card = document.getElementById(`eval_item_${itemId}`);
+        if (card) {
+            const percentElement = card.querySelector('.item-progress-percent');
+            const labelElement = card.querySelector('.item-progress-label');
+            const circleElement = card.querySelector('.item-progress-ring-circle');
+
+            if (percentElement) percentElement.textContent = `${completionRate}%`;
+            if (labelElement) labelElement.textContent = `${completedSteps}/${totalSteps}`;
+
+            if (circleElement) {
+                const circumference = 2 * Math.PI * 50;
+                const offset = circumference - (completionRate / 100) * circumference;
+                circleElement.setAttribute('stroke-dashoffset', offset);
+            }
+
+            // 更新整體完成狀態
+            const scoreItems = card.querySelectorAll('.score-item-value');
+            if (scoreItems.length >= 3) {
+                scoreItems[1].textContent = completedSteps;
+                scoreItems[1].className = `score-item-value ${isCompleted ? 'pass' : 'fail'}`;
+                scoreItems[2].textContent = `${completionRate}%`;
+                scoreItems[2].className = `score-item-value ${isCompleted ? 'pass' : 'fail'}`;
+            }
+
+            const overallStatusElement = card.querySelector('.score-info .score-item-value[style*="font-size: 1.1em"]');
+            if (overallStatusElement) {
+                const statusText = isCompleted ? '✅ 訓練已完成' : '⏳ 訓練進行中';
+                overallStatusElement.innerHTML = statusText;
+                overallStatusElement.className = `score-item-value ${isCompleted ? 'pass' : ''}`;
+            }
+
+            // 更新卡片樣式
+            if (isCompleted) {
+                card.classList.add('completed');
+            } else {
+                card.classList.remove('completed');
+            }
+        }
+
+    } catch (error) {
+        console.error('更新整體進度失敗:', error);
+    }
+}
+        
 // 重設所有訓練記錄
 async function resetAllTraining(itemId) {
     if (!confirm('❓ 確定要重設此項目的所有訓練記錄嗎？')) {
