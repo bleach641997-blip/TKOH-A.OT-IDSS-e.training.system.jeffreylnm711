@@ -2031,6 +2031,7 @@
         let selectedEmoji = '📚';
         let systemInitialized = false;
         let checklistSteps = [];
+        let trainingRecordSteps = [];
 
         // ==================== Emoji 列表 ====================
         const EMOJI_LIST = [
@@ -2990,10 +2991,17 @@ function showAddItemModal() {
             </select>
         </div>
         ` : ''}
-        <div class="checkbox-group">
-            <input type="checkbox" id="hasChecklistCheck" checked onchange="toggleChecklistInput()">
-            <label for="hasChecklistCheck">📋 製作評核步驟 Checklist</label>
+        
+        <!-- ⭐ 新增：選擇項目類型 -->
+        <div class="input-group">
+            <label>📋 項目類型</label>
+            <select id="itemTypeSelect" onchange="toggleItemTypeInputs()">
+                <option value="checklist">評核步驟 Checklist（需評核合格/不合格）</option>
+                <option value="training">訓練記錄（僅記錄日期及簽名）</option>
+            </select>
         </div>
+        
+        <!-- ⭐ Checklist 輸入區 -->
         <div id="checklistInputGroup" style="margin-top: 15px;">
             <div class="input-group">
                 <label>📋 Checklist 步驟</label>
@@ -3006,6 +3014,21 @@ function showAddItemModal() {
                 </div>
             </div>
         </div>
+        
+        <!-- ⭐ 訓練記錄輸入區（新增）-->
+        <div id="trainingRecordInputGroup" style="margin-top: 15px; display: none;">
+            <div class="input-group">
+                <label>📅 訓練記錄欄位</label>
+                <div id="trainingRecordStepsContainer">
+                    <!-- 動態生成 -->
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-success btn-small" onclick="addNewTrainingRecordStep()">➕ 新增訓練項目</button>
+                    <button class="btn btn-info btn-small" onclick="addNewTrainingSubtitle()">📑 新增章節標題</button>
+                </div>
+            </div>
+        </div>
+        
         <div class="checkbox-group">
             <input type="checkbox" id="hasDeadlineCheck" onchange="toggleDeadlineSettings()">
             <label for="hasDeadlineCheck">⏰ 設定截止日期</label>
@@ -3013,13 +3036,11 @@ function showAddItemModal() {
         <div id="deadlineSettings" class="deadline-settings" style="display: none;">
             <div class="deadline-settings-title">⏰ 截止日期計算（從入職日期開始）</div>
             
-            <!-- ⭐ 新增：重複評核選項 -->
             <div class="checkbox-group" style="margin-bottom: 15px;">
                 <input type="checkbox" id="isRecurringCheck" onchange="toggleRecurringSettings()">
                 <label for="isRecurringCheck">🔄 設定為重複評核</label>
             </div>
             
-            <!-- ⭐ 單次評核設定 -->
             <div id="singleDeadlineSettings">
                 <div class="deadline-inputs">
                     <div class="input-group" style="margin: 0;">
@@ -3037,7 +3058,6 @@ function showAddItemModal() {
                 </div>
             </div>
             
-            <!-- ⭐ 重複評核設定 -->
             <div id="recurringSettings" style="display: none;">
                 <label>📅 重複週期（請選擇所有需要完成的時間點）</label>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
@@ -3083,6 +3103,7 @@ function showAddItemModal() {
 
     showModal('➕ 新增培訓項目', modalBody);
     checklistSteps = [];
+    trainingRecordSteps = []; // ⭐ 新增
     addNewChecklistStep();
 }
         
@@ -3092,6 +3113,79 @@ function showAddItemModal() {
             document.getElementById('checklistInputGroup').style.display = checked ? 'block' : 'none';
         }
 
+        // ==================== 切換項目類型輸入 ====================
+function toggleItemTypeInputs() {
+    const itemType = document.getElementById('itemTypeSelect').value;
+    document.getElementById('checklistInputGroup').style.display = itemType === 'checklist' ? 'block' : 'none';
+    document.getElementById('trainingRecordInputGroup').style.display = itemType === 'training' ? 'block' : 'none';
+}
+
+// ==================== 新增訓練記錄步驟 ====================
+function addNewTrainingRecordStep() {
+    trainingRecordSteps.push({ step: '', isSubtitle: false });
+    renderTrainingRecordSteps();
+}
+
+// ==================== 新增訓練記錄章節標題 ====================
+function addNewTrainingSubtitle() {
+    trainingRecordSteps.push({ isSubtitle: true, step: '' });
+    renderTrainingRecordSteps();
+}
+
+// ==================== 渲染訓練記錄步驟 ====================
+function renderTrainingRecordSteps() {
+    const container = document.getElementById('trainingRecordStepsContainer');
+    
+    let stepCounter = 0;
+    
+    const stepsHtml = trainingRecordSteps.map((step, index) => {
+        if (step.isSubtitle) {
+            return `
+                <div class="step-edit-item subtitle" style="margin-bottom: 12px;">
+                    <div class="step-edit-header">
+                        <span class="step-number" style="color: #ffa502;">📑 章節:</span>
+                        <input type="text" data-index="${index}" value="${step.step}" 
+                               placeholder="輸入章節標題" 
+                               style="flex: 1; padding: 8px; border: 2px solid #ffa502; border-radius: 6px; font-weight: bold;"
+                               onchange="updateTrainingRecordStep(${index}, this.value)">
+                        <button class="btn btn-danger btn-small" onclick="removeTrainingRecordStep(${index})">🗑️</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            stepCounter++;
+            return `
+                <div class="step-edit-item" style="margin-bottom: 12px; border-left-color: #1e90ff;">
+                    <div class="step-edit-header">
+                        <span class="step-number" style="color: #1e90ff;">項目 ${stepCounter}:</span>
+                        <input type="text" data-index="${index}" value="${step.step}" 
+                               placeholder="輸入訓練項目名稱（例如：靜脈注射技術）" 
+                               style="flex: 1; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;"
+                               onchange="updateTrainingRecordStep(${index}, this.value)">
+                        <button class="btn btn-danger btn-small" onclick="removeTrainingRecordStep(${index})">🗑️</button>
+                    </div>
+                    <div style="margin-top: 8px; margin-left: 80px; font-size: 0.9em; color: #666;">
+                        📅 需記錄：教授/講解日期 | ✍️ 新同事簽名 | ✍️ 陪帶同事簽名
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+
+    container.innerHTML = stepsHtml;
+}
+
+// ==================== 更新訓練記錄步驟 ====================
+function updateTrainingRecordStep(index, value) {
+    trainingRecordSteps[index].step = value;
+}
+
+// ==================== 移除訓練記錄步驟 ====================
+function removeTrainingRecordStep(index) {
+    trainingRecordSteps.splice(index, 1);
+    renderTrainingRecordSteps();
+}
+        
         // ==================== 切換截止日期設定 ====================
         function toggleDeadlineSettings() {
             const checked = document.getElementById('hasDeadlineCheck').checked;
@@ -3182,124 +3276,130 @@ function renderChecklistSteps() {
             renderChecklistSteps();
         }
 
-        // ==================== 創建培訓項目 ====================
-        async function createTrainingItem() {
-            const name = document.getElementById('newItemName').value.trim();
-            const hasChecklist = document.getElementById('hasChecklistCheck').checked;
-            const hasDeadline = document.getElementById('hasDeadlineCheck').checked;
-            const isImportant = document.getElementById('isImportantCheck').checked;
+// ==================== 創建培訓項目 ====================
+async function createTrainingItem() {
+    const name = document.getElementById('newItemName').value.trim();
+    const itemType = document.getElementById('itemTypeSelect').value; // ⭐ 讀取項目類型
+    const hasDeadline = document.getElementById('hasDeadlineCheck').checked;
+    const isImportant = document.getElementById('isImportantCheck').checked;
 
-            if (!name) {
-                showToast('❌ 請輸入項目名稱', 'error');
-                return;
-            }
-
-let itemData = {
-    categoryId: currentCategoryId,
-    name: name,
-    hasChecklist: hasChecklist,
-    hasDeadline: hasDeadline,
-    isImportant: isImportant,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-};
-
-//  ⭐ 關鍵：讀取 PCA 級別選擇
-if (currentTrainingType === 'PCA') {
-    const pcaLevel = document.getElementById('newPcaLevel').value;
-    itemData.pcaLevel = pcaLevel;
-}
-
-            if (hasChecklist) {
-                if (checklistSteps.length === 0 || checklistSteps.some(s => !s.step.trim())) {
-                    showToast('❌ 請至少新增一個步驟並填寫內容', 'error');
-                    return;
-                }
-                itemData.checklist = checklistSteps;
-            }
-
-// ⭐ 檢查是否為重複評核
-const isRecurring = document.getElementById('hasDeadlineCheck').checked && 
-                    document.getElementById('isRecurringCheck').checked;
-
-if (hasDeadline && isRecurring) {
-    // 🔄 重複評核：建立多個項目
-    const recurringPeriods = Array.from(document.querySelectorAll('.recurring-period:checked'))
-        .map(cb => parseInt(cb.value))
-        .sort((a, b) => a - b);
-    
-    if (recurringPeriods.length === 0) {
-        showToast('❌ 請至少選擇一個重複週期！', 'error');
+    if (!name) {
+        showToast('❌ 請輸入項目名稱', 'error');
         return;
     }
+
+    let itemData = {
+        categoryId: currentCategoryId,
+        name: name,
+        itemType: itemType, // ⭐ 儲存項目類型
+        hasDeadline: hasDeadline,
+        isImportant: isImportant,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (currentTrainingType === 'PCA') {
+        const pcaLevel = document.getElementById('newPcaLevel').value;
+        itemData.pcaLevel = pcaLevel;
+    }
+
+    // ⭐ 根據項目類型儲存不同的數據
+    if (itemType === 'checklist') {
+        if (checklistSteps.length === 0 || checklistSteps.some(s => !s.step.trim())) {
+            showToast('❌ 請至少新增一個步驟並填寫內容', 'error');
+            return;
+        }
+        itemData.hasChecklist = true;
+        itemData.checklist = checklistSteps;
+    } else if (itemType === 'training') {
+        if (trainingRecordSteps.length === 0 || trainingRecordSteps.some(s => !s.step.trim())) {
+            showToast('❌ 請至少新增一個訓練項目並填寫內容', 'error');
+            return;
+        }
+        itemData.hasTrainingRecord = true;
+        itemData.trainingRecordSteps = trainingRecordSteps;
+    }
+
+    // ... 原有的截止日期和重複評核邏輯保持不變 ...
     
-    try {
-        const itemsSnapshot = await db.collection('trainingItems')
-            .where('categoryId', '==', currentCategoryId)
-            .get();
+    const isRecurring = document.getElementById('hasDeadlineCheck').checked && 
+                        document.getElementById('isRecurringCheck').checked;
 
-        let maxOrder = 0;
-        itemsSnapshot.forEach(doc => {
-            const order = doc.data().order || 0;
-            if (order > maxOrder) maxOrder = order;
-        });
+    if (hasDeadline && isRecurring) {
+        const recurringPeriods = Array.from(document.querySelectorAll('.recurring-period:checked'))
+            .map(cb => parseInt(cb.value))
+            .sort((a, b) => a - b);
+        
+        if (recurringPeriods.length === 0) {
+            showToast('❌ 請至少選擇一個重複週期！', 'error');
+            return;
+        }
+        
+        try {
+            const itemsSnapshot = await db.collection('trainingItems')
+                .where('categoryId', '==', currentCategoryId)
+                .get();
 
-        // 為每個週期建立獨立項目
-        for (let i = 0; i < recurringPeriods.length; i++) {
-            const months = recurringPeriods[i];
-            const recurringItemData = {
-                ...itemData,
-                name: `${name} (${months}個月)`,
-                deadlineValue: months,
-                deadlineUnit: 'months',
-                recurringSequence: i + 1,
-                recurringTotal: recurringPeriods.length,
-                originalName: name,
-                order: maxOrder + i + 1
-            };
-            
-            await db.collection('trainingItems').add(recurringItemData);
+            let maxOrder = 0;
+            itemsSnapshot.forEach(doc => {
+                const order = doc.data().order || 0;
+                if (order > maxOrder) maxOrder = order;
+            });
+
+            for (let i = 0; i < recurringPeriods.length; i++) {
+                const months = recurringPeriods[i];
+                const recurringItemData = {
+                    ...itemData,
+                    name: `${name} (${months}個月)`,
+                    deadlineValue: months,
+                    deadlineUnit: 'months',
+                    recurringSequence: i + 1,
+                    recurringTotal: recurringPeriods.length,
+                    originalName: name,
+                    order: maxOrder + i + 1
+                };
+                
+                await db.collection('trainingItems').add(recurringItemData);
+            }
+
+            showToast(`✅ 成功新增 ${recurringPeriods.length} 個重複評核！`, 'success');
+            closeModal();
+            showCategoryDetail(currentCategoryId);
+        } catch (error) {
+            console.error('新增重複評核失敗:', error);
+            showToast('❌ 新增重複評核失敗', 'error');
+        }
+        
+    } else {
+        if (hasDeadline) {
+            const deadlineValue = parseInt(document.getElementById('deadlineValue').value) || 1;
+            const deadlineUnit = document.getElementById('deadlineUnit').value;
+            itemData.deadlineValue = deadlineValue;
+            itemData.deadlineUnit = deadlineUnit;
         }
 
-        showToast(`✅ 成功新增 ${recurringPeriods.length} 個重複評核！`, 'success');
-        closeModal();
-        showCategoryDetail(currentCategoryId);
-    } catch (error) {
-        console.error('新增重複評核失敗:', error);
-        showToast('❌ 新增重複評核失敗', 'error');
+        try {
+            const itemsSnapshot = await db.collection('trainingItems')
+                .where('categoryId', '==', currentCategoryId)
+                .get();
+
+            let maxOrder = 0;
+            itemsSnapshot.forEach(doc => {
+                const order = doc.data().order || 0;
+                if (order > maxOrder) maxOrder = order;
+            });
+
+            itemData.order = maxOrder + 1;
+
+            await db.collection('trainingItems').add(itemData);
+
+            showToast('✅ 培訓項目新增成功', 'success');
+            closeModal();
+            showCategoryDetail(currentCategoryId);
+        } catch (error) {
+            console.error('新增培訓項目失敗:', error);
+            showToast('❌ 新增培訓項目失敗', 'error');
+        }
     }
-    
-} else {
-    // ⏰ 單次評核：原有邏輯
-    if (hasDeadline) {
-        const deadlineValue = parseInt(document.getElementById('deadlineValue').value) || 1;
-        const deadlineUnit = document.getElementById('deadlineUnit').value;
-        itemData.deadlineValue = deadlineValue;
-        itemData.deadlineUnit = deadlineUnit;
-    }
-
-    try {
-        const itemsSnapshot = await db.collection('trainingItems')
-            .where('categoryId', '==', currentCategoryId)
-            .get();
-
-        let maxOrder = 0;
-        itemsSnapshot.forEach(doc => {
-            const order = doc.data().order || 0;
-            if (order > maxOrder) maxOrder = order;
-        });
-
-        itemData.order = maxOrder + 1;
-
-        await db.collection('trainingItems').add(itemData);
-
-        showToast('✅ 培訓項目新增成功', 'success');
-        closeModal();
-        showCategoryDetail(currentCategoryId);
-    } catch (error) {
-        console.error('新增培訓項目失敗:', error);
-        showToast('❌ 新增培訓項目失敗', 'error');
-    }
-   }
 }
         
         // ==================== 轉換為 Checklist ====================
