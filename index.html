@@ -3635,6 +3635,9 @@ async function createTrainingItem() {
                 // 根據員工職級決定要顯示哪個類型的培訓
                 const staffTrainingType = ['PCA1', 'PCA2', 'PCA3'].includes(staff.level) ? 'PCA' : 'OTA';
 
+                // ⭐ 檢查當前用戶是否為 PCA1
+const isPCA1Mentor = currentUser.level === 'PCA1' && ['PCA2', 'PCA3'].includes(staff.level);
+                
                 // 載入重要評核時間表
                 await loadImportantTimeline(staffId, staff.joinDate, staffTrainingType);
 
@@ -3955,6 +3958,18 @@ async function showCategoryEvaluation(categoryId) {
         const categoryDoc = await db.collection('trainingCategories').doc(categoryId).get();
         const category = categoryDoc.data();
 
+        // ⭐ 檢查是否為「新入職 PCA 陪帶訓練」
+        const isNewPCATraining = category.name === '新入職PCA 陪帶訓練' || 
+                                  category.name.includes('新入職') || 
+                                  category.name.includes('陪帶');
+        
+        // ⭐ 檢查當前用戶是否為 PCA1
+        const staffDoc = await db.collection('accounts').doc(currentStaffId).get();
+        const staff = staffDoc.data();
+        const isPCA1Mentor = currentUser.level === 'PCA1' && 
+                             ['PCA2', 'PCA3'].includes(staff.level) && 
+                             isNewPCATraining;
+        
         document.getElementById('evaluationCategoryTitle').textContent = `${category.emoji} ${category.name} - 評核`;
 
         // ⭐ 先取得員工資料以獲取 level
@@ -4057,48 +4072,48 @@ async function showCategoryEvaluation(categoryId) {
                                 <div class="training-record-row">
                                     <div class="training-record-label">📅 教授/講解日期:</div>
                                     <div>
-                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                            <input type="date" id="trainingDate_${item.docId}_${index}" 
-                                                   value="${trainingDate}" 
-                                                   onchange="saveStepTrainingDate('${item.docId}', ${index})"
-                                                   style="padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; width: 100%;">
-                                        ` : `
-                                            <div style="padding: 8px; background: #f0f0f0; border-radius: 6px;">
-                                                ${trainingDate || '尚未設定'}
-                                            </div>
-                                        `}
+                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' || isPCA1Mentor ? `
+    <input type="date" id="trainingDate_${item.docId}_${index}" 
+           value="${trainingDate}" 
+           onchange="saveStepTrainingDate('${item.docId}', ${index})"
+           style="padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; width: 100%;">
+` : `
+    <div style="padding: 8px; background: #f0f0f0; border-radius: 6px;">
+        ${trainingDate || '尚未設定'}
+    </div>
+`}
                                     </div>
                                 </div>
                                 
                                 <div class="training-record-row">
                                     <div class="training-record-label">✍️ 新同事簽名:</div>
                                     <div>
-                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                            <div class="signature-box ${traineeSignature ? 'signed' : ''}" 
-                                                 onclick="editStepSignature('${item.docId}', ${index}, 'trainee', '${traineeSignature}')">
-                                                ${traineeSignature || '點擊輸入簽名'}
-                                            </div>
-                                        ` : `
-                                            <div class="signature-box ${traineeSignature ? 'signed' : ''}">
-                                                ${traineeSignature || '尚未簽名'}
-                                            </div>
-                                        `}
+                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' || isPCA1Mentor ? `
+    <div class="signature-box ${traineeSignature ? 'signed' : ''}" 
+         onclick="editStepSignature('${item.docId}', ${index}, 'trainee', '${traineeSignature}')">
+        ${traineeSignature || '點擊輸入簽名'}
+    </div>
+` : `
+    <div class="signature-box ${traineeSignature ? 'signed' : ''}">
+        ${traineeSignature || '尚未簽名'}
+    </div>
+`}
                                     </div>
                                 </div>
                                 
                                 <div class="training-record-row">
                                     <div class="training-record-label">✍️ 陪帶同事簽名:</div>
                                     <div>
-                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                            <div class="signature-box ${mentorSignature ? 'signed' : ''}" 
-                                                 onclick="editStepSignature('${item.docId}', ${index}, 'mentor', '${mentorSignature}')">
-                                                ${mentorSignature || '點擊輸入簽名'}
-                                            </div>
-                                        ` : `
-                                            <div class="signature-box ${mentorSignature ? 'signed' : ''}">
-                                                ${mentorSignature || '尚未簽名'}
-                                            </div>
-                                        `}
+                                       ${currentUser.role === 'admin' || currentUser.role === 'supervisor' || isPCA1Mentor ? `
+    <div class="signature-box ${mentorSignature ? 'signed' : ''}" 
+         onclick="editStepSignature('${item.docId}', ${index}, 'mentor', '${mentorSignature}')">
+        ${mentorSignature || '點擊輸入簽名'}
+    </div>
+` : `
+    <div class="signature-box ${mentorSignature ? 'signed' : ''}">
+        ${mentorSignature || '尚未簽名'}
+    </div>
+`}
                                     </div>
                                 </div>
                                 
@@ -4152,11 +4167,11 @@ async function showCategoryEvaluation(categoryId) {
                                 </div>
                             </div>
 
-                            <div class="item-card-actions">
-                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                    ${isCompleted ? `<button class="btn btn-danger btn-small" onclick="event.stopPropagation(); resetAllTraining('${item.docId}')">🔄 重設全部</button>` : ''}
-                                ` : ''}
-                            </div>
+ <div class="item-card-actions">
+    ${currentUser.role === 'admin' || currentUser.role === 'supervisor' || isPCA1Mentor ? `
+        ${isCompleted ? `<button class="btn btn-danger btn-small" onclick="event.stopPropagation(); resetAllTraining('${item.docId}')">🔄 重設全部</button>` : ''}
+    ` : ''}
+</div>
                         </div>
 
                         <div class="item-card-content">
