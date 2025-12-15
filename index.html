@@ -6165,7 +6165,7 @@ function selectUnsignedSteps(type = 'trainee') {
     });
 }
 
-// ⭐⭐⭐ 修改：增加 type 參數 ⭐⭐⭐
+// ⭐⭐⭐ 確認批量簽署 ⭐⭐⭐
 async function confirmBatchSign(itemId, signature, type = 'trainee') {
     try {
         const checkedBoxes = document.querySelectorAll('[id^="step_checkbox_"]:checked');
@@ -6191,6 +6191,8 @@ async function confirmBatchSign(itemId, signature, type = 'trainee') {
 
         // 為選中的步驟簽名
         let signedCount = 0;
+        const stepIndexes = []; // ⭐ 收集所有步驟索引
+        
         checkedBoxes.forEach(checkbox => {
             const stepIndex = parseInt(checkbox.dataset.stepIndex);
             
@@ -6199,6 +6201,7 @@ async function confirmBatchSign(itemId, signature, type = 'trainee') {
             }
             
             stepRecords[stepIndex][fieldName] = signature;
+            stepIndexes.push(stepIndex); // ⭐ 記錄索引
             signedCount++;
         });
 
@@ -6220,7 +6223,10 @@ async function confirmBatchSign(itemId, signature, type = 'trainee') {
         showToast(`✅ 已成功為 ${signedCount} 個步驟簽署【${label}】簽名！`, 'success');
         closeModal();
         
-        showCategoryEvaluation(currentCategoryId);
+        // ⭐⭐⭐ 關鍵修改：唔重新載入頁面，只更新簽名框 ⭐⭐⭐
+        for (const stepIndex of stepIndexes) {
+            await refreshSignatureBox(itemId, stepIndex, type, signature);
+        }
         
     } catch (error) {
         console.error('批量簽署失敗:', error);
