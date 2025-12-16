@@ -1670,10 +1670,13 @@
 }
 
 .training-record-header {
-    font-weight: bold;
+    font-weight: 900;  /* ⭐ 改：同評核項目一樣粗 */
     margin-bottom: 15px;
     color: #ffa502;
-    font-size: 1.1em;
+    font-size: 1.8em;  /* ⭐ 改：同評核項目一樣大 */
+    text-align: center;  /* ⭐ 新增：置中 */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);  /* ⭐ 新增：同評核項目一樣嘅陰影 */
+    letter-spacing: 0.5px;  /* ⭐ 新增：字距 */
 }
 
 .training-record-item {
@@ -4119,20 +4122,21 @@ async function showCategoryEvaluation(categoryId) {
 <div class="item-card-header">
     <div class="item-card-title-section">
         <!-- ⭐⭐⭐ 這裡是修改的地方 ⭐⭐⭐ -->
-        <div class="item-card-name" style="font-size: 1.8em; 
-                                           font-weight: 900; 
-                                           color: #2c3e50; 
-                                           line-height: 1.3;
-                                           text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-                                           letter-spacing: 0.5px;
-                                           background: linear-gradient(135deg, #ffa502 0%, #ff6b35 100%);
-                                           -webkit-background-clip: text;
-                                           -webkit-text-fill-color: transparent;
-                                           background-clip: text;
-                                           padding: 5px 0;
-                                           margin-bottom: 10px;">
-            📋 ${item.name}
-        </div>
+<div class="item-card-name" style="font-size: 1.8em; 
+                                   font-weight: 900; 
+                                   color: #2c3e50; 
+                                   line-height: 1.3;
+                                   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+                                   letter-spacing: 0.5px;
+                                   background: linear-gradient(135deg, #ffa502 0%, #ff6b35 100%);
+                                   -webkit-background-clip: text;
+                                   -webkit-text-fill-color: transparent;
+                                   background-clip: text;
+                                   padding: 5px 0;
+                                   margin-bottom: 10px;
+                                   text-align: center;">
+    📋 ${item.name}
+</div>
         <div class="item-card-badges">${badges}</div>
     </div>
     
