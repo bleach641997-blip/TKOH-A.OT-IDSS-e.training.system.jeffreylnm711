@@ -2706,14 +2706,14 @@ if (item.hasChecklist && item.checklist && item.checklist.length > 0) {
                                        line-height: 1.3;
                                        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
                                        letter-spacing: 0.5px;
-                                       background: linear-gradient(135deg, #ffa502 0%, #ff6b35 100%);
+                                       background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%);
                                        -webkit-background-clip: text;
                                        -webkit-text-fill-color: transparent;
                                        background-clip: text;
                                        padding: 5px 0;
                                        margin-bottom: 10px;
                                        text-align: center;">
-        📋 ${item.name}
+         ${item.name}
     </div>
     <div class="item-card-badges">${badges}</div>
 </div>
@@ -4149,7 +4149,7 @@ async function showCategoryEvaluation(categoryId) {
                                    padding: 5px 0;
                                    margin-bottom: 10px;
                                    text-align: center;">
-    📋 ${item.name}
+     ${item.name}
 </div>
         <div class="item-card-badges">${badges}</div>
     </div>
@@ -4343,21 +4343,7 @@ async function showCategoryEvaluation(categoryId) {
                         
                         <div class="item-card-header">
                             <div class="item-card-title-section">
-<div class="item-card-name" style="font-size: 1.8em; 
-                                   font-weight: 900; 
-                                   color: #2c3e50; 
-                                   line-height: 1.3;
-                                   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-                                   letter-spacing: 0.5px;
-                                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                   -webkit-background-clip: text;
-                                   -webkit-text-fill-color: transparent;
-                                   background-clip: text;
-                                   padding: 5px 0;
-                                   margin-bottom: 10px;
-                                   text-align: center;">
-    🎯 ${item.name}
-</div>
+                                <div class="item-card-name">${item.name}</div>
                                 <div class="item-card-badges">${badges}</div>
                             </div>
                             
