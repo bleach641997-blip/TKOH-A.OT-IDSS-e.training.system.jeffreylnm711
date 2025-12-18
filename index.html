@@ -1882,17 +1882,52 @@
             </div>
         </div>
 
-        <!-- 員工列表頁面 -->
-        <div id="staffListPage" class="page">
-            <div class="top-bar">
-                <h2 id="staffListTitle">員工列表</h2>
-                <button class="btn btn-secondary" onclick="showPage('staffLevelPage')">🔙 返回</button>
-            </div>
-            <div class="staff-grid" id="staffList">
-                <!-- 動態生成員工列表 -->
-            </div>
+ <!-- 員工列表頁面 -->
+<div id="staffListPage" class="page">
+    <div class="top-bar">
+        <h2 id="staffListTitle">員工列表</h2>
+        <button class="btn btn-secondary" onclick="showPage('staffLevelPage')">🔙 返回</button>
+    </div>
+    
+    <!-- ⭐ 新增：搜尋框 ⭐ -->
+    <div style="margin-bottom: 20px;">
+        <div style="position: relative; max-width: 500px;">
+            <input type="text" 
+                   id="staffSearchInput" 
+                   placeholder="🔍 輸入同事名稱搜尋..." 
+                   onkeyup="filterStaffList()"
+                   style="width: 100%; 
+                          padding: 12px 45px 12px 15px; 
+                          border: 2px solid #ffa502; 
+                          border-radius: 8px; 
+                          font-size: 16px; 
+                          transition: all 0.3s;
+                          box-shadow: 0 2px 8px rgba(255, 165, 2, 0.2);">
+            <span style="position: absolute; 
+                         right: 15px; 
+                         top: 50%; 
+                         transform: translateY(-50%); 
+                         font-size: 1.2em; 
+                         color: #ffa502; 
+                         pointer-events: none;">
+                🔍
+            </span>
         </div>
-
+        <div id="staffSearchCount" style="margin-top: 8px; color: #666; font-size: 0.9em;"></div>
+    </div>
+    
+    <div class="staff-grid" id="staffList">
+        <!-- 動態生成員工列表 -->
+    </div>
+    
+    <!-- ⭐ 新增：無結果提示 ⭐ -->
+    <div id="noStaffResults" style="display: none; text-align: center; padding: 40px; color: #999;">
+        <div style="font-size: 3em; margin-bottom: 15px;">🔍</div>
+        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">搵唔到符合條件嘅同事</div>
+        <div style="font-size: 0.95em;">試下用其他關鍵字搜尋</div>
+    </div>
+</div>
+        
         <!-- 培訓進度頁面（Dashboard 設計）-->
         <div id="trainingProgressPage" class="page">
             <div class="dashboard-header">
@@ -3576,53 +3611,99 @@ async function createTrainingItem() {
         }
 
         // ==================== 顯示員工列表 ====================
-        async function showStaffList(level) {
-            currentStaffLevel = level;
-            
-            const levelNames = {
-                'WM': 'WM (病房經理)',
-                'APN': 'APN (資深護師)',
-                'RN': 'RN (註冊護士)',
-                'PCA1': 'PCA1',
-                'PCA2': 'PCA2',
-                'PCA3': 'PCA3',
-                'OTA': 'OTA'
-            };
-            
-            document.getElementById('staffListTitle').textContent = `📊 ${levelNames[level]} - 員工列表`;
-            showPage('staffListPage');
+async function showStaffList(level) {
+    currentStaffLevel = level;
+    
+    const levelNames = {
+        'WM': 'WM (病房經理)',
+        'APN': 'APN (資深護師)',
+        'RN': 'RN (註冊護士)',
+        'PCA1': 'PCA1',
+        'PCA2': 'PCA2',
+        'PCA3': 'PCA3',
+        'OTA': 'OTA'
+    };
+    
+    document.getElementById('staffListTitle').textContent = `📊 ${levelNames[level]} - 員工列表`;
+    showPage('staffListPage');
 
-            try {
-                const accountsSnapshot = await db.collection('accounts')
-                    .where('level', '==', level)
-                    .where('role', '==', 'staff')
-                    .get();
+    try {
+        const accountsSnapshot = await db.collection('accounts')
+            .where('level', '==', level)
+            .where('role', '==', 'staff')
+            .get();
 
-                const staffListHtml = [];
+        const staffListHtml = [];
 
-                accountsSnapshot.forEach(doc => {
-                    const account = doc.data();
-                    staffListHtml.push(`
-                        <div class="staff-card level-${level}" onclick="showTrainingProgress('${doc.id}')">
-                            <div class="staff-card-name">👤 ${account.name}</div>
-                            <div class="staff-card-info">
-                                📅 入職日期: ${account.joinDate || '未設定'}
-                            </div>
-                        </div>
-                    `);
-                });
+        accountsSnapshot.forEach(doc => {
+            const account = doc.data();
+            staffListHtml.push(`
+                <div class="staff-card level-${level}" onclick="showTrainingProgress('${doc.id}')">
+                    <div class="staff-card-name">👤 ${account.name}</div>
+                    <div class="staff-card-info">
+                        📅 入職日期: ${account.joinDate || '未設定'}
+                    </div>
+                </div>
+            `);
+        });
 
-                if (staffListHtml.length === 0) {
-                    staffListHtml.push('<p class="no-data-message">📭 此職級尚無員工</p>');
-                }
-
-                document.getElementById('staffList').innerHTML = staffListHtml.join('');
-            } catch (error) {
-                console.error('載入員工列表失敗:', error);
-                showToast('❌ 載入員工列表失敗', 'error');
-            }
+        if (staffListHtml.length === 0) {
+            staffListHtml.push('<p class="no-data-message">📭 此職級尚無員工</p>');
         }
 
+        document.getElementById('staffList').innerHTML = staffListHtml.join('');
+        
+        // ⭐⭐⭐ 新增以下兩行 ⭐⭐⭐
+        document.getElementById('staffSearchInput').value = '';  // 清空搜尋框
+        document.getElementById('staffSearchCount').textContent = `共 ${accountsSnapshot.size} 位同事`;  // 顯示總數
+        
+    } catch (error) {
+        console.error('載入員工列表失敗:', error);
+        showToast('❌ 載入員工列表失敗', 'error');
+    }
+}
+
+        // ==================== 搜尋員工列表 ====================
+function filterStaffList() {
+    const searchInput = document.getElementById('staffSearchInput');
+    const filter = searchInput.value.toLowerCase().trim();
+    const staffCards = document.querySelectorAll('.staff-card');
+    const noResults = document.getElementById('noStaffResults');
+    const searchCount = document.getElementById('staffSearchCount');
+    
+    let visibleCount = 0;
+    let totalCount = staffCards.length;
+    
+    staffCards.forEach(card => {
+        const staffName = card.querySelector('.staff-card-name').textContent.toLowerCase();
+        const staffInfo = card.querySelector('.staff-card-info').textContent.toLowerCase();
+        
+        // 搜尋名稱或入職日期
+        if (staffName.includes(filter) || staffInfo.includes(filter)) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // 顯示結果數量
+    if (filter === '') {
+        searchCount.textContent = `共 ${totalCount} 位同事`;
+    } else {
+        searchCount.textContent = `搜尋到 ${visibleCount} 位同事（共 ${totalCount} 位）`;
+    }
+    
+    // 顯示/隱藏無結果提示
+    if (visibleCount === 0 && filter !== '') {
+        noResults.style.display = 'block';
+        document.getElementById('staffList').style.display = 'none';
+    } else {
+        noResults.style.display = 'none';
+        document.getElementById('staffList').style.display = '';
+    }
+}
+        
         // ==================== 計算截止日期 ====================
         function calculateDeadline(joinDate, value, unit) {
             const date = new Date(joinDate);
