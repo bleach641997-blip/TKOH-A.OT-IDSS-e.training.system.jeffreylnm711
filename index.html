@@ -2151,6 +2151,31 @@
         let systemInitialized = false;
         let checklistSteps = [];
 
+        // ==================== 權限檢查函數 ====================
+// ⭐⭐⭐ 新增：檢查用戶是否有權限編輯訓練記錄 ⭐⭐⭐
+function canEditTrainingRecord(categoryName, targetStaffLevel) {
+    // 1. Admin & Supervisor 永遠有權限
+    if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
+        return true;
+    }
+    
+    // 2. PCA1 員工只能為 PCA2 & PCA3 編輯【新入職PCA 陪帶訓練記錄】
+    if (currentUser.role === 'staff' && currentUser.level === 'PCA1') {
+        // 必須係【新入職PCA 陪帶訓練記錄】分類
+        const isNewStaffTraining = categoryName.includes('新入職') || 
+                                   categoryName.includes('陪帶') || 
+                                   categoryName.includes('PCA');
+        
+        // 目標員工必須係 PCA2 或 PCA3
+        const isTargetPCA2or3 = targetStaffLevel === 'PCA2' || targetStaffLevel === 'PCA3';
+        
+        return isNewStaffTraining && isTargetPCA2or3;
+    }
+    
+    // 3. 其他情況一律無權限
+    return false;
+}
+        
         // ==================== Emoji 列表 ====================
         const EMOJI_LIST = [
             '📚', '📖', '📝', '📋', '📊', '📈', '📉', '📄', '📃', '📑',
@@ -4058,7 +4083,9 @@ async function showCategoryEvaluation(categoryId) {
         // ⭐ 先取得員工資料以獲取 level
         const staffDoc = await db.collection('accounts').doc(currentStaffId).get();
         const staff = staffDoc.data();
-
+        
+        // ⭐⭐⭐ 新增：檢查當前用戶是否有編輯權限 ⭐⭐⭐
+        const hasEditPermission = canEditTrainingRecord(category.name, staff.level);
         const itemsSnapshot = await db.collection('trainingItems')
             .where('categoryId', '==', categoryId)
             .get();
@@ -4152,53 +4179,53 @@ async function showCategoryEvaluation(categoryId) {
                             </div>
                             
                             <div class="training-record-item" style="margin-top: 12px;">
-                                <div class="training-record-row">
-                                    <div class="training-record-label">📅 教授/講解日期:</div>
-                                    <div>
-                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                            <input type="date" id="trainingDate_${item.docId}_${index}" 
-                                                   value="${trainingDate}" 
-                                                   onchange="saveStepTrainingDate('${item.docId}', ${index})"
-                                                   style="padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; width: 100%;">
-                                        ` : `
-                                            <div style="padding: 8px; background: #f0f0f0; border-radius: 6px;">
-                                                ${trainingDate || '尚未設定'}
-                                            </div>
-                                        `}
-                                    </div>
-                                </div>
+      <div class="training-record-row">
+    <div class="training-record-label">📅 教授/講解日期:</div>
+    <div>
+        ${hasEditPermission ? `
+            <input type="date" id="trainingDate_${item.docId}_${index}" 
+                   value="${trainingDate}" 
+                   onchange="saveStepTrainingDate('${item.docId}', ${index})"
+                   style="padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; width: 100%;">
+        ` : `
+            <div style="padding: 8px; background: #f0f0f0; border-radius: 6px;">
+                ${trainingDate || '尚未設定'}
+            </div>
+        `}
+    </div>
+</div>
                                 
-                                <div class="training-record-row">
-                                    <div class="training-record-label">✍️ 新同事簽名:</div>
-                                    <div>
-                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                            <div class="signature-box ${traineeSignature ? 'signed' : ''}" 
-                                                 onclick="editStepSignature('${item.docId}', ${index}, 'trainee', '${traineeSignature}')">
-                                                ${traineeSignature || '點擊輸入簽名'}
-                                            </div>
-                                        ` : `
-                                            <div class="signature-box ${traineeSignature ? 'signed' : ''}">
-                                                ${traineeSignature || '尚未簽名'}
-                                            </div>
-                                        `}
-                                    </div>
-                                </div>
+      <div class="training-record-row">
+    <div class="training-record-label">✍️ 新同事簽名:</div>
+    <div>
+        ${hasEditPermission ? `
+            <div class="signature-box ${traineeSignature ? 'signed' : ''}" 
+                 onclick="editStepSignature('${item.docId}', ${index}, 'trainee', '${traineeSignature}')">
+                ${traineeSignature || '點擊輸入簽名'}
+            </div>
+        ` : `
+            <div class="signature-box ${traineeSignature ? 'signed' : ''}">
+                ${traineeSignature || '尚未簽名'}
+            </div>
+        `}
+    </div>
+</div>
                                 
-                                <div class="training-record-row">
-                                    <div class="training-record-label">✍️ 陪帶同事簽名:</div>
-                                    <div>
-                                        ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                            <div class="signature-box ${mentorSignature ? 'signed' : ''}" 
-                                                 onclick="editStepSignature('${item.docId}', ${index}, 'mentor', '${mentorSignature}')">
-                                                ${mentorSignature || '點擊輸入簽名'}
-                                            </div>
-                                        ` : `
-                                            <div class="signature-box ${mentorSignature ? 'signed' : ''}">
-                                                ${mentorSignature || '尚未簽名'}
-                                            </div>
-                                        `}
-                                    </div>
-                                </div>
+<div class="training-record-row">
+    <div class="training-record-label">✍️ 陪帶同事簽名:</div>
+    <div>
+        ${hasEditPermission ? `
+            <div class="signature-box ${mentorSignature ? 'signed' : ''}" 
+                 onclick="editStepSignature('${item.docId}', ${index}, 'mentor', '${mentorSignature}')">
+                ${mentorSignature || '點擊輸入簽名'}
+            </div>
+        ` : `
+            <div class="signature-box ${mentorSignature ? 'signed' : ''}">
+                ${mentorSignature || '尚未簽名'}
+            </div>
+        `}
+    </div>
+</div>
                                 
                                 <div style="margin-top: 10px; padding: 10px; background: ${stepCompleted ? '#f0fff4' : '#fff9e6'}; border-radius: 6px; text-align: center; font-size: 0.9em;">
                                     <strong style="color: ${stepCompleted ? '#2ed573' : '#ffa502'};">
@@ -4251,11 +4278,11 @@ async function showCategoryEvaluation(categoryId) {
                                 </div>
                             </div>
 
-                            <div class="item-card-actions">
-                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                    ${isCompleted ? `<button class="btn btn-danger btn-small" onclick="event.stopPropagation(); resetAllTraining('${item.docId}')">🔄 重設全部</button>` : ''}
-                                ` : ''}
-                            </div>
+<div class="item-card-actions">
+    ${hasEditPermission ? `
+        ${isCompleted ? `<button class="btn btn-danger btn-small" onclick="event.stopPropagation(); resetAllTraining('${item.docId}')">🔄 重設全部</button>` : ''}
+    ` : ''}
+</div>
                         </div>
 
                         <div class="item-card-content">
@@ -4364,13 +4391,13 @@ async function showCategoryEvaluation(categoryId) {
                                     <span class="step-number">Step ${stepNumber}:</span>
                                     ${step.step} ${criticalBadge}
                                 </div>
-                                ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
-                                    <div class="checklist-step-actions">
-                                        <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
-                                        <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
-                                        <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
-                                    </div>
-                                ` : ''}
+  ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
+    <div class="checklist-step-actions">
+        <button class="step-btn step-btn-pass" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pass')">✅ 合格</button>
+        <button class="step-btn step-btn-fail" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'fail')">❌ 不合格</button>
+        <button class="step-btn step-btn-reset" onclick="event.stopPropagation(); updateChecklistStepStatus('${item.docId}', ${index}, 'pending')">🔄 重設</button>
+    </div>
+` : ''}
                             </div>
                             <div style="margin: 8px 0; color: #666;">${statusText}</div>
                             ${currentUser.role === 'admin' || currentUser.role === 'supervisor' ? `
