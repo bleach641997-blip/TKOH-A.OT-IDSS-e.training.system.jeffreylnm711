@@ -2301,14 +2301,24 @@ function canEditTrainingRecord(categoryName, targetStaffLevel) {
                         <div class="title">選擇員工職級</div>
                     </div>
                 `);
-            } else if (currentUser.role === 'staff') {
-                menuHtml.push(`
-                    <div class="menu-card" onclick="viewMyProgress()">
-                        <div class="emoji">📈</div>
-                        <div class="title">我的培訓進度</div>
-                    </div>
-                `);
-            }
+} else if (currentUser.role === 'staff') {
+    menuHtml.push(`
+        <div class="menu-card" onclick="viewMyProgress()">
+            <div class="emoji">📈</div>
+            <div class="title">我的培訓進度</div>
+        </div>
+    `);
+    
+    // ⭐⭐⭐ 新增：PCA1 員工可以為 PCA2 & PCA3 做陪帶訓練記錄 ⭐⭐⭐
+    if (currentUser.level === 'PCA1') {
+        menuHtml.push(`
+            <div class="menu-card" onclick="showPCA1MentorMenu()">
+                <div class="emoji">👨‍🏫</div>
+                <div class="title">陪帶訓練記錄<br><small style="font-size: 0.75em; opacity: 0.9;">(為 PCA2/PCA3)</small></div>
+            </div>
+        `);
+    }
+}
 
             if (currentUser.role === 'admin') {
                 menuHtml.push(`
@@ -6752,6 +6762,27 @@ async function resetAllTraining(itemId) {
         console.error('重設失敗:', error);
         showToast('❌ 操作失敗', 'error');
     }
+}
+
+        // ==================== PCA1 陪帶訓練專用選單 ====================
+function showPCA1MentorMenu() {
+    showPage('staffLevelPage');
+    
+    // 修改標題
+    document.querySelector('#staffLevelPage .top-bar h2').textContent = '📊 選擇要陪帶的員工職級';
+    
+    // 只顯示 PCA2 和 PCA3 卡片
+    const menuGrid = document.querySelector('#staffLevelPage .menu-grid');
+    menuGrid.innerHTML = `
+        <div class="menu-card level-PCA2" onclick="showStaffList('PCA2')">
+            <div class="emoji">🙋🏻‍♂️</div>
+            <div class="title">PCA2</div>
+        </div>
+        <div class="menu-card level-PCA3" onclick="showStaffList('PCA3')">
+            <div class="emoji">🙋🏻‍♀️</div>
+            <div class="title">PCA3</div>
+        </div>
+    `;
 }
     </script>
 </body>
